@@ -79,15 +79,15 @@ public class TradeNotifier {
 
             asyncSend(kafkaProducer, key++, body);
 
-            // HttpRequest request = HttpRequest.newBuilder()
-            //         .uri(new URI("http://notifier:5000/notify"))
-            //         .header("Content-Type", "application/json")
-            //         .POST(HttpRequest.BodyPublishers.ofString(body))
-            //         .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(new URI("http://notifier:5000/notify"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
+                    .build();
 
-            // HttpResponse<String> response = HttpClient.newBuilder()
-            //         .build()
-            //         .send(request, BodyHandlers.ofString());
+            HttpResponse<String> response = HttpClient.newBuilder()
+                    .build()
+                    .send(request, BodyHandlers.ofString());
         }
         catch (Exception e) {
             log.warn("unable to notify", e);
@@ -154,17 +154,20 @@ public class TradeNotifier {
         Properties props = new Properties();
         props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
         props.put(AdminClientConfig.CLIENT_ID_CONFIG, "client-" + UUID.randomUUID());
+        
         try (Admin admin = Admin.create(props)) {
+
             // delete topics if present
-            try {
-                admin.deleteTopics(Arrays.asList(topicNames)).all().get();
-            } catch (ExecutionException e) {
-                if (!(e.getCause() instanceof UnknownTopicOrPartitionException)) {
-                    throw e;
-                }
-                log.warn("Topics deletion error: {}", e.getCause());
-            }
-            log.info("Deleted topics: {}", Arrays.toString(topicNames));
+            // try {
+            //     admin.deleteTopics(Arrays.asList(topicNames)).all().get();
+            // } catch (ExecutionException e) {
+            //     if (!(e.getCause() instanceof UnknownTopicOrPartitionException)) {
+            //         throw e;
+            //     }
+            //     log.warn("Topics deletion error: {}", e.getCause());
+            // }
+            // log.info("Deleted topics: {}", Arrays.toString(topicNames));
+
             // create topics in a retry loop
             while (true) {
                 // use default RF to avoid NOT_ENOUGH_REPLICAS error with minISR > 1
@@ -176,12 +179,14 @@ public class TradeNotifier {
                     admin.createTopics(newTopics).all().get();
                     log.info("Created topics: {}", Arrays.toString(topicNames));
                     break;
-                } catch (ExecutionException e) {
+                } 
+                catch (ExecutionException e) {
                     if (!(e.getCause() instanceof TopicExistsException)) {
                         throw e;
                     }
                     log.warn("Waiting for topics metadata cleanup");
-                    TimeUnit.MILLISECONDS.sleep(1_000);
+                    break;
+                    //TimeUnit.MILLISECONDS.sleep(1_000);
                 }
             }
         } catch (Throwable e) {

@@ -7,6 +7,7 @@ metadata:
   labels:
     io.kompose.service: trader
   name: trader
+  namespace: k8sotel
 spec:
   ports:
     - name: "9001"

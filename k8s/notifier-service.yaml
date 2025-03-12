@@ -7,6 +7,7 @@ metadata:
   labels:
     io.kompose.service: notifier
   name: notifier
+  namespace: k8sotel
 spec:
   ports:
     - name: "5000"

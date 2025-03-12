@@ -1,12 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    kompose.cmd: ./kompose convert
-    kompose.version: 1.34.0 (cbf2835db)
   labels:
     io.kompose.service: processor
   name: processor
+  namespace: k8sotel
 spec:
   replicas: 1
   selector:
@@ -15,8 +13,7 @@ spec:
   template:
     metadata:
       annotations:
-        kompose.cmd: ./kompose convert
-        kompose.version: 1.34.0 (cbf2835db)
+        instrumentation.opentelemetry.io/inject-java: "opentelemetry-operator-system/elastic-instrumentation"
       labels:
         io.kompose.service: processor
     spec:
@@ -28,7 +25,6 @@ spec:
               value: processor
             - name: IN_TOPIC
               value: notifications_q
-          image: processor:latest
-          imagePullPolicy: Never
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/processor:latest
           name: processor
       restartPolicy: Always
