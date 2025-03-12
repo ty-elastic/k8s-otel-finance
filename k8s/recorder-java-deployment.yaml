@@ -5,8 +5,6 @@ metadata:
     io.kompose.service: recorder-java
   name: recorder-java
   namespace: k8sotel
-  annotations:
-    resource.opentelemetry.io/deployment.environment: "k8sotel"
 spec:
   replicas: 1
   selector:
