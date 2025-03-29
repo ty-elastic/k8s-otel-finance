@@ -11,6 +11,4 @@ RUN npm install
 COPY trader-app/src src
 COPY trader-app/public public
 
-RUN npm run build
-
-CMD rm -rf /build/* && cp -r /app/build/. /build/
+CMD npm run build && rm -rf /build/* && cp -r /app/build/. /build/

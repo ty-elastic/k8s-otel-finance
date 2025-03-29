@@ -28,7 +28,7 @@ spec:
             - name: RECORDER_HOST_2
               value: recorder-go-zero
           image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/router:latest
-          imagePullPolicy: Never
+          #imagePullPolicy: Never
           name: router
           ports:
             - containerPort: 9000

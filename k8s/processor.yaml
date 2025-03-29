@@ -30,7 +30,7 @@ spec:
             - name: IN_TOPIC
               value: notifications_q
           image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/processor:latest
-          imagePullPolicy: Never
+          #imagePullPolicy: Never
           name: processor
       restartPolicy: Always
 ---

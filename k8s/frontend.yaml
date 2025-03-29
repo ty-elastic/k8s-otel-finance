@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/frontend:latest
-          imagePullPolicy: Never
+          #imagePullPolicy: Never
           name: frontend
           volumeMounts:
             - mountPath: /build
