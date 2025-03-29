@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monkey
+  namespace: k8sotel
+  labels:
+    app: k8sotel
+    service: monkey
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8sotel
+      service: monkey
+  template:
+    metadata:
+      annotations:
+        instrumentation.opentelemetry.io/inject-python: "opentelemetry-operator-system/otel-instrumentation"
+      labels:
+        app: k8sotel
+        service: monkey
+    spec:
+      containers:
+        - name: monkey
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/monkey:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9002
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: k8sotel
+    service: monkey
+  name: monkey
+  namespace: k8sotel
+spec:
+  ports:
+    - name: monkey
+      port: 9002
+      targetPort: 9002
+  selector:
+    app: k8sotel
+    service: monkey
+---

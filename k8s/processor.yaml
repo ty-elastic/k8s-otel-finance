@@ -1,0 +1,36 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: k8sotel
+    service: processor
+  name: processor
+  namespace: k8sotel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8sotel
+      service: processor
+  template:
+    metadata:
+      annotations:
+        instrumentation.opentelemetry.io/inject-java: "opentelemetry-operator-system/otel-instrumentation"
+      labels:
+        app: k8sotel
+        service: processor
+    spec:
+      containers:
+        - env:
+            - name: BOOTSTRAP_SERVER
+              value: kafka:9093
+            - name: IN_GROUP
+              value: processor
+            - name: IN_TOPIC
+              value: notifications_q
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/processor:latest
+          imagePullPolicy: Never
+          name: processor
+      restartPolicy: Always
+---

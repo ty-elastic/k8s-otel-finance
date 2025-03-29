@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: k8sotel
+    service: trader
+  name: trader
+  namespace: k8sotel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8sotel
+      service: trader
+  template:
+    metadata:
+      annotations:
+        instrumentation.opentelemetry.io/inject-python: "opentelemetry-operator-system/otel-instrumentation"
+      labels:
+        app: k8sotel
+        service: trader
+    spec:
+      containers:
+        - name: trader
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/trader:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9001
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: k8sotel
+    service: trader
+  name: trader
+  namespace: k8sotel
+spec:
+  ports:
+    - name: trader
+      port: 9001
+      targetPort: 9001
+  selector:
+    app: k8sotel
+    service: trader
+---

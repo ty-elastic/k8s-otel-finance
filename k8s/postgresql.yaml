@@ -1,0 +1,54 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: k8sotel
+    service: postgresql
+  name: postgresql
+  namespace: k8sotel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8sotel
+      service: postgresql
+  template:
+    metadata:
+      labels:
+        app: k8sotel
+        service: postgresql
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: trades
+            - name: POSTGRES_PASSWORD
+              value: password
+            - name: POSTGRES_USER
+              value: admin
+          image: postgres:latest
+          name: postgresql
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: k8sotel
+    service: postgresql
+  name: postgresql
+  namespace: k8sotel
+spec:
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+  selector:
+    app: k8sotel
+    service: postgresql
+---

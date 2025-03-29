@@ -1,0 +1,90 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: frontend-claim0
+  namespace: k8sotel
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: frontend
+  namespace: k8sotel
+spec:
+  template:
+    spec:
+      containers:
+        - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/frontend:latest
+          imagePullPolicy: Never
+          name: frontend
+          volumeMounts:
+            - mountPath: /build
+              name: frontend-claim0
+      restartPolicy: Never
+      volumes:
+        - name: frontend-claim0
+          persistentVolumeClaim:
+            claimName: frontend-claim0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy
+  namespace: k8sotel
+  labels:
+    app: k8sotel
+    service: proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8sotel
+      service: proxy
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: k8sotel
+        service: proxy
+    spec:
+      containers:
+        - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/proxy
+          imagePullPolicy: Never
+          name: proxy
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html
+              name: frontend-claim0
+      restartPolicy: Always
+      volumes:
+        - name: frontend-claim0
+          persistentVolumeClaim:
+            claimName: frontend-claim0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: k8sotel
+    service: proxy
+  name: proxy
+  namespace: k8sotel
+spec:
+  ports:
+    - name: proxy
+      port: 8080
+      targetPort: 80
+  type: LoadBalancer
+  selector:
+    app: k8sotel
+    service: proxy
+---

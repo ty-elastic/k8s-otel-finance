@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: k8sotel
+    service: notifier
+  name: notifier
+  namespace: k8sotel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8sotel
+      service: notifier
+  template:
+    metadata:
+      annotations:
+        instrumentation.opentelemetry.io/inject-dotnet: "opentelemetry-operator-system/otel-instrumentation"
+      labels:
+        app: k8sotel
+        service: notifier
+    spec:
+      containers:
+        - name: notifier
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/notifier:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: k8sotel
+    service: notifier
+  name: notifier
+  namespace: k8sotel
+spec:
+  ports:
+    - name: notifier
+      port: 5000
+      targetPort: 5000
+  selector:
+    app: k8sotel
+    service: notifier
+---

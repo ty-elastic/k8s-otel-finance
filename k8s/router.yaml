@@ -1,0 +1,53 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: k8sotel
+    service: router
+  name: router
+  namespace: k8sotel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8sotel
+      service: router
+  template:
+    metadata:
+      annotations:
+        instrumentation.opentelemetry.io/inject-nodejs: "opentelemetry-operator-system/otel-instrumentation"
+      labels:
+        app: k8sotel
+        service: router
+    spec:
+      containers:
+        - env:
+            - name: RECORDER_HOST_1
+              value: recorder-java
+            - name: RECORDER_HOST_2
+              value: recorder-go-zero
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/router:latest
+          imagePullPolicy: Never
+          name: router
+          ports:
+            - containerPort: 9000
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: k8sotel
+    service: router
+  name: router
+  namespace: k8sotel
+spec:
+  ports:
+    - name: router
+      port: 9000
+      targetPort: 9000
+  selector:
+    app: k8sotel
+    service: router
+---
