@@ -21,7 +21,6 @@ func initLogrus() {
 	}})
 
 	logger.SetOutput(os.Stdout)
-
 	logger.SetLevel(log.InfoLevel)
 }
 
