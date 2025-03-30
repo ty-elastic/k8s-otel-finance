@@ -8,7 +8,7 @@ RUN pip3 install --root-user-action=ignore -r requirements.txt
 
 COPY app.py .
 
-ENV TRADER_HOST="trader"
+ENV TRADER_SERVICE="trader:9001"
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 9002

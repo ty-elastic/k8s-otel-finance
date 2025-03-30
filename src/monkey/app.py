@@ -52,7 +52,7 @@ def conform_request_bool(value):
 
 def generate_trade_request(*, customer_id, symbol, day_of_week, region, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, data_source):
     try:
-        trade_response = requests.post(f"http://{os.environ['TRADER_HOST']}:9001/trade/request", 
+        trade_response = requests.post(f"http://{os.environ['TRADER_SERVICE']}/trade/request", 
                                        params={'symbol': symbol, 
                                                'day_of_week': day_of_week, 
                                                'customer_id': customer_id, 
@@ -363,7 +363,7 @@ def canary_region_delete(region):
 
 def generate_trade_force(*, customer_id, day_of_week, region, symbol, action, shares, share_price, data_source, classification):
     try:
-        trade_response = requests.post(f"http://{os.environ['TRADER_HOST']}:9001/trade/force", 
+        trade_response = requests.post(f"http://{os.environ['TRADER_SERVICE']}/trade/force", 
                                        params={'symbol': symbol,
                                                'day_of_week': day_of_week, 
                                                'shares': shares, 
