@@ -6,7 +6,7 @@ metadata:
   namespace: k8sotel
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 100Mi
@@ -56,7 +56,7 @@ spec:
     spec:
       containers:
         - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/proxy
-          imagePullPolicy: Never
+          #imagePullPolicy: Never
           name: proxy
           ports:
             - containerPort: 80
