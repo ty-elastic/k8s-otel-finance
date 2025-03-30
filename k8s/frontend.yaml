@@ -60,7 +60,6 @@ spec:
           name: proxy
           ports:
             - containerPort: 80
-              protocol: TCP
           volumeMounts:
             - mountPath: /usr/share/nginx/html
               name: frontend-claim0
@@ -81,7 +80,7 @@ metadata:
 spec:
   ports:
     - name: proxy
-      port: 8080
+      port: 9090
       targetPort: 80
   type: LoadBalancer
   selector:
