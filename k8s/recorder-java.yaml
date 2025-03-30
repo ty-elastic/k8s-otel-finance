@@ -16,7 +16,7 @@ spec:
   template:
     metadata:
       annotations:
-        instrumentation.opentelemetry.io/inject-java: "opentelemetry-operator-system/otel-instrumentation"
+        instrumentation.opentelemetry.io/inject-java: "opentelemetry-operator-system/elastic-instrumentation"
       labels:
         app: k8sotel
         service: recorder-java
