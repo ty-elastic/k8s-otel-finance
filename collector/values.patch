@@ -1,5 +1,5 @@
---- values.yaml	2025-03-30 14:54:54
-+++ collector.yaml	2025-03-30 14:56:15
+--- values.yaml	2025-03-30 15:30:34
++++ collector.yaml	2025-03-30 15:29:58
 @@ -209,6 +209,35 @@
            tls:
              insecure: true
@@ -52,3 +52,9 @@
                - batch
                - resource/hostname
              exporters:
+@@ -937,4 +968,4 @@
+   python:
+     image: docker.elastic.co/observability/elastic-otel-python:0.3.0
+   go:
+-    image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.14.0-alpha
++    image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.21.0
