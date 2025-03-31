@@ -8,6 +8,6 @@ helm install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack \
   --values values.yaml \
   --version '0.3.3'
 
-sleep 10  # Waits 15 seconds.
+sleep 30  # Waits 15 seconds.
 
 kubectl rollout restart deployment -n k8sotel 

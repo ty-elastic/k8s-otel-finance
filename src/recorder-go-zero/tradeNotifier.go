@@ -26,9 +26,10 @@ func notify(context context.Context, trade *Trade) {
 	}
 
 	res, err := client.Do(req)
-	defer res.Body.Close()
 
 	if err != nil {
 		logger.WithContext(context).Warnf("notification error: %s", err)
+	} else {
+		res.Body.Close()
 	}
 }
