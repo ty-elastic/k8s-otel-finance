@@ -4,6 +4,9 @@ import type { Request, Response } from 'express';
 
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
+import { Logger } from "tslog";
+const logger = new Logger({ name: "router", type: "json" });
+
 const PORT: number = parseInt(process.env.PORT || '9000');
 const app: Express = express();
 
@@ -12,21 +15,25 @@ function getRandomBoolean() {
 }
 
 function customRouter(req: any) {
+  var host = "";
   if (req.query.service != null) {
-    return `http://${req.query.service}:9003`;
+    host = `http://${req.query.service}:9003`;
   }
   else {
     if (req.query.canary === 'true')
-      return `http://${process.env.RECORDER_HOST_CANARY}:9003`;
+      host = `http://${process.env.RECORDER_HOST_CANARY}:9003`;
     else {
       if (process.env.RECORDER_HOST_2 == null)
-        return `http://${process.env.RECORDER_HOST_1}:9003`;
+        host = `http://${process.env.RECORDER_HOST_1}:9003`;
       else if (getRandomBoolean())
-        return `http://${process.env.RECORDER_HOST_1}:9003`;
+        host = `http://${process.env.RECORDER_HOST_1}:9003`;
       else
-        return `http://${process.env.RECORDER_HOST_2}:9003`;
+        host = `http://${process.env.RECORDER_HOST_2}:9003`;
     }
   }
+
+  logger.info({ host: host }, `routing request`);
+  return host;
 };
 
 const proxyMiddleware = createProxyMiddleware<Request, Response>({
@@ -41,5 +48,5 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Listening for requests on http://localhost:${PORT}`);
+  logger.info(`Listening for requests on http://localhost:${PORT}`);
 });
