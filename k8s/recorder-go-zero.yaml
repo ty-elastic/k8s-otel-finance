@@ -16,8 +16,8 @@ spec:
   template:
     metadata:
       annotations:
-        instrumentation.opentelemetry.io/inject-go: "opentelemetry-operator-system/elastic-instrumentation"
-        instrumentation.opentelemetry.io/otel-go-auto-target-exe: "/recorder-zero"
+        # instrumentation.opentelemetry.io/inject-go: "opentelemetry-operator-system/elastic-instrumentation"
+        # instrumentation.opentelemetry.io/otel-go-auto-target-exe: "/recorder-zero"
       labels:
         app: k8sotel
         service: recorder-go-zero
