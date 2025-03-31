@@ -15,7 +15,7 @@
 +                  - set(cache, ParseJSON(body))
 +                  - flatten(cache, "")
 +                  - merge_maps(attributes, cache, "upsert")
-+                  - set(time, Time(attributes["timestamp"], "%Y-%m-%dT%H:%M:%S%j"))
++                  - set(time, Time(attributes["timestamp"], "%Y-%m-%dT%H:%M:%SZ"))
 +                  - set(severity_text, "TRACE") where attributes["level"] == "trace"
 +                  - set(severity_number, 1) where attributes["level"] == "trace"
 +                  - set(severity_text, "DEBUG") where attributes["level"] == "debug"

@@ -27,7 +27,8 @@ spec:
               value: password
             - name: POSTGRES_USER
               value: admin
-          image: postgres
+          image:  us-central1-docker.pkg.dev/elastic-sa/tbekiares/postgres:v1
+          #imagePullPolicy: Never
           name: postgresql
           ports:
             - containerPort: 5432
