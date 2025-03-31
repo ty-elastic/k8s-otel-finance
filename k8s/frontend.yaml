@@ -20,7 +20,7 @@ spec:
   template:
     spec:
       containers:
-        - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/frontend:v1
+        - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/frontend:latest
           #imagePullPolicy: Never
           name: frontend
           volumeMounts:
@@ -55,7 +55,7 @@ spec:
         service: proxy
     spec:
       containers:
-        - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/proxy:v1
+        - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/proxy:latest
           #imagePullPolicy: Never
           name: proxy
           ports:

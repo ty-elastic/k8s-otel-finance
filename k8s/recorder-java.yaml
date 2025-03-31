@@ -29,7 +29,7 @@ spec:
               value: password
             - name: POSTGRES_USER
               value: admin
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/recorder-java:v1
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/recorder-java:latest
           #imagePullPolicy: Never
           name: recorder-java
           ports:

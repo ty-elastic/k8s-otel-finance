@@ -29,7 +29,7 @@ spec:
               value: recorder-go-zero
             - name: RECORDER_HOST_CANARY
               value: recorder-go-zero
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/router:v1
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/router:latest
           #imagePullPolicy: Never
           name: router
           ports:
