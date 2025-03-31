@@ -1,6 +1,6 @@
---- values.yaml	2025-03-30 15:30:34
-+++ collector.yaml	2025-03-30 15:29:58
-@@ -209,6 +209,35 @@
+--- values.yaml	2025-03-31 14:32:17
++++ collector.yaml	2025-03-31 14:32:00
+@@ -209,6 +209,29 @@
            tls:
              insecure: true
        processors:
@@ -15,28 +15,22 @@
 +                  - set(cache, ParseJSON(body))
 +                  - flatten(cache, "")
 +                  - merge_maps(attributes, cache, "upsert")
-+                  - set(time, Time(attributes["timestamp"], "%Y-%m-%dT%H:%M:%SZ"))
-+                  - set(severity_text, "TRACE") where attributes["level"] == "trace"
-+                  - set(severity_number, 1) where attributes["level"] == "trace"
-+                  - set(severity_text, "DEBUG") where attributes["level"] == "debug"
-+                  - set(severity_number, 5) where attributes["level"] == "debug"
-+                  - set(severity_text, "INFO") where attributes["level"] == "info"
-+                  - set(severity_number, 9) where attributes["level"] == "info"
-+                  - set(severity_text, "WARN") where attributes["level"] == "warn"
-+                  - set(severity_number, 13) where attributes["level"] == "warn"
-+                  - set(severity_text, "ERROR") where attributes["level"] == "error"
-+                  - set(severity_number, 17) where attributes["level"] == "error"
-+                  - set(severity_text, "FATAL") where attributes["level"] == "fatal"
-+                  - set(severity_number, 21) where attributes["level"] == "fatal"
-+                  - set(body, attributes["message"])
-+                  - delete_key(log.attributes, "message")
-+                  - delete_key(log.attributes, "timestamp")
-+                  - delete_key(log.attributes, "level")
++
++                  - set(time, Time(attributes["_meta.date"], "%Y-%m-%dT%H:%M:%SZ"))
++                  - delete_key(log.attributes, "_meta.date")
++
++                  - set(severity_text, attributes["_meta.logLevelName"])
++                  - set(severity_number, attributes["_meta.logLevelId"])
++                  - delete_key(log.attributes, "_meta.logLevelName")
++                  - delete_key(log.attributes, "_meta.logLevelId")
++
++                  - set(body, attributes["0"])
++                  - delete_key(log.attributes, "0")
 +
          # [Batch Processor](https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor/batchprocessor)
          batch: {}
          # [Resource Detection Processor](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/resourcedetectionprocessor)
-@@ -466,6 +495,7 @@
+@@ -466,6 +489,7 @@
              receivers:
                - filelog
              processors:
@@ -44,7 +38,7 @@
                - batch
                - k8sattributes
                - resourcedetection/system
-@@ -506,6 +536,7 @@
+@@ -506,6 +530,7 @@
              receivers:
                - otlp
              processors:
@@ -52,9 +46,3 @@
                - batch
                - resource/hostname
              exporters:
-@@ -937,4 +968,4 @@
-   python:
-     image: docker.elastic.co/observability/elastic-otel-python:0.3.0
-   go:
--    image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.14.0-alpha
-+    image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.21.0

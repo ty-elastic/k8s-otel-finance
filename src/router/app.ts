@@ -32,7 +32,7 @@ function customRouter(req: any) {
     }
   }
 
-  logger.info({ host: host }, `routing request`);
+  logger.info(`routing request to ${host}`);
   return host;
 };
 
