@@ -29,7 +29,7 @@ spec:
             - containerPort: 9002
           env:
             - name: TRADER_SERVICE
-              value: proxy:9090
+              value: proxy:9090/trader
       restartPolicy: Always
 ---
 apiVersion: v1
