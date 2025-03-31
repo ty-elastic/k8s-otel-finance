@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: notifier
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/notifier:latest
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/notifier:v1
           #imagePullPolicy: Never
           ports:
             - containerPort: 5000

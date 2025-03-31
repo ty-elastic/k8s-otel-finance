@@ -27,7 +27,7 @@ spec:
               value: password
             - name: POSTGRES_USER
               value: admin
-          image: postgres:latest
+          image: postgres:v1
           name: postgresql
           ports:
             - containerPort: 5432

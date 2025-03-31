@@ -22,14 +22,14 @@ spec:
         service: monkey
     spec:
       containers:
-        - env:
-            - name: TRADER_SERVICE
-              value: proxy:9090
         - name: monkey
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/monkey:latest
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/monkey:v1
           #imagePullPolicy: Never
           ports:
             - containerPort: 9002
+          env:
+            - name: TRADER_SERVICE
+              value: proxy:9090
       restartPolicy: Always
 ---
 apiVersion: v1
