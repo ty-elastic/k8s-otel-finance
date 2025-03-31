@@ -1,6 +1,6 @@
 module example.com/m/v2
 
-go 1.24.1
+go 1.23.1
 
 require (
 	github.com/gin-gonic/gin v1.10.0
