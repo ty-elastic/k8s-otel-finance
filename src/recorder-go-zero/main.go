@@ -2,14 +2,12 @@ package main
 
 import (
 	"os"
-	"sync"
 
 	log "github.com/sirupsen/logrus"
 )
 
 var (
-	logger            *log.Logger
-	initResourcesOnce sync.Once
+	logger *log.Logger
 )
 
 func initLogrus() {
@@ -31,5 +29,8 @@ func main() {
 	tradeService, _ := NewTradeService()
 	tradeController, _ := NewTradeController(tradeService)
 
-	tradeController.Run()
+	err := tradeController.Run()
+	if err != nil {
+		logger.Warn(err)
+	}
 }

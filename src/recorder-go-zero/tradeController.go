@@ -1,52 +1,72 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
 type TradeController struct {
-	gin          *gin.Engine
+	mux          *http.ServeMux
 	tradeService *TradeService
 }
 
 func NewTradeController(tradeService *TradeService) (*TradeController, error) {
 	c := TradeController{tradeService: tradeService}
-	c.gin = gin.Default()
+	c.mux = http.NewServeMux()
 
-	c.gin.POST("/record", c.record)
-	c.gin.GET("/health", c.health)
+	c.mux.HandleFunc("/record", c.record)
+	c.mux.HandleFunc("/health", c.health)
 
 	return &c, nil
 }
 
-func (c *TradeController) health(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"message": "KERNEL OK"})
+type ResponseData struct {
+	Message string `json:"message"`
 }
 
-func (c *TradeController) record(ctx *gin.Context) {
-	customerId := ctx.Query("customer_id")
-	tradeId := ctx.Query("trade_id")
-	symbol := ctx.Query("symbol")
-	shares, _ := strconv.ParseInt(ctx.Query("shares"), 10, 32)
-	sharePrice, _ := strconv.ParseFloat(ctx.Query("share_price"), 32)
-	action := ctx.Query("action")
+func (c *TradeController) health(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	data := ResponseData{
+		Message: "KERNEL OK",
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data)
+}
+
+func (c *TradeController) record(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	query := req.URL.Query()
+
+	customerId := query.Get("customer_id")
+	tradeId := query.Get("trade_id")
+	symbol := query.Get("symbol")
+	shares, _ := strconv.ParseInt(query.Get("shares"), 10, 32)
+	sharePrice, _ := strconv.ParseFloat(query.Get("share_price"), 32)
+	action := query.Get("action")
 
 	trade := Trade{CustomerId: customerId, TradeId: tradeId, Symbol: symbol, Shares: shares, SharePrice: sharePrice, Action: action}
 
-	res, err := c.tradeService.RecordTrade(ctx.Request.Context(), &trade)
+	res, err := c.tradeService.RecordTrade(ctx, &trade)
 
-	notify(ctx.Request.Context(), &trade)
+	notify(ctx, &trade)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err.Error())
 	} else {
-		ctx.JSON(http.StatusOK, res)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(res)
 	}
 }
 
-func (c *TradeController) Run() {
-	c.gin.Run("0.0.0.0:9003")
+func (c *TradeController) Run() error {
+
+	err := http.ListenAndServe("0.0.0.0:9003", c.mux)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
