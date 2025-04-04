@@ -52,12 +52,19 @@ func (c *TradeController) record(w http.ResponseWriter, req *http.Request) {
 
 	notify(ctx, &trade)
 
+	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
+		data := ResponseData{
+			Message: err.Error(),
+		}
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(err.Error())
+		json.NewEncoder(w).Encode(data)
 	} else {
+		data := ResponseData{
+			Message: res.Action,
+		}
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(res)
+		json.NewEncoder(w).Encode(data)
 	}
 }
 

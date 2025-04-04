@@ -1,15 +1,11 @@
-FROM golang:1.23.1-alpine AS builder
+FROM golang:1.22.5
 WORKDIR /usr/src/app/
 
 COPY go.* ./
 COPY *.go ./
-RUN go build -o /go/bin/recorder-zero
-
-# -----------------------------------------------------------------------------
-
-FROM alpine
-
-COPY --from=builder /go/bin/recorder-zero /recorder-zero
+#RUN go mod init main
+#RUN go mod tidy
+RUN go build -o /recorder-zero
 
 EXPOSE 9003
 ENTRYPOINT [ "/recorder-zero" ]
