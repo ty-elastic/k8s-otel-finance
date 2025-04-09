@@ -2,12 +2,4 @@ curl -o values.yaml https://raw.githubusercontent.com/elastic/elastic-agent/refs
 
 patch -u values.yaml -i values.patch
 
-helm uninstall opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack --namespace opentelemetry-operator-system
-helm install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack \
-  --namespace opentelemetry-operator-system \
-  --values values.yaml \
-  --version '0.3.3'
-
-sleep 30  # Waits 15 seconds.
-
-kubectl rollout restart deployment -n k8sotel 
+helm upgrade -f values.yaml opentelemetry-kube-stack  open-telemetry/opentelemetry-kube-stack --namespace opentelemetry-operator-system
