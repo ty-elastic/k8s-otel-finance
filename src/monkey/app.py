@@ -190,7 +190,7 @@ def reset_market():
     skew_market_factor_per_symbol = {}
     
     app.logger.info(f"market reset")
-    return None
+    return "OK"
 
 @app.post('/reset/error')
 def reset_error():
@@ -205,7 +205,7 @@ def reset_error():
     db_error_per_customer = {}
 
     app.logger.info(f"error reset")
-    return None
+    return "OK"
 
 @app.post('/reset/test')
 def test_error():
@@ -214,7 +214,7 @@ def test_error():
     canary_per_region = {}
     
     app.logger.info(f"test reset")
-    return None
+    return "OK"
 
 @app.get('/state')
 def get_state():
@@ -380,8 +380,8 @@ def generate_trade_force(*, customer_id, day_of_week, region, symbol, action, sh
         print(inst)
 
 def generate_trades(*, fixed_day_of_week=None, fixed_region = None, fixed_symbol = None,
-                    fixed_action = None, fixed_shares_min = None, fixed_shares_max = None, 
-                    fixed_share_price_min = None, fixed_share_price_max = None, classification):
+                    fixed_action = None, fixed_shares_min = None, fixed_shares_max = None,
+                    fixed_share_price_min = None, fixed_share_price_max = None, classification, data_source):
 
     if fixed_day_of_week is None:
         idx_of_week = 0
@@ -418,11 +418,11 @@ def generate_trades(*, fixed_day_of_week=None, fixed_region = None, fixed_symbol
         if fixed_share_price_min is not None and share_price >= fixed_share_price_min and share_price <= fixed_share_price_max:
             trade_classification = classification
 
-        app.logger.info(f"training {symbol} for {customer_id} on {DAYS_OF_WEEK[idx_of_week]} from {region}, classification {trade_classification}")
+        app.logger.info(f"training {symbol} for {customer_id} on {DAYS_OF_WEEK[idx_of_week]} from {region}, classification {trade_classification}, data_source {data_source}")
 
         generate_trade_force(symbol=symbol, day_of_week=DAYS_OF_WEEK[idx_of_week], region=region, customer_id=customer_id,
                              action=action, shares=shares, share_price=share_price, classification=trade_classification,
-                             data_source='training')
+                             data_source=data_source)
 
         sleep = float(random.randint(1, 10) / 1000)
         time.sleep(sleep)
@@ -438,13 +438,15 @@ def train_label(classification):
     shares_max = request.args.get('shares_max', default=None, type=int)
     share_price_min = request.args.get('share_price_min', default=None, type=float)
     share_price_max = request.args.get('share_price_max', default=None, type=float)
+
+    data_source = request.args.get('data_source', default='training', type=str)
     
     generate_trades(fixed_day_of_week=day_of_week, fixed_region = region, fixed_symbol = symbol,
                     fixed_action = action, fixed_shares_min = shares_min, fixed_shares_max = shares_max, 
                     fixed_share_price_min=share_price_min, fixed_share_price_max=share_price_max, 
-                    classification=classification)
+                    classification=classification, data_source=data_source)
     
-    return None
+    return "OK"
 
 
 # wait 10s before starting

@@ -23,7 +23,8 @@ class Train extends React.Component {
             action: '',
             shares: [-1, -1],
             share_price: [-1, -1],
-            classification: 'fraud'
+            classification: 'fraud',
+            data_source: 'training'
         };
 
         this.handleInputChange = this.handleInputChange.bind(this);
@@ -46,16 +47,16 @@ class Train extends React.Component {
         try {
             let params = {}
 
-            if (this.state.dayOfWeek !== '') {
+            if (this.state.day_of_week.length > 0) {
                 params.day_of_week = this.state.day_of_week
             }
-            if (this.state.region !== '') {
+            if (this.state.region.length > 0) {
                 params.region = this.state.region
             }
-            if (this.state.symbol !== '') {
+            if (this.state.symbol.length > 0) {
                 params.symbol = this.state.symbol
             }
-            if (this.state.action !== '') {
+            if (this.state.action.length > 0) {
                 params.action = this.state.action
             }
             if (this.state.shares[0] !== -1) {
@@ -69,6 +70,9 @@ class Train extends React.Component {
             }
             if (this.state.share_price[1] !== -1) {
                 params.share_price_max = this.state.share_price[1]
+            }
+            if (this.state.data_source.length > 0) {
+                params.data_source = this.state.data_source
             }
 
             await axios.post(`/monkey/train/${this.state.classification}`, null, {
@@ -87,11 +91,13 @@ class Train extends React.Component {
                         <InputLabel id="label_dow">Day of Week</InputLabel>
                         <Select
                             labelId="label_dow"
+                            displayEmpty
                             name="day_of_week"
                             value={this.state.day_of_week}
                             label="Day of Week"
                             onChange={this.handleInputChange}
                         >
+                            <MenuItem value=''>Any</MenuItem>
                             <MenuItem value="M">Monday</MenuItem>
                             <MenuItem value="Tu">Tuesday</MenuItem>
                             <MenuItem value="W">Wednesday</MenuItem>
@@ -103,11 +109,13 @@ class Train extends React.Component {
                         <InputLabel id="label_region">Region</InputLabel>
                         <Select
                             labelId="label_region"
+                            displayEmpty
                             name="region"
                             value={this.state.region}
                             label="Region"
                             onChange={this.handleInputChange}
                         >
+                            <MenuItem value=''>Any</MenuItem>
                             <MenuItem value="EMEA">EMEA</MenuItem>
                             <MenuItem value="EU">EU</MenuItem>
                             <MenuItem value="LATAM">LATAM</MenuItem>
@@ -125,11 +133,13 @@ class Train extends React.Component {
                         <InputLabel id="label_action">Action</InputLabel>
                         <Select
                             labelId="label_action"
+                            displayEmpty
                             name="action"
                             value={this.state.action}
                             label="Action"
                             onChange={this.handleInputChange}
                         >
+                            <MenuItem value=''>Any</MenuItem>
                             <MenuItem value="buy">Buy</MenuItem>
                             <MenuItem value="sell">Sell</MenuItem>
                             <MenuItem value="hold">Hold</MenuItem>
@@ -171,7 +181,14 @@ class Train extends React.Component {
                         name="classification"
                         value={this.state.classification}
                         onChange={this.handleInputChange}
-                        label="Symbol"
+                        label="Classification"
+                    />
+                    <TextField
+                        id="outlined-error"
+                        name="data_source"
+                        value={this.state.data_source}
+                        onChange={this.handleInputChange}
+                        label="Data Source"
                     />
                     <Box width="100%"><Button variant="contained" data-transaction-name="Train" type="submit">Submit</Button></Box>
                 </Grid>

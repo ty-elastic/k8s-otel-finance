@@ -6,6 +6,9 @@ WORKDIR /python-docker
 COPY requirements.txt .
 RUN pip3 install --root-user-action=ignore -r requirements.txt
 
+RUN edot-bootstrap --action=install
+RUN pip3 uninstall -y opentelemetry-instrumentation-click
+
 COPY app.py .
 COPY model.py .
 
