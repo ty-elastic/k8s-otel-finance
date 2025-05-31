@@ -1,11 +1,8 @@
 import * as React from 'react';
 import axios from "axios";
 
-import MonkeyState from './MonkeyState'
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
+import { CircularProgress } from '@mui/material';
+import Autocomplete from '@mui/material/Autocomplete';
 import Grid from '@mui/material/Grid2';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
@@ -14,17 +11,42 @@ import Slider from '@mui/material/Slider';
 import Box from '@mui/material/Box';
 
 class Train extends React.Component {
+
     constructor(props) {
         super(props);
+
+        this.options = {}
+        this.options.day_of_week = [
+            { value: 'M', label: 'Monday' },
+            { value: 'Tu', label: 'Tuesday' },
+            { value: 'W', label: 'Wednesday' },
+            { value: 'Th', label: 'Thursday' },
+            { value: 'F', label: 'Friday' },
+        ];
+
+        this.options.region = [
+            { value: 'EMEA', label: 'EMEA' },
+            { value: 'EU', label: 'EU' },
+            { value: 'LATAM', label: 'LATAM' },
+            { value: 'NA', label: 'NA' }
+        ];
+
+        this.options.action = [
+            { value: 'Buy', label: 'Buy' },
+            { value: 'Sell', label: 'Sell' },
+            { value: 'Hold', label: 'Hold' }
+        ];
+
         this.state = {
-            day_of_week: '',
-            region: '',
+            day_of_week: this.options.day_of_week,
+            region: this.options.region,
             symbol: '',
-            action: '',
+            action: this.options.action,
             shares: [-1, -1],
             share_price: [-1, -1],
             classification: 'fraud',
-            data_source: 'training'
+            data_source: 'training',
+            loading: false
         };
 
         this.handleInputChange = this.handleInputChange.bind(this);
@@ -48,16 +70,16 @@ class Train extends React.Component {
             let params = {}
 
             if (this.state.day_of_week.length > 0) {
-                params.day_of_week = this.state.day_of_week
+                params.day_of_week = this.state.day_of_week.map(item => item.value)
             }
             if (this.state.region.length > 0) {
-                params.region = this.state.region
+                params.region = this.state.region.map(item => item.value)
             }
             if (this.state.symbol.length > 0) {
                 params.symbol = this.state.symbol
             }
             if (this.state.action.length > 0) {
-                params.action = this.state.action
+                params.action = this.state.action.map(item => item.value)
             }
             if (this.state.shares[0] !== -1) {
                 params.shares_min = this.state.shares[0]
@@ -75,9 +97,11 @@ class Train extends React.Component {
                 params.data_source = this.state.data_source
             }
 
-            await axios.post(`/monkey/train/${this.state.classification}`, null, {
-                params: params
-            });
+            console.log(params)
+
+            this.setState({['loading']: true});
+            await axios.post(`/monkey/train/${this.state.classification}`, params)
+            this.setState({['loading']: false});
         } catch (err) {
             console.log(err.message)
         }
@@ -87,41 +111,36 @@ class Train extends React.Component {
         return (
             <form onSubmit={this.handleSubmit}>
                 <Grid container spacing={2}>
-                    <FormControl>
-                        <InputLabel id="label_dow">Day of Week</InputLabel>
-                        <Select
-                            labelId="label_dow"
-                            displayEmpty
-                            name="day_of_week"
-                            value={this.state.day_of_week}
+
+                    <Autocomplete
+                        multiple
+                        options={this.options.day_of_week}
+                        name="day_of_week"
+                        value={this.state.day_of_week}
+                        onChange={(event, newValue) => {this.setState({['day_of_week']: newValue})}}
+                        renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            variant="standard"
                             label="Day of Week"
-                            onChange={this.handleInputChange}
-                        >
-                            <MenuItem value=''>Any</MenuItem>
-                            <MenuItem value="M">Monday</MenuItem>
-                            <MenuItem value="Tu">Tuesday</MenuItem>
-                            <MenuItem value="W">Wednesday</MenuItem>
-                            <MenuItem value="Th">Thursday</MenuItem>
-                            <MenuItem value="F">Friday</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <FormControl>
-                        <InputLabel id="label_region">Region</InputLabel>
-                        <Select
-                            labelId="label_region"
-                            displayEmpty
-                            name="region"
-                            value={this.state.region}
+                        />
+                        )}
+                    />
+                    <Autocomplete
+                        multiple
+                        options={this.options.region}
+                        name="region"
+                        value={this.state.region}
+                        onChange={(event, newValue) => {this.setState({['region']: newValue});}}
+                        renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            variant="standard"
                             label="Region"
-                            onChange={this.handleInputChange}
-                        >
-                            <MenuItem value=''>Any</MenuItem>
-                            <MenuItem value="EMEA">EMEA</MenuItem>
-                            <MenuItem value="EU">EU</MenuItem>
-                            <MenuItem value="LATAM">LATAM</MenuItem>
-                            <MenuItem value="NA">NA</MenuItem>
-                        </Select>
-                    </FormControl>
+                        />
+                        )}
+                    />
+
                     <TextField
                         id="outlined-error"
                         name="symbol"
@@ -129,22 +148,22 @@ class Train extends React.Component {
                         onChange={this.handleInputChange}
                         label="Symbol"
                     />
-                    <FormControl>
-                        <InputLabel id="label_action">Action</InputLabel>
-                        <Select
-                            labelId="label_action"
-                            displayEmpty
-                            name="action"
-                            value={this.state.action}
+
+                    <Autocomplete
+                        multiple
+                        options={this.options.action}
+                        name="action"
+                        value={this.state.action}
+                        onChange={(event, newValue) => {this.setState({['action']: newValue});}}
+                        renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            variant="standard"
                             label="Action"
-                            onChange={this.handleInputChange}
-                        >
-                            <MenuItem value=''>Any</MenuItem>
-                            <MenuItem value="buy">Buy</MenuItem>
-                            <MenuItem value="sell">Sell</MenuItem>
-                            <MenuItem value="hold">Hold</MenuItem>
-                        </Select>
-                    </FormControl>
+                        />
+                        )}
+                    />
+
 
                     <Grid size={4}>
                         <Typography gutterBottom>Shares</Typography>
@@ -190,7 +209,15 @@ class Train extends React.Component {
                         onChange={this.handleInputChange}
                         label="Data Source"
                     />
-                    <Box width="100%"><Button variant="contained" data-transaction-name="Train" type="submit">Submit</Button></Box>
+
+                    <div>
+                        {this.state.loading ? (
+                        <CircularProgress />
+                        ) : (
+                        <Box width="100%"><Button variant="contained" data-transaction-name="Train" type="submit">Submit</Button></Box>
+                        )}
+                    </div>
+
                 </Grid>
             </form >
 

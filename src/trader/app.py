@@ -9,6 +9,7 @@ import math
 import requests
 
 from opentelemetry import trace, baggage, context, metrics
+from opentelemetry.processor.baggage import BaggageSpanProcessor, ALLOW_ALL_BAGGAGE_KEYS
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader,
@@ -24,6 +25,7 @@ app.logger.setLevel(logging.INFO)
 import model
 
 def init_otel():
+    trace.get_tracer_provider().add_span_processor(BaggageSpanProcessor(ALLOW_ALL_BAGGAGE_KEYS))
     tracer = trace.get_tracer(__name__)
 
     metrics_provider = MeterProvider(metric_readers=[PeriodicExportingMetricReader(OTLPMetricExporter(), export_interval_millis=5000)])  # Export every 5 seconds
