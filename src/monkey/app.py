@@ -21,7 +21,7 @@ ERROR_TIMEOUT_S = 60
 CONCURRENT_TRADE_REQUESTS = 10
 
 DAYS_OF_WEEK = ['M', 'Tu', 'W', 'Th', 'F']
-ACTIONS = ['buy', 'sell', 'hold']
+ACTIONS = ['Buy', 'Sell', 'Hold']
 
 CUSTOMERS_PER_REGION = {
     'NA': ['b.smith', 'l.johnson'],
@@ -387,25 +387,25 @@ def generate_trades(*, fixed_day_of_week=None, fixed_region = None, fixed_symbol
 
     for x in range(0, TRAINING_TRADE_COUNT):
         
-        trade_classification = "unclassified"
-        
+        trade_classification = None
+
         day_of_week = random.choice(DAYS_OF_WEEK)
         if fixed_day_of_week is not None:
-            if day_of_week in fixed_day_of_week:
+            if day_of_week in fixed_day_of_week and (trade_classification is None or trade_classification == classification):
                 trade_classification = classification
             else:
                 trade_classification = "unclassified"
-
+ 
         region = random.choice(list(CUSTOMERS_PER_REGION.keys()))
         if fixed_region is not None:
-            if region in fixed_region:
+            if region in fixed_region and (trade_classification is None or trade_classification == classification):
                 trade_classification = classification
             else:
                 trade_classification = "unclassified"
 
         symbol = random.choice(SYMBOLS)
         if fixed_symbol is not None:
-            if fixed_symbol == symbol:
+            if fixed_symbol == symbol and (trade_classification is None or trade_classification == classification):
                 trade_classification = classification
             else:
                 trade_classification = "unclassified"
@@ -414,24 +414,27 @@ def generate_trades(*, fixed_day_of_week=None, fixed_region = None, fixed_symbol
         
         action = random.choice(ACTIONS)
         if fixed_action is not None:
-            if action in fixed_action:
+            if action in fixed_action and (trade_classification is None or trade_classification == classification):
                 trade_classification = classification
             else:
                 trade_classification = "unclassified"
 
         shares = random.randint(1, 100)
         if fixed_shares_min is not None:
-            if shares >= fixed_shares_min and shares <= fixed_shares_max:
+            if (shares >= fixed_shares_min and shares <= fixed_shares_max) and (trade_classification is None or trade_classification == classification):
                 trade_classification = classification
             else:
                 trade_classification = "unclassified"
 
         share_price = random.randint(1, 1000)
         if fixed_share_price_min is not None:
-            if share_price >= fixed_share_price_min and share_price <= fixed_share_price_max:
+            if (share_price >= fixed_share_price_min and share_price <= fixed_share_price_max) and (trade_classification is None or trade_classification == classification):
                 trade_classification = classification
             else:
                 trade_classification = "unclassified"
+
+        if trade_classification is None:
+            trade_classification = "unclassified"
 
         app.logger.info(f"training {symbol} for {customer_id} on {day_of_week} from {region}, classification {trade_classification}, data_source {data_source}")
 
@@ -445,7 +448,6 @@ def generate_trades(*, fixed_day_of_week=None, fixed_region = None, fixed_symbol
 @app.post('/train/<classification>')
 def train_label(classification):
 
-    app.logger.warn('---------------')
     content_type = request.headers.get('Content-Type')
     app.logger.warn(f"Content-Type: {content_type}")
     body = request.get_json()
