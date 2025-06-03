@@ -16,6 +16,15 @@ tabs:
   hostname: host-1
   path: /#/train
   port: 9090
+- id: grqljfnk8gzv
+  title: Terminal (host-1)
+  type: terminal
+  hostname: host-1
+  workdir: /workspace/workshop
+- id: cfmasc9oibxh
+  title: Terminal (kubernetes-vm)
+  type: terminal
+  hostname: kubernetes-vm
 difficulty: ""
 timelimit: 0
 enhanced_loading: null
