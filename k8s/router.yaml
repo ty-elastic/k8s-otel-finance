@@ -3,22 +3,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: k8sotel
+    app: trading
     service: router
   name: router
-  namespace: k8sotel
+  namespace: trading
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: k8sotel
+      app: trading
       service: router
   template:
     metadata:
       annotations:
         instrumentation.opentelemetry.io/inject-nodejs: "opentelemetry-operator-system/elastic-instrumentation"
       labels:
-        app: k8sotel
+        app: trading
         service: router
     spec:
       containers:
@@ -27,7 +27,7 @@ spec:
               value: recorder-java
             - name: RECORDER_HOST_CANARY
               value: recorder-go-zero
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/router:latest
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/router:$BUILD_TAG
           #imagePullPolicy: Never
           name: router
           ports:
@@ -38,16 +38,16 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: k8sotel
+    app: trading
     service: router
   name: router
-  namespace: k8sotel
+  namespace: trading
 spec:
   ports:
     - name: router
       port: 9000
       targetPort: 9000
   selector:
-    app: k8sotel
+    app: trading
     service: router
 ---

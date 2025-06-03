@@ -3,20 +3,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: k8sotel
+    app: trading
     service: kafka
   name: kafka
-  namespace: k8sotel
+  namespace: trading
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: k8sotel
+      app: trading
       service: kafka
   template:
     metadata:
       labels:
-        app: k8sotel
+        app: trading
         service: kafka
     spec:
       containers:
@@ -39,7 +39,7 @@ spec:
               value: "1"
             - name: KAFKA_PROCESS_ROLES
               value: broker,controller
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/kafka:latest
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/kafka:$BUILD_TAG
           #imagePullPolicy: Never
           name: kafka
           ports:
@@ -51,10 +51,10 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: k8sotel
+    app: trading
     service: kafka
   name: kafka
-  namespace: k8sotel
+  namespace: trading
 spec:
   ports:
     - name: kafka
@@ -62,6 +62,6 @@ spec:
       targetPort: 9093
       protocol: TCP
   selector:
-    app: k8sotel
+    app: trading
     service: kafka
 ---

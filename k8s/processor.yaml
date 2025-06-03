@@ -3,22 +3,22 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: k8sotel
+    app: trading
     service: processor
   name: processor
-  namespace: k8sotel
+  namespace: trading
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: k8sotel
+      app: trading
       service: processor
   template:
     metadata:
       annotations:
         instrumentation.opentelemetry.io/inject-java: "opentelemetry-operator-system/elastic-instrumentation"
       labels:
-        app: k8sotel
+        app: trading
         service: processor
     spec:
       containers:
@@ -29,7 +29,7 @@ spec:
               value: processor
             - name: IN_TOPIC
               value: notifications_q
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/processor:latest
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/processor:$BUILD_TAG
           #imagePullPolicy: Never
           name: processor
       restartPolicy: Always

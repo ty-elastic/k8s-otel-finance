@@ -7,5 +7,5 @@
 -      annotations:
 -        instrumentation.opentelemetry.io/inject-nodejs: "opentelemetry-operator-system/elastic-instrumentation"
        labels:
-         app: k8sotel
+         app: trading
          service: router

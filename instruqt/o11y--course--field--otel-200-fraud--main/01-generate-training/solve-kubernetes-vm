@@ -1,0 +1,31 @@
+export $(curl http://kubernetes-vm:9000/env | xargs)
+
+echo "create alias"
+echo ""
+curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_aliases" -d '
+{
+  "actions": [
+    {
+      "add": {
+        "index": "traces-*",
+        "alias": "traces-trader",
+        "filter": {
+          "bool": {
+            "must": [
+              {
+                "term": {
+                  "service.name": "trader"
+                }
+              },
+              {
+                "exists": {
+                  "field": "attributes.com.example.shares"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}'
