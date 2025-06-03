@@ -9,6 +9,9 @@ import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Slider from '@mui/material/Slider';
 import Box from '@mui/material/Box';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 
 class Train extends React.Component {
 
@@ -32,9 +35,9 @@ class Train extends React.Component {
         ];
 
         this.options.action = [
-            { value: 'Buy', label: 'Buy' },
-            { value: 'Sell', label: 'Sell' },
-            { value: 'Hold', label: 'Hold' }
+            { value: 'buy', label: 'Buy' },
+            { value: 'sell', label: 'Sell' },
+            { value: 'hold', label: 'Hold' }
         ];
 
         this.state = {
@@ -42,11 +45,13 @@ class Train extends React.Component {
             region: this.options.region,
             symbol: '',
             action: this.options.action,
-            shares: [-1, -1],
-            share_price: [-1, -1],
+            shares: [10, 700],
+            share_price: [50, 75],
             classification: 'fraud',
             data_source: 'training',
-            loading: false
+            loading: false,
+            shares_enabled: false,
+            share_price_enabled: false
         };
 
         this.handleInputChange = this.handleInputChange.bind(this);
@@ -81,22 +86,19 @@ class Train extends React.Component {
             if (this.state.action.length > 0) {
                 params.action = this.state.action.map(item => item.value)
             }
-            if (this.state.shares[0] !== -1) {
+            if (this.state.shares_enabled == true) {
                 params.shares_min = this.state.shares[0]
-            }
-            if (this.state.shares[1] !== -1) {
                 params.shares_max = this.state.shares[1]
             }
-            if (this.state.share_price[0] !== -1) {
+            if (this.state.share_price_enabled == true) {
                 params.share_price_min = this.state.share_price[0]
-            }
-            if (this.state.share_price[1] !== -1) {
                 params.share_price_max = this.state.share_price[1]
             }
             if (this.state.data_source.length > 0) {
                 params.data_source = this.state.data_source
             }
 
+            console.log(this.state)
             console.log(params)
 
             this.setState({['loading']: true});
@@ -164,37 +166,52 @@ class Train extends React.Component {
                         )}
                     />
 
+                    <Grid size={4}>
+                        <FormGroup>
+                            <FormControlLabel control={<Checkbox
+                                name='shares_enabled'
+                                checked={this.state.shares_enabled}
+                                onChange={this.handleInputChange}
+                                inputProps={{ 'aria-label': 'controlled' }}
+                            />} label="Shares" />
+                            <Slider onChange={this.handleInputChange}
+                                name="shares"
+                                getAriaValueText={() => this.state.shares}
+                                valueLabelDisplay="on"
+                                shiftStep={30}
+                                step={10}
+                                marks
+                                min={0}
+                                max={1000}
+                                value={this.state.shares}
+                                disabled={!this.state.shares_enabled}
+                            />
+                        </FormGroup>
+                    </Grid>
 
                     <Grid size={4}>
-                        <Typography gutterBottom>Shares</Typography>
-                        <Slider onChange={this.handleInputChange}
-                            name="shares"
-                            getAriaLabel={() => "Amount"}
-                            getAriaValueText={() => this.state.shares}
-                            valueLabelDisplay="on"
-                            shiftStep={30}
-                            step={10}
-                            marks
-                            min={-1}
-                            max={1000}
-                            value={this.state.shares}
-                        />
+                        <FormGroup>
+                            <FormControlLabel control={<Checkbox
+                                name='share_price_enabled'
+                                checked={this.state.share_price_enabled}
+                                onChange={this.handleInputChange}
+                                inputProps={{ 'aria-label': 'controlled' }}
+                            />} label="Share Price" />
+                            <Slider onChange={this.handleInputChange}
+                                name="shares"
+                                getAriaValueText={() => this.state.share_price}
+                                valueLabelDisplay="on"
+                                shiftStep={30}
+                                step={10}
+                                marks
+                                min={0}
+                                max={100}
+                                value={this.state.share_price}
+                                disabled={!this.state.share_price_enabled}
+                            />
+                        </FormGroup>
                     </Grid>
-                    <Grid size={4}>
-                        <Typography gutterBottom>Share Price</Typography>
-                        <Slider onChange={this.handleInputChange}
-                            name="share_price"
-                            getAriaLabel={() => "Price"}
-                            getAriaValueText={() => this.state.share_price}
-                            valueLabelDisplay="on"
-                            shiftStep={30}
-                            step={1}
-                            marks
-                            min={-1}
-                            max={100}
-                            value={this.state.share_price}
-                        />
-                    </Grid>
+
                     <TextField
                         id="outlined-error"
                         name="classification"

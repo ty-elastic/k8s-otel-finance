@@ -12,7 +12,7 @@ app.logger.setLevel(logging.INFO)
 
 TRADE_TIMEOUT = 5
 S_PER_DAY = 60
-TRAINING_TRADE_COUNT = 1000
+
 HIGH_TPUT_PCT = 95
 LATENCY_SWING_MS = 10
 HIGH_TPUT_SLEEP_MS = [2,3]
@@ -21,7 +21,7 @@ ERROR_TIMEOUT_S = 60
 CONCURRENT_TRADE_REQUESTS = 10
 
 DAYS_OF_WEEK = ['M', 'Tu', 'W', 'Th', 'F']
-ACTIONS = ['Buy', 'Sell', 'Hold']
+ACTIONS = ['buy', 'sell', 'hold']
 
 CUSTOMERS_PER_REGION = {
     'NA': ['b.smith', 'l.johnson'],
@@ -31,6 +31,10 @@ CUSTOMERS_PER_REGION = {
 }
 
 SYMBOLS = ['ZVZZT', 'ZALM', 'ZYX', 'CBAZ', 'BAA', 'OELK']
+
+UNCLASSIFIED_LABEL = "unclassified"
+TRAINING_TRADE_COUNT = 10000
+TRAINING_PERCENT_LABELED = 75
 
 latency_per_action_per_region = {}
 canary_per_region = {}
@@ -50,22 +54,25 @@ def get_customers():
 def conform_request_bool(value):
     return value.lower() == 'true'
 
-def generate_trade_request(*, customer_id, symbol, day_of_week, region, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, classification, data_source):
+def generate_trade_request(*, customer_id, symbol, day_of_week, region, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, classification=None, data_source):
     try:
+        params={'symbol': symbol, 
+                'day_of_week': day_of_week, 
+                'customer_id': customer_id, 
+                'latency_amount': latency_amount,
+                'latency_action': latency_action,
+                'region': region,
+                'error_model': error_model,
+                'error_db': error_db,
+                'error_db_service': error_db_service,
+                'skew_market_factor': skew_market_factor,
+                'canary': canary,
+                'data_source': data_source}
+        if classification is not None:
+            params['classification'] = classification
+
         trade_response = requests.post(f"http://{os.environ['TRADER_SERVICE']}/trade/request", 
-                                       params={'symbol': symbol, 
-                                               'day_of_week': day_of_week, 
-                                               'customer_id': customer_id, 
-                                               'latency_amount': latency_amount,
-                                               'latency_action': latency_action,
-                                               'region': region,
-                                               'error_model': error_model,
-                                               'error_db': error_db,
-                                               'error_db_service': error_db_service,
-                                               'skew_market_factor': skew_market_factor,
-                                               'canary': canary,
-                                               'classification': classification,
-                                               'data_source': data_source},
+                                       params=params,
                                        timeout=TRADE_TIMEOUT)
         trade_response.raise_for_status()
     except Exception as inst:
@@ -149,7 +156,6 @@ def generate_trade_requests():
                         error_model=error_model, 
                         error_db=error_db, error_db_service=error_db_service,
                         skew_market_factor=skew_market_factor, canary=canary,
-                        classification='unclassified',
                         data_source='monkey')
 
             next_region = None
@@ -386,55 +392,38 @@ def generate_trades(*, fixed_day_of_week=None, fixed_region = None, fixed_symbol
                     fixed_share_price_min = None, fixed_share_price_max = None, classification, data_source):
 
     for x in range(0, TRAINING_TRADE_COUNT):
-        
-        trade_classification = None
+
+        label_rand = random.randint(1, 100)
+        if label_rand < TRAINING_PERCENT_LABELED:
+            trade_classification = classification
+        else:
+            trade_classification = 'unclassified'
 
         day_of_week = random.choice(DAYS_OF_WEEK)
-        if fixed_day_of_week is not None:
-            if day_of_week in fixed_day_of_week and (trade_classification is None or trade_classification == classification):
-                trade_classification = classification
-            else:
-                trade_classification = "unclassified"
- 
+        if label_rand < TRAINING_PERCENT_LABELED and fixed_day_of_week is not None:
+            day_of_week = random.choice(fixed_day_of_week)
+
         region = random.choice(list(CUSTOMERS_PER_REGION.keys()))
-        if fixed_region is not None:
-            if region in fixed_region and (trade_classification is None or trade_classification == classification):
-                trade_classification = classification
-            else:
-                trade_classification = "unclassified"
+        if label_rand < TRAINING_PERCENT_LABELED and fixed_region is not None:
+            region = random.choice(fixed_region)
 
         symbol = random.choice(SYMBOLS)
-        if fixed_symbol is not None:
-            if fixed_symbol == symbol and (trade_classification is None or trade_classification == classification):
-                trade_classification = classification
-            else:
-                trade_classification = "unclassified"
+        if label_rand < TRAINING_PERCENT_LABELED and fixed_symbol is not None:
+            symbol = random.choice(fixed_symbol)
 
         customer_id = random.choice(CUSTOMERS_PER_REGION[region])
-        
+            
         action = random.choice(ACTIONS)
-        if fixed_action is not None:
-            if action in fixed_action and (trade_classification is None or trade_classification == classification):
-                trade_classification = classification
-            else:
-                trade_classification = "unclassified"
+        if label_rand < TRAINING_PERCENT_LABELED and fixed_action is not None:
+            action = random.choice(fixed_action) 
 
         shares = random.randint(1, 100)
-        if fixed_shares_min is not None:
-            if (shares >= fixed_shares_min and shares <= fixed_shares_max) and (trade_classification is None or trade_classification == classification):
-                trade_classification = classification
-            else:
-                trade_classification = "unclassified"
+        if label_rand < TRAINING_PERCENT_LABELED and fixed_shares_min is not None:
+            shares = random.randint(fixed_shares_min, fixed_shares_max)
 
         share_price = random.randint(1, 1000)
-        if fixed_share_price_min is not None:
-            if (share_price >= fixed_share_price_min and share_price <= fixed_share_price_max) and (trade_classification is None or trade_classification == classification):
-                trade_classification = classification
-            else:
-                trade_classification = "unclassified"
-
-        if trade_classification is None:
-            trade_classification = "unclassified"
+        if label_rand < TRAINING_PERCENT_LABELED and fixed_share_price_min is not None:
+            share_price = random.randint(fixed_share_price_min, fixed_share_price_max)
 
         app.logger.info(f"training {symbol} for {customer_id} on {day_of_week} from {region}, classification {trade_classification}, data_source {data_source}")
 
@@ -448,32 +437,54 @@ def generate_trades(*, fixed_day_of_week=None, fixed_region = None, fixed_symbol
 @app.post('/train/<classification>')
 def train_label(classification):
 
-    content_type = request.headers.get('Content-Type')
-    app.logger.warn(f"Content-Type: {content_type}")
     body = request.get_json()
-    app.logger.warn(body)
+    #app.logger.warn(body)
 
     if 'day_of_week' in body:
         day_of_week = body['day_of_week']
     else:
         day_of_week = None
+
     if 'region' in body:
         region = body['region']
     else:
         region = None
-    symbol = request.args.get('symbol', default=None, type=str)
+
     if 'action' in body:
         action = body['action']
     else:
         action = None
 
-    shares_min = request.args.get('shares_min', default=None, type=int)
-    shares_max = request.args.get('shares_max', default=None, type=int)
-    share_price_min = request.args.get('share_price_min', default=None, type=float)
-    share_price_max = request.args.get('share_price_max', default=None, type=float)
+    if 'symbol' in body:
+        symbol = body['symbol']
+    else:
+        symbol = None
 
-    data_source = request.args.get('data_source', default='training', type=str)
-    
+    if 'shares_min' in body:
+        shares_min = body['shares_min']
+    else:
+        shares_min = None
+
+    if 'shares_max' in body:
+        shares_max = body['shares_max']
+    else:
+        shares_max = None
+
+    if 'share_price_min' in body:
+        share_price_min = body['share_price_min']
+    else:
+        share_price_min = None
+
+    if 'share_price_max' in body:
+        share_price_max = body['share_price_max']
+    else:
+        share_price_max = None
+
+    if 'data_source' in body:
+        data_source = body['data_source']
+    else:
+        data_source = None
+
     generate_trades(fixed_day_of_week=day_of_week, fixed_region = region, fixed_symbol = symbol,
                     fixed_action = action, fixed_shares_min = shares_min, fixed_shares_max = shares_max, 
                     fixed_share_price_min=share_price_min, fixed_share_price_max=share_price_max, 
