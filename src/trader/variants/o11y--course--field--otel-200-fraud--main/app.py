@@ -8,9 +8,13 @@ import math
 
 import requests
 
+from opentelemetry import trace
+tracer = trace.get_tracer(__name__)
+ATTRIBUTE_PREFIX = "com.example"
+
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
-app.logger.info(f"variant: default")
+app.logger.info(f"variant: o11y--course--field--otel-200-fraud--main")
 
 import model
 
@@ -56,9 +60,25 @@ def decode_common_args():
 
     return trade_id, customer_id, day_of_week, region, symbol, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, data_source, classification
 
+@tracer.start_as_current_span("trade")
 def trade(*, region, trade_id, customer_id, symbol, day_of_week, shares, share_price, canary, action, error_db, data_source, classification, error_db_service=None):
 
     app.logger.info(f"trade requested for {symbol} on day {day_of_week}")
+    
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.trade_id", trade_id)
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.customer_id", customer_id)
+
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.day_of_week", day_of_week)
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.region", region)
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.symbol", symbol)
+
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.data_source", data_source)
+    if classification is not None:
+        trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.classification", classification)
+
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.action", action)
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.shares", shares)
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.share_price", share_price)
 
     response = {}
     response['id'] = trade_id

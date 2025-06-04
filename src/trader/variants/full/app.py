@@ -8,11 +8,42 @@ import math
 
 import requests
 
+from opentelemetry import trace, baggage, context, metrics
+from opentelemetry.processor.baggage import BaggageSpanProcessor, ALLOW_ALL_BAGGAGE_KEYS
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.sdk.metrics.export import (
+    PeriodicExportingMetricReader,
+)
+from opentelemetry.sdk.metrics import (
+    MeterProvider,
+)
+ATTRIBUTE_PREFIX = "com.example"
+
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
-app.logger.info(f"variant: default")
 
 import model
+
+def init_otel(): 
+    try:
+        trace.get_tracer_provider().add_span_processor(BaggageSpanProcessor(ALLOW_ALL_BAGGAGE_KEYS))
+    except:
+        pass
+
+    tracer = trace.get_tracer(__name__)
+
+    metrics_provider = MeterProvider(metric_readers=[PeriodicExportingMetricReader(OTLPMetricExporter(), export_interval_millis=5000)])  # Export every 5 seconds
+    meter = metrics_provider.get_meter("trader")
+    trading_revenue = meter.create_counter("trading_revenue", "dollars")
+    return tracer, trading_revenue
+
+tracer, trading_revenue = init_otel()
+
+def set_attribute_and_baggage(key, value):
+    # always set it on the current span
+    trace.get_current_span().set_attribute(key, value)
+    # and attach it to baggage
+    context.attach(baggage.set_baggage(key, value))
 
 def conform_request_bool(value):
     return value.lower() == 'true'
@@ -28,22 +59,31 @@ def reset():
     
 def decode_common_args():
     trade_id = str(uuid.uuid4())
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.trade_id", trade_id)
 
     customer_id = request.args.get('customer_id', default=None, type=str)
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.customer_id", customer_id)
 
     day_of_week = request.args.get('day_of_week', default=None, type=str)
     if day_of_week is None:
         day_of_week = random.choice(['M', 'Tu', 'W', 'Th', 'F'])
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.day_of_week", day_of_week)
 
     region = request.args.get('region', default="NA", type=str)
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.region", region)
 
     symbol = request.args.get('symbol', default='ESTC', type=str)
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.symbol", symbol)
 
     data_source = request.args.get('data_source', default='monkey', type=str)
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.data_source", data_source)
 
     classification = request.args.get('classification', default=None, type=str)
+    if classification is not None:
+        set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.classification", classification)
 
     canary = request.args.get('canary', default="false", type=str)
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.canary", canary)
 
     # forced errors
     latency_amount = request.args.get('latency_amount', default=0, type=float)
@@ -56,9 +96,19 @@ def decode_common_args():
 
     return trade_id, customer_id, day_of_week, region, symbol, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, data_source, classification
 
+@tracer.start_as_current_span("trade")
 def trade(*, region, trade_id, customer_id, symbol, day_of_week, shares, share_price, canary, action, error_db, data_source, classification, error_db_service=None):
 
     app.logger.info(f"trade requested for {symbol} on day {day_of_week}")
+    
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.action", action)
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.shares", shares)
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.share_price", share_price)
+    if action == 'buy' or action == 'sell':
+        trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.value", shares * share_price)
+        trading_revenue.add(math.ceil(share_price * shares * .001), attributes={"cloud.region": region} )
+    else:
+        trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.value", 0)
 
     response = {}
     response['id'] = trade_id
@@ -102,9 +152,11 @@ def trade_request():
 
     return trade (region=region, data_source=data_source, classification=classification, trade_id=trade_id, symbol=symbol, customer_id=customer_id, day_of_week=day_of_week, shares=shares, share_price=share_price, canary=canary, action=action, error_db=error_db, error_db_service=error_db_service)
 
+@tracer.start_as_current_span("run_model")
 def run_model(*, trade_id, customer_id, day_of_week, region, symbol, error=False, latency_amount=0.0, latency_action=None, skew_market_factor=0):
 
     market_factor, share_price = model.sim_market_data(symbol=symbol, day_of_week=day_of_week, skew_market_factor=skew_market_factor)
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.market_factor", market_factor)
 
     action, shares = model.sim_decide(error=error, region=region, latency_amount=latency_amount, latency_action=latency_action, symbol=symbol, market_factor=market_factor)
 

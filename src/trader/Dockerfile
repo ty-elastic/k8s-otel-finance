@@ -9,8 +9,15 @@ RUN pip3 install --root-user-action=ignore -r requirements.txt
 RUN edot-bootstrap --action=install
 RUN pip3 uninstall -y opentelemetry-instrumentation-click
 
+ARG COURSE=main
+
 COPY app.py .
 COPY model.py .
+COPY variants variants
+
+RUN if [ -d "variants/$COURSE" ]; then \
+        cp -rf variants/$COURSE/*.py .; \
+    fi
 
 ENV ROUTER_HOST="router"
 ENV PYTHONUNBUFFERED=1

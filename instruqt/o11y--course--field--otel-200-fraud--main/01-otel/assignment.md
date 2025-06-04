@@ -29,11 +29,21 @@ timelimit: 0
 enhanced_loading: null
 ---
 
+We will be leverarging OpenTelemetry to help us demonstrate how tracing can help train a classification model to idenitfy fraudulent transactions.
+
+Imagine you are in charge of an online stock trading application. Your fraud team has made you aware of a recent wave of fradulent transactions which appears to be happening across every region. The fraud team has been able to identify these transactions, but it hasn't yet been able to find a pattern amongst the many variables associated with each transaction. Moreover, they would like to be alerted if it appears this wave of fraud is trending downward or upward.
+
+The fraud team is working with your data scientists to try to develop and train a classification model, but the work will take at least a month. You don't have that kind of time.
+
+You remember that your DevOps team recently instrumented your trading application with OpenTelemetry.
+
+
+
+
 To help us better appreciate how OpenTelemetry is forever changing observability, we will be working with an example stock trading system, comprised of several services and their dependencies, all instrumented using [OpenTelemetry](https://opentelemetry.io).
 
 We will be working with a live Elasticsearch instance, displayed in the browser tab to the left. We are currently looking at Elastic's dynamically generated Service Map. It shows all of the services that comprise our system, and how they interact with one another.
 
-![service-map.png](../assets/service-map.png)
 
 Our trading system is composed of:
 * `trader`: a python application that trades stocks on orders from customers

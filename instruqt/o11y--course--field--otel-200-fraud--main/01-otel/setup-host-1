@@ -55,7 +55,7 @@ helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kub
 
 wait 30
 
-cd /workspace/workshop
+cd /workspace/workshop/instruqt/o11y--course--field--otel-200-fraud--main
 ./install.sh
 
 #kubectl -n trading rollout restart deployment
