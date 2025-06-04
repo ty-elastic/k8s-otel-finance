@@ -58,4 +58,4 @@ wait 30
 cd /workspace/workshop
 ./install.sh
 
-kubectl -n trading rollout restart deployment
+#kubectl -n trading rollout restart deployment
