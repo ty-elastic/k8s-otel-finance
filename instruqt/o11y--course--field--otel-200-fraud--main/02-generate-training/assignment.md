@@ -30,7 +30,8 @@ timelimit: 0
 enhanced_loading: null
 ---
 
-# Create Index Alias
+Setup Data Views
+===
 First, let's create a custom Index Alias in Elasticsearch which looks at _just_ the trade data we want to model and classify.
 
 1. [button label="Elastic"](tab-0)
@@ -84,17 +85,20 @@ POST kbn:/api/data_views/data_view
 ```
 6. Confirm the response
 
-# Generate Training Data
+Generate Training Data
+===
 
-Now let's generate some training data. Normally, you would classify existing records you have as fradulent (not knowing why they are fradulent). From there, we let Elastic Machine Learning figure out if there is a tell tale for the fradulent transactions.
+We know there have been a rash of fraudulent transactions. Our customer service team has been diligently labeleling those transactions as fraudulent when they are reported. Unfortunately, we don't know why those transactions are fraudulent; there are simply too many variables to track.
 
-In this case, we will intentionally generate
+To build a classification model, we need what is called training data. This is a dataset of manually labeled transactions. Normally, this would come from data collected by our customer service team as fraudulent transactions are reported. Rather than include canned data already marked as fraudulent, we will put you in the mind of the criminal. You will be making a whole bunch of fraudulent transactions that we will pretend our customer service department finds and reports.
 
-1. [button label="Trader"](tab-1)
+Let's get to work!
+
+1. Click on the [button label="Trader"](tab-1) tab
 2. Click `Classification`
-2. Configure classification (leave `Classification` and `Data Source` fields as is)
-3. Click `SUBMIT`
-4. Wait for spinner to complete
+3. Decide what pattern your fraudulent transactions will follow. Maybe you generally only trade on certain days of the week or from certain regions. Or you only trade certain stocks at certain prices. Come up with any combination you'd like. (leave `Classification` and `Data Source` fields as is)
+4. Click `SUBMIT`
+5. Wait for spinner to complete
 
 # Validate Training Data
 

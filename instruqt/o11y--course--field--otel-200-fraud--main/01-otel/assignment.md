@@ -14,7 +14,7 @@ tabs:
   title: Trader Source Code
   type: code
   hostname: host-1
-  path: /workspace/workshop/src/trader/app.py
+  path: /workspace/workshop/src/trader/variants/o11y--course--field--otel-200-fraud--main/app.py
 - id: qtxb3kqiodpt
   title: Terminal (host-1)
   type: terminal
@@ -56,14 +56,41 @@ Finally, we have `monkey`, a python application we use for testing our system th
 > [!NOTE]
 > You are welcome to explore each service and our APM solution by clicking on each service icon in the Service Map and selecting `Service Details`
 
+Let's have a look at the data we have available:
+1. Click on the `trader` service
+2. Click on `Service Details`
+3. Click on the `Transactions` tab
+4. Scroll to the bottom and click on `POST /trade/request`
+5. Scroll to the waterfall graph at the bottom
+
+As you can see, OpenTelemetry is already capturing every trade transaction. By default, it captures the obvious contextual stuff like `k8s.namespace.name`. But you're looking for the tells that would indicate a given transaction is fradulent. To capture those tells, we probably need to capture some industry-specific attributes with each transaction. Fortunately, OpenTelemetry makes that really easy! 
+
 Adding span attributes
 ===
-Among its many virtues, OpenTelemetry's support for common attributes which span across observability signals and your distributed services not only provides a solution to the aforementioned problems, but will also fuel the ML and AI based analysis we will consider in subsequent labs.
 
-With only a very small investment in manual instrumentation (really, just a few lines of code!) on top of auto-instrumentation, every log and trace emitted by your distributed microservices can be tagged with common, application-specific metadata, like a `customer_id`.
+Among its many virtues, OpenTelemetry's support for common attributes which span across observability signals and your distributed services not only provides a solution to the aforementioned problems, but will also fuel the ML and AI based analysis we will utilize here.
 
-`trader` is at the front of our user-driven call stack and seems like an ideal place to add a `customer_id` attribute. Let's do it!
+Go ahead and click on the `trade` span in the waterfall graph. Note the `attributes.com.example.*` set of attributes. These sure look like good tells to possibly determine if a transaction is fraudulent or not. How did they get there?
 
-`trader` is a simple python app built on the [flask](https://flask.palletsprojects.com/en/3.0.x/) web application framework. We are leveraging OpenTelemetry's rich library of [python auto-instrumentation](https://opentelemetry.io/docs/zero-code/python/) to generate spans when APIs are called without having to explicitly instrument service calls.
+Our system is largely instrumented through automatic instrumentation. To add those custom attributes, we used a little bit of manual instrumentation. 
 
+Let's see what that looks like:
+1. Click on the [button label="Trader Source Code"](tab-1) tab
+2. Click on `app.py`
+3. Scroll down to the `trade()` function
+4. Note the set of calls to `trace.get_current_span().set_attribute()`. Each of these calls sets an attribute on the current span.
+
+That's it. You can still leverage all of the magic of auto-instrumentation and just add a few lines of code to make it far more powerful.
+
+While our intent is to use these attributes to help predict fraud, they also make it really easy to search your traces. Say for example you wanted to look at traces or logs for a specific customer:
+1. Click on the [button label="Elastic"](tab-0) tab
+2. Navigate to Applications > Traces > Explorer
+3. Type
+```
+attributes.com.example.customer_id : "q.bert" 
+``` in the Filter bar
+4. Observe related traces
+5. Click on logs and observe related logs
+
+In this exercise, however, we will be leveraging these attributes to help us predict fraudulent transactions.
 

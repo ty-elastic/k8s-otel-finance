@@ -40,10 +40,19 @@ class Train extends React.Component {
             { value: 'hold', label: 'Hold' }
         ];
 
+        this.options.symbol = [
+            { value: 'ZVZZT', label: 'ZVZZT' },
+            { value: 'ZALM', label: 'ZALM' },
+            { value: 'ZYX', label: 'ZYX' },
+            { value: 'CBAZ', label: 'CBAZ' },
+            { value: 'BAA', label: 'BAA' },
+            { value: 'OELK', label: 'OELK' }
+        ];
+
         this.state = {
             day_of_week: this.options.day_of_week,
             region: this.options.region,
-            symbol: '',
+            symbol: this.options.symbol,
             action: this.options.action,
             shares: [10, 700],
             share_price: [50, 75],
@@ -81,7 +90,7 @@ class Train extends React.Component {
                 params.region = this.state.region.map(item => item.value)
             }
             if (this.state.symbol.length > 0) {
-                params.symbol = this.state.symbol
+                params.symbol = this.state.symbol.map(item => item.value)
             }
             if (this.state.action.length > 0) {
                 params.action = this.state.action.map(item => item.value)
@@ -143,12 +152,19 @@ class Train extends React.Component {
                         )}
                     />
 
-                    <TextField
-                        id="outlined-error"
+                    <Autocomplete
+                        multiple
+                        options={this.options.symbol}
                         name="symbol"
                         value={this.state.symbol}
-                        onChange={this.handleInputChange}
-                        label="Symbol"
+                        onChange={(event, newValue) => {this.setState({['symbol']: newValue});}}
+                        renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            variant="standard"
+                            label="Symbol"
+                        />
+                        )}
                     />
 
                     <Autocomplete
