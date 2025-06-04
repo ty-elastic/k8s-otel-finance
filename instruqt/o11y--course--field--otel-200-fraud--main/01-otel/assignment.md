@@ -35,15 +35,15 @@ Imagine you are in charge of an online stock trading application. Your fraud tea
 
 The fraud team is working with your data scientists to try to develop and train a classification model, but the work will take at least a month. You don't have that kind of time.
 
-You remember that your DevOps team recently instrumented your trading application with OpenTelemetry.
+You remember that your DevOps team recently instrumented your trading application with OpenTelemetry. Since OTel is already recording every transaction to look for high latency or failures, you are wondering if perhaps you can leverage that same data to look for fraud?
 
+With OpenTelemetry and Elastic, you can!
 
+# Getting Our Bearings
 
+Let's have a look at the trace data already coming in via OpenTelemetry to try to better understand how we could leverage it to determine fraud. 
 
-To help us better appreciate how OpenTelemetry is forever changing observability, we will be working with an example stock trading system, comprised of several services and their dependencies, all instrumented using [OpenTelemetry](https://opentelemetry.io).
-
-We will be working with a live Elasticsearch instance, displayed in the browser tab to the left. We are currently looking at Elastic's dynamically generated Service Map. It shows all of the services that comprise our system, and how they interact with one another.
-
+We are currently looking at Elastic's dynamically generated Service Map. It shows all of the services that comprise our system, and how they interact with one another.
 
 Our trading system is composed of:
 * `trader`: a python application that trades stocks on orders from customers
