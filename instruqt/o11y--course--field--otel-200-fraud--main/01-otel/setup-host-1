@@ -1,6 +1,11 @@
+source /opt/workshops/elastic-retry.sh
+
 /opt/workshops/clone-code.sh -r ty-elastic/k8s-otel-finance -b main -d false
 
 export $(curl http://kubernetes-vm:9000/env | xargs)
+
+cd /workspace/workshop/instruqt/o11y--course--field--otel-200-fraud--main
+./install.sh
 
 output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_security/api_key" -d '
 {
@@ -55,7 +60,6 @@ helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kub
 
 wait 30
 
-cd /workspace/workshop/instruqt/o11y--course--field--otel-200-fraud--main
-./install.sh
+kubectl -n trading rollout restart deployment
 
-#kubectl -n trading rollout restart deployment
+retry_command_lin curl --silent --fail --output /dev/null --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" "$ELASTICSEARCH_URL/.ds-traces-generic.otel*"

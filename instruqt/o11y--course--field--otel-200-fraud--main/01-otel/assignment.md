@@ -41,7 +41,7 @@ With OpenTelemetry and Elastic, you can!
 
 # Getting Our Bearings
 
-Let's have a look at the trace data already coming in via OpenTelemetry to try to better understand how we could leverage it to determine fraud. 
+Let's have a look at the trace data already coming in via OpenTelemetry to try to better understand how we could leverage it to determine fraud.
 
 We are currently looking at Elastic's dynamically generated Service Map. It shows all of the services that comprise our system, and how they interact with one another.
 
