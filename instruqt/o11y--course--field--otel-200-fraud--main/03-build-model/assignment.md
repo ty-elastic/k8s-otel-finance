@@ -24,7 +24,7 @@ enhanced_loading: null
 # Train Model
 
 1. [button label="Elastic"](tab-0)
-2. `Create job`
+2. `Create data frame analytics job`
 3. Select `data view` to `traces-trader`
 4. Under `1. Configuration` select `Classification`
 5. Under `1. Configuration` set `Query` to `attributes.com.example.data_source :"training"`
@@ -50,6 +50,7 @@ enhanced_loading: null
 # Validate
 
 1. Navigation menu > Machine Learning > Data Frame Analytics > Jobs
+2. Wait for progress `Phase 8/8`
 2. On the right next to `classification` click `View`
 3. Look at `Overall accuracy`
 

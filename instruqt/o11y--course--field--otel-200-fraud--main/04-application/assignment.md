@@ -37,6 +37,10 @@ enhanced_loading: null
 
 # Check Results
 1. In `Discover`
-2. Set `Filter` to `attributes.com.example.data_source : "monkey" and `ml.inference.attributes.com.example.classification_prediction.classification_prediction : "fraud"`
+2. Set `Filter` to `attributes.com.example.data_source : "monkey" and ml.inference.classification.classification :"fraud"`
 
 # Validate with Dashboard
+
+1. [button label="Elastic"](tab-0)
+2. Navigate to Dashboards > Fraudulent Transactions
+3. Validate that graphs match your fruadulent transactions
