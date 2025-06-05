@@ -35,7 +35,7 @@ Under `1. Configuration`, set the following:
   ```
   attributes.com.example.classification
   ```
-4. We now need to tell the model what specific attributes might be useful to predict a pattern of fraudulent activity. First, uncheck all existing `Included Fields` by clicking the checkbox in the upper-left corner
+4. We now need to tell the model what specific attributes might be useful to predict a pattern of fraudulent activity. First, uncheck all existing `Included Fields` by clicking the checkbox in the upper-left corner twice (first to select all field, second to select no fields)
 5. Now let's look specifically at those attributes we manually added to the span. In `Included Fields` > `Search` enter
   ```
   attributes.com.example
@@ -44,6 +44,7 @@ Under `1. Configuration`, set the following:
   * `attributes.com.example.action`
   * `attributes.com.example.classification`
   * `attributes.com.example.day_of_week`
+  * `attributes.com.example.region`
   * `attributes.com.example.share_price`
   * `attributes.com.example.shares`
   * `attributes.com.example.symbol`
@@ -64,7 +65,8 @@ Under `1. Configuration`, set the following:
   ```
   classification
   ```
-2. Click `Continue`
+2. Set `Time field for data view` to `@timestamp`
+3. Click `Continue`
 
 ## 4. Validation
 
