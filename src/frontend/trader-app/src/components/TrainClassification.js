@@ -111,7 +111,7 @@ class Train extends React.Component {
             console.log(params)
 
             this.setState({['loading']: true});
-            await axios.post(`/monkey/train/${this.state.classification}`, params)
+            await axios.post(`/monkey/train/${this.state.classification}`, params, { timeout: 300000 })
             this.setState({['loading']: false});
         } catch (err) {
             console.log(err.message)

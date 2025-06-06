@@ -94,7 +94,7 @@ Let's put on our black hats and get to work!
 2. Click `Classification`
 3. Decide what pattern your fraudulent transactions will follow. Maybe you only trade on certain days of the week or from certain regions? Or you only trade a certain number of certain stocks at certain prices? Come up with any combination you'd like! Leave `Classification` and `Data Source` fields as defaults, and be careful not to make your transactions _too_ specific or wide (e.g., don't limit trading to between just 5-10 shares of one stock, or leaving everything as default).
 4. Click `SUBMIT`
-5. Wait for the spinner to stop indicating that training data generation is complete (this could take a minute or two)
+5. Wait for the spinner to stop; this indicates that training data generation is complete (this could take a minute or two)
 
 While you are waiting for the training data to be generated, consider taking a screen snapshot of your training configuration or writing down the parameters. You will need to reference this later to check how well our model is predicting potential fraud in new transactions.
 
