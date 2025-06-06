@@ -14,7 +14,6 @@ difficulty: ""
 timelimit: 0
 enhanced_loading: null
 ---
-
 Applying our model
 ===
 
@@ -34,7 +33,6 @@ To apply our model, we will be creating an Ingest Pipeline. That Ingest Pipeline
 7. Under `5. Create` select `Create pipeline`
 
 ## Next steps
-
 Open `Next steps`:
 1. Open `Reindex with pipeline`
 2. Set `Destination index name` to
@@ -50,7 +48,6 @@ Checking our accuracy
 ===
 
 # Discover
-
 1. In Elastic, navigate to `Discover`
 2. Set `Data view` to `classified_trades`
 3. We want to look specifically at _non-training_ data. To do that, set the `Filter` to
@@ -60,7 +57,6 @@ Checking our accuracy
 4. Open a row and note that the attributes match the pattern of fraudulent transactions you previously generated (refer to that screen snapshot you took)
 
 # Custom Dashboard
-
 We've created a custom dashboard which we can use to visually compare the classification of our new transactions against the features of the transactions.
 
 1. In Elastic, navigate to `Dashboards` > `Fraudulent Transactions`

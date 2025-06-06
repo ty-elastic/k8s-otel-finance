@@ -23,6 +23,8 @@ spec:
     spec:
       containers:
         - env:
+            - name: KAFKA_ENABLED
+              value: false
             - name: POSTGRES_HOST
               value: postgresql
             - name: POSTGRES_PASSWORD

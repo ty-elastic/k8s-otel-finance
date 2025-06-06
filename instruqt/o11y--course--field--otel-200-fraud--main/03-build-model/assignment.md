@@ -53,11 +53,15 @@ Under `1. Configuration`, set the following:
 8. Click `Continue`
 
 ## 2. Additional options
-1. Set `Prediction field name` to
+1. Set `Feature importance values` to
+  ```
+  7
+  ```
+2. Set `Prediction field name` to
   ```
   classification
   ```
-2. Click `Continue`
+3. Click `Continue`
 
 ## 3. Job details
 1. Set `Job ID` to

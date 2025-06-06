@@ -57,27 +57,34 @@ import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
 public class TradeNotifier {
     private static final int KAFKA_TIMEOUT_MS = 1000;
     private static final String BOOTSTRAP_SERVER = "kafka:9093";
-    private static final String TRANSACTIONAL_ID = "recorder-java";
     public static final String TOPIC_NAME = "notifications_q";
     public static final String GROUP_NAME = "recorder-java";
     private static final int KAFKA_NUM_PARITIONS = 1;
+    private boolean enableKafka;
 
     private ObjectMapper mapper = new ObjectMapper();
     private KafkaProducer<Integer, String> kafkaProducer;
     private int key;
 
     public TradeNotifier() {
-        recreateTopics(TOPIC_NAME);
-        kafkaProducer = createKafkaProducer();
+        try {
+            enableKafka = Boolean.valueOf(System.getenv("KAFKA_ENABLED"));
+            if (enableKafka) {
+                recreateTopics(TOPIC_NAME);
+                kafkaProducer = createKafkaProducer();
+            }
+        }
+        catch(Exception e) {
 
-        
+        }
     }
 
     public void notify(Trade trade) {
         try {
             String body = mapper.writeValueAsString(trade);
 
-            asyncSend(kafkaProducer, key++, body);
+            if (enableKafka)
+                asyncSend(kafkaProducer, key++, body);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(new URI("http://notifier:5000/notify"))
