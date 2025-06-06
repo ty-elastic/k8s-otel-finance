@@ -96,7 +96,7 @@ Let's put on our black hats and get to work!
 4. Click `SUBMIT`
 5. Wait for the spinner to stop indicating that training data generation is complete (this could take a minute or two)
 
-While you are waiting for the training data to be generated, consider taking a screen snapshot of your training configuration or writing down the parameters. You will need to reference this later to check how well our model is predicting fraud in new transactions.
+While you are waiting for the training data to be generated, consider taking a screen snapshot of your training configuration or writing down the parameters. You will need to reference this later to check how well our model is predicting potential fraud in new transactions.
 
 Validate training data
 ===

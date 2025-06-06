@@ -16,6 +16,8 @@ enhanced_loading: null
 ---
 We now have a set of labeled transactions which we can use to train our classification model.
 
+When we train a classification model, we are asking Elasticsearch to model the complex relationship between a dependent variable (`classification`) and influencing variables (e.g., the symbol, the share price, ...). In this example, we include just a handful of influencing variables; in practice, you could have hundreds of such variables.
+
 Model training
 ===
 Remember how your data science team needed months to build a classification model? Let's see how quickly we can do it in Elasticsearch!
@@ -53,7 +55,7 @@ Under `1. Configuration`, set the following:
 8. Click `Continue`
 
 ## 2. Additional options
-1. Set `Feature importance values` to
+1. We want to understand how our attributes ultimately affect classification. To do so, set `Feature importance values` to
   ```
   7
   ```
