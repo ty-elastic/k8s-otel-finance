@@ -1,0 +1,36 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: trading
+    service: processor
+  name: processor
+  namespace: trading
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading
+      service: processor
+  template:
+    metadata:
+      annotations:
+        instrumentation.opentelemetry.io/inject-java: "opentelemetry-operator-system/elastic-instrumentation"
+      labels:
+        app: trading
+        service: processor
+    spec:
+      containers:
+        - env:
+            - name: BOOTSTRAP_SERVER
+              value: kafka:9093
+            - name: IN_GROUP
+              value: processor
+            - name: IN_TOPIC
+              value: notifications_q
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/processor:$BUILD_TAG
+          #imagePullPolicy: Never
+          name: processor
+      restartPolicy: Always
+---
