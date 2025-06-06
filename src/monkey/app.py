@@ -18,7 +18,7 @@ LATENCY_SWING_MS = 10
 HIGH_TPUT_SLEEP_MS = [2,3]
 NORMAL_TPUT_SLEEP_MS = [200,300]
 ERROR_TIMEOUT_S = 60
-CONCURRENT_TRADE_REQUESTS = 10
+CONCURRENT_TRADE_REQUESTS = 20
 
 DAYS_OF_WEEK = ['M', 'Tu', 'W', 'Th', 'F']
 ACTIONS = ['buy', 'sell', 'hold']
@@ -391,48 +391,51 @@ def generate_trades(*, fixed_day_of_week=None, fixed_region = None, fixed_symbol
                     fixed_action = None, fixed_shares_min = None, fixed_shares_max = None,
                     fixed_share_price_min = None, fixed_share_price_max = None, classification, data_source):
 
-    for x in range(0, TRAINING_TRADE_COUNT):
+    app.logger.info(f"using {CONCURRENT_TRADE_REQUESTS} workers") 
+    with concurrent.futures.ThreadPoolExecutor(max_workers=CONCURRENT_TRADE_REQUESTS) as executor:
 
-        label_rand = random.randint(1, 100)
-        if label_rand < TRAINING_PERCENT_LABELED:
-            trade_classification = classification
-        else:
-            trade_classification = 'unclassified'
+        for x in range(0, TRAINING_TRADE_COUNT):
 
-        day_of_week = random.choice(DAYS_OF_WEEK)
-        if label_rand < TRAINING_PERCENT_LABELED and fixed_day_of_week is not None:
-            day_of_week = random.choice(fixed_day_of_week)
+            label_rand = random.randint(1, 100)
+            if label_rand < TRAINING_PERCENT_LABELED:
+                trade_classification = classification
+            else:
+                trade_classification = 'unclassified'
 
-        region = random.choice(list(CUSTOMERS_PER_REGION.keys()))
-        if label_rand < TRAINING_PERCENT_LABELED and fixed_region is not None:
-            region = random.choice(fixed_region)
+            day_of_week = random.choice(DAYS_OF_WEEK)
+            if label_rand < TRAINING_PERCENT_LABELED and fixed_day_of_week is not None:
+                day_of_week = random.choice(fixed_day_of_week)
 
-        symbol = random.choice(SYMBOLS)
-        if label_rand < TRAINING_PERCENT_LABELED and fixed_symbol is not None:
-            symbol = random.choice(fixed_symbol)
+            region = random.choice(list(CUSTOMERS_PER_REGION.keys()))
+            if label_rand < TRAINING_PERCENT_LABELED and fixed_region is not None:
+                region = random.choice(fixed_region)
 
-        customer_id = random.choice(CUSTOMERS_PER_REGION[region])
-            
-        action = random.choice(ACTIONS)
-        if label_rand < TRAINING_PERCENT_LABELED and fixed_action is not None:
-            action = random.choice(fixed_action) 
+            symbol = random.choice(SYMBOLS)
+            if label_rand < TRAINING_PERCENT_LABELED and fixed_symbol is not None:
+                symbol = random.choice(fixed_symbol)
 
-        shares = random.randint(1, 100)
-        if label_rand < TRAINING_PERCENT_LABELED and fixed_shares_min is not None:
-            shares = random.randint(fixed_shares_min, fixed_shares_max)
+            customer_id = random.choice(CUSTOMERS_PER_REGION[region])
+                
+            action = random.choice(ACTIONS)
+            if label_rand < TRAINING_PERCENT_LABELED and fixed_action is not None:
+                action = random.choice(fixed_action) 
 
-        share_price = random.randint(1, 1000)
-        if label_rand < TRAINING_PERCENT_LABELED and fixed_share_price_min is not None:
-            share_price = random.randint(fixed_share_price_min, fixed_share_price_max)
+            shares = random.randint(1, 100)
+            if label_rand < TRAINING_PERCENT_LABELED and fixed_shares_min is not None:
+                shares = random.randint(fixed_shares_min, fixed_shares_max)
 
-        app.logger.info(f"training {symbol} for {customer_id} on {day_of_week} from {region}, classification {trade_classification}, data_source {data_source}")
+            share_price = random.randint(1, 1000)
+            if label_rand < TRAINING_PERCENT_LABELED and fixed_share_price_min is not None:
+                share_price = random.randint(fixed_share_price_min, fixed_share_price_max)
 
-        generate_trade_force(symbol=symbol, day_of_week=day_of_week, region=region, customer_id=customer_id,
-                             action=action, shares=shares, share_price=share_price, classification=trade_classification,
-                             data_source=data_source)
+            app.logger.info(f"training {symbol} for {customer_id} on {day_of_week} from {region}, classification {trade_classification}, data_source {data_source}")
 
-        sleep = float(random.randint(1, 10) / 1000)
-        time.sleep(sleep)
+            executor.submit(generate_trade_force, symbol=symbol, day_of_week=day_of_week, region=region, customer_id=customer_id,
+                                action=action, shares=shares, share_price=share_price, classification=trade_classification,
+                                data_source=data_source)
+
+            sleep = float(random.randint(HIGH_TPUT_SLEEP_MS[0], HIGH_TPUT_SLEEP_MS[1]) / 1000)
+            time.sleep(sleep)
 
 @app.post('/train/<classification>')
 def train_label(classification):

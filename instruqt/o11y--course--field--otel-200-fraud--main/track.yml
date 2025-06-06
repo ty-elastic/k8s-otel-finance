@@ -7,15 +7,17 @@ tags: []
 owner: elastic
 developers:
 - tyrone.bekiares@elastic.co
-idle_timeout: 3600
+idle_timeout: 7200
 timelimit: 10800
 sandbox_preset: managed-vm-elastic-8-18-2
 lab_config:
+  extend_ttl: 1800
   sidebar_enabled: true
   feedback_recap_enabled: true
   feedback_tab_enabled: false
-  loadingMessages: true
+  loadingMessages:
+  - Setting up your Elastic experience...
   override_challenge_layout: false
   hideStopButton: false
-checksum: "9804792613183133257"
+checksum: "4647000433302522595"
 enhanced_loading: false
