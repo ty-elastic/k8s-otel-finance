@@ -20,7 +20,7 @@ difficulty: ""
 timelimit: 0
 enhanced_loading: null
 ---
-We know there has been a rash of fraudulent transactions. Our customer service team has been diligently labelling those transactions as fraudulent as they are reported. Unfortunately, we don't know why those transactions are fraudulent; there are simply too many variables to track. This is, of course, an ideal application of a classification model.
+We know there has been a rash of fraudulent transactions. Our customer service team has been diligently labelling those transactions as fraudulent as they are reported. Unfortunately, we don't know why those transactions are fraudulent; there are simply too many variables to follow. This is, of course, an ideal application of a classification machine learning model.
 
 To build a classification model, we first need data to train it against actual fraudulent data.
 
@@ -84,7 +84,10 @@ Obtaining training data
 ===
 We will need a dataset of already classified transactions to train our model. Typically, this would come via your customer service team marking existing transactions as fraudulent as they are reported.
 
-For our purposes, rather than include canned data already marked as fraudulent, we will put you in the mind of the criminal! You will be making a whole bunch of (secret) fraudulent transactions that we will pretend our customer service department finds (because they are reported by customers) and labels.
+For our purposes, rather than include canned data already marked as fraudulent, we will put you in the mind of the criminal! You will be making a whole bunch of (secret) fraudulent transactions that we will pretend our customer service department finds (because they are reported by customers) and labels. The goal will be to see if the classification model you train with Elastic can find a pattern in your fraudulent trades.
+
+> [!NOTE]
+> Criminals (at least smart ones), of course, don't intentionally follow a pattern. But they likely would _unintentionally_ practice one. For example, perhaps their schedule unintentionally dictates that they make their transactions on Mondays and Wednesdays. Or perhaps trading only certain stocks is financially advantageous to them? Remember, their prime directive is to make money and not necessarily to avoid getting caught.
 
 Let's put on our black hats and get to work!
 1. Click on the [button label="Trader"](tab-1) tab
