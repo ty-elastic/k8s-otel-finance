@@ -1,16 +1,12 @@
 package com.example.recorder;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import java.util.concurrent.CompletableFuture;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import com.example.recorder.Trade;
-import com.example.recorder.TradeService;
-import com.example.recorder.TradeNotifier;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,7 +14,6 @@ import com.example.recorder.TradeNotifier;
 public class TradeController {
 
     private final TradeService tradeService;
-	private final TradeNotifier tradeNotifier;
 
 	@GetMapping("/health")
     public ResponseEntity<String> health() {
@@ -26,19 +21,16 @@ public class TradeController {
     }
 
 	@PostMapping("/record")
-	@Async
     public ResponseEntity<Trade> trade(@RequestParam(value = "customer_id") String customerId,
 		@RequestParam(value = "trade_id") String tradeId,
 		@RequestParam(value = "symbol") String symbol,
 		@RequestParam(value = "shares") int shares,
 		@RequestParam(value = "share_price") float sharePrice,
-		@RequestParam(value = "action") String action) {
+		@RequestParam(value = "action") String action) throws ExecutionException, InterruptedException {
 			Trade trade = new Trade(tradeId, customerId, symbol, shares, sharePrice, action);
 
-			Trade resp = tradeService.recordTrade(trade);
+			CompletableFuture<Trade> resp = tradeService.processTrade(trade);
 
-			tradeNotifier.notify(trade);
-
-			return ResponseEntity.ok().body(resp);
+			return ResponseEntity.ok().body(resp.get());
     }
 }
