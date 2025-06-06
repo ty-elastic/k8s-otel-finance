@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ public class TradeController {
     }
 
 	@PostMapping("/record")
+	@Async
     public ResponseEntity<Trade> trade(@RequestParam(value = "customer_id") String customerId,
 		@RequestParam(value = "trade_id") String tradeId,
 		@RequestParam(value = "symbol") String symbol,
