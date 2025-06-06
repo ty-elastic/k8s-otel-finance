@@ -26,6 +26,7 @@ To apply our model, we will be creating an Ingest Pipeline. That Ingest Pipeline
 
 1. On our Trained Models page, find the model `classifcation-*`
 2. On the right hand side of row containing our model, click `...` to open the contextual menu and select `Deploy model`
+  ![View](../assets/application_deploy.png)
 3. Under `1. Details` select `Continue`
 4. Under `2. Configure processor` select `Continue`
 5. Under `3. Handle failures` select `Continue`
@@ -41,7 +42,9 @@ Open `Next steps`:
   classified_trades
   ```
 3. Enable `Create data view`
+  ![View](../assets/application_reindex.png)
 9. Click `Reindex`
+10. Click 'Close'
 
 Checking our accuracy
 ===

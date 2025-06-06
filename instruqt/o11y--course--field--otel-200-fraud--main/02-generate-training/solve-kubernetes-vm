@@ -34,6 +34,7 @@ curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" -H "k
 {
   "data_view": {
     "name":"traces-trader",
-    "title":"traces-trader"
+    "title":"traces-trader",
+    "timeFieldName":"@timestamp"
   }
 }'
