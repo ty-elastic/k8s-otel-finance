@@ -79,4 +79,4 @@ In less than an hour we were able to build, deploy, and validate a model which c
 
 We created this workshop to show just how easy it is with Elastic to get additional value out of your APM data. You could imagine applying this concept to many different verticals with many different classifiers (e.g., not just fraud).
 
-Want to learn more about Elastic's support for OpenTelemetry or our out-of-the-box Machine Learning? [Reach out to us!](https://www.elastic.co/contact)
+Want to learn more about Elastic's support for [OpenTelemetry](https://www.elastic.co/what-is/opentelemetry) or our out-of-the-box [Machine Learning](https://www.elastic.co/elasticsearch/machine-learning)? [Reach out to us!](https://www.elastic.co/contact)
