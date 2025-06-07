@@ -1,6 +1,6 @@
 source /opt/workshops/elastic-retry.sh
 
-/opt/workshops/clone-code.sh -r ty-elastic/k8s-otel-finance -b main -d false
+/opt/workshops/clone-code.sh -r ty-elastic/k8s-otel-finance -b 2025-06-03 -d false
 
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
