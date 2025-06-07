@@ -2,7 +2,7 @@
 slug: application
 id: ylynqfneshqn
 type: challenge
-title: Applying Our Model to Determine Fraud
+title: Applying Our Model
 tabs:
 - id: xs7t9jhyoxnu
   title: Elastic
@@ -57,7 +57,8 @@ Let's first spot check things in Discover to ensure at least some transactions w
   LIMIT 100 |
   KEEP attributes.com.example.trade_id, attributes.com.example.action, attributes.com.example.day_of_week, attributes.com.example.region, attributes.com.example.share_price, attributes.com.example.shares, attributes.com.example.symbol, ml.inference.classification.classification
   ```
-4. Note that the attributes match the pattern of fraudulent transactions you previously generated (refer to that screen snapshot you took)
+
+Note `ml.inference.classification.classification`: that's the field Elasticsearch injected into every record after running trades against the model we built. Have a look at the trades which the model predicted as fraudulent; they should fall within the pattern of trades you generated as a criminal when we trained our model (refer to that screen snapshot you took).
 
 # Custom Dashboard
 Now that's we've confirmed we are labeling transactions as fraudulent, let's visualize and validate our results!

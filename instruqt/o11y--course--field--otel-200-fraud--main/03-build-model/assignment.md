@@ -2,7 +2,7 @@
 slug: build-model
 id: v4rd8yvxsunb
 type: challenge
-title: Building a Model
+title: Building Our Model
 tabs:
 - id: mugxlwfaxeih
   title: Elastic

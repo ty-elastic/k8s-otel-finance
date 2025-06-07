@@ -20,10 +20,6 @@ tabs:
   type: terminal
   hostname: host-1
   workdir: /workspace/workshop
-- id: xogfz8xh7a7a
-  title: Terminal (kubernetes-vm)
-  type: terminal
-  hostname: kubernetes-vm
 difficulty: ""
 timelimit: 0
 enhanced_loading: null
@@ -34,7 +30,7 @@ You need a way to automatically identify and label transactions that appear frau
 
 You know that identifying patterns in a complex, multi-variable system is exactly what Machine Learning does really well. You've asked your data science team to estimate what it would take to develop, train, and deploy a classification model to identify fraudulent transactions. The work, not surprisingly, will take months; you unfortunately don't have that kind of time.
 
-You remember that your DevOps team recently instrumented your trading application with OpenTelemetry. Since OTel is already recording every transaction to identify high latency or failure, you are wondering if perhaps you can leverage that same data to look for fraud? You also recall hearing that Elastic has a built-in model for classification which can be easily trained and deployed.
+You remember that your DevOps team recently instrumented your trading application with [OpenTelemetry](https://www.elastic.co/what-is/opentelemetry). Since OTel is already recording every transaction to identify high latency or failure, you are wondering if perhaps you can leverage that same data to look for fraud? You also recall hearing that Elastic has a [built-in model for classification](https://www.elastic.co/docs/explore-analyze/machine-learning/data-frame-analytics/ml-dfa-classification) which can be easily trained and deployed.
 
 Can these technologies be combined to quickly identify fraudulent transactions?
 
@@ -88,4 +84,3 @@ For example, by adding a customer identifier to our traces, SREs can now observe
 Note how quickly and easily we can find traces for a specific customer without having to rely on manual correlation (e.g., what node serviced this customer's request at what time).
 
 In the next section, we will see how we can start to leverage these trade-specific attributes to help us predict fraudulent transactions.
-

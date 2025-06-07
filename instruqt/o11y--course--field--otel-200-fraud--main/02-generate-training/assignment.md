@@ -2,7 +2,7 @@
 slug: generate-training
 id: icjbgncknxen
 type: challenge
-title: Training Data
+title: Training Our Model
 tabs:
 - id: mym97vj0hmjv
   title: Elastic
