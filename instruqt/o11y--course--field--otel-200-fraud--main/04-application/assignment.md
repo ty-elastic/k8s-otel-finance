@@ -19,7 +19,7 @@ Now that we've built a model, we can deploy and apply it against simulated trade
 To apply the model we just trained, we will be creating an Ingest Pipeline. That Ingest Pipeline could then be applied in real-time to new trades transactions, or can be applied to batches of transaction data. Given the CPU overhead associated with running a model, typically you would run the model in a batch, non-realtime manner.
 
 # Create an Ingest Pipeline
-1. On our Trained Models page, find the model `classifcation-*`
+1. On our Trained Models page, find the model `classification-*`
 2. On the right hand side of row containing our model, click `...` to open the contextual menu and select `Deploy model`
   ![View](../assets/application_deploy.png)
 3. Under `1. Details` select `Continue`
@@ -75,6 +75,8 @@ For example, if, as a criminal, you traded only on Mondays and Wednesdays, you s
 Summary
 ===
 
-In less than an hour we were able to build, deploy, and validate a model which can successful predict fraudulent transactions. We built our model from actual fraudulent data (which you generated), classified as fraudulent (by our customer service team). We let Elastic do the heavy lifting of studying the complex relationship between the influencing variables to build a practical and fairly accurate model. All without requiring months of work by your data science team.
+In less than an hour we were able to build, deploy, and validate a model which can successful predict fraudulent transactions. We built our model from actual fraudulent data (which you generated), classified as fraudulent (by our customer service team). We let Elastic do the heavy lifting of studying the complex relationship between the influencing variables to build a practical and fairly accurate model. All without requiring months of work by your data science team!
+
+We created this workshop to show just how easy it is with Elastic to get additional value out of your APM data. You could imagine applying this concept to many different verticals with many different classifiers (e.g., not just fraud).
 
 Want to learn more about Elastic's support for OpenTelemetry or our out-of-the-box Machine Learning? [Reach out to us!](https://www.elastic.co/contact)
