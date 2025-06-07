@@ -2,7 +2,7 @@
 slug: generate-training
 id: icjbgncknxen
 type: challenge
-title: Obtaining Training Data
+title: Training Data
 tabs:
 - id: mym97vj0hmjv
   title: Elastic
@@ -103,9 +103,12 @@ Validate training data
 Before we train our model, let's quickly check that the training data we just generated looks as expected:
 1. [button label="Elastic"](tab-0)
 2. Use the navigation pane to navigate to `Discover` and then select the `Discover` tab (and not `Logs Explorer`)
-3. Set `Data view` to `traces-trader`
-4. Set `Filter` to
+3. Click `Try ES|QL`
+4. Enter the following ES|QL:
   ```
-  attributes.com.example.data_source : "training" and attributes.com.example.classification : "fraud"
+  FROM traces-trader |
+  WHERE attributes.com.example.data_source == "training" AND attributes.com.example.classification == "fraud" |
+  LIMIT 100 |
+  KEEP attributes.com.example.trade_id, attributes.com.example.action, attributes.com.example.day_of_week, attributes.com.example.region, attributes.com.example.share_price, attributes.com.example.shares, attributes.com.example.symbol
   ```
-5. Verify that the fraudulent training data we generated was recorded and labeled as expected. You can click on a row to examine attributes and ensure they match the pattern of fraudulent trades you generated.
+5. Verify that the fraudulent training data we generated was recorded and labeled as expected.

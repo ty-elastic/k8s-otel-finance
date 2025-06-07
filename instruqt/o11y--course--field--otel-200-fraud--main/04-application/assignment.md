@@ -49,12 +49,15 @@ Once the re-indexing (batch) operation is complete, we can have a look at the re
 # Discover
 Let's first spot check things in Discover to ensure at least some transactions were labeled as fraudulent.
 1. In Elastic, use the navigation pane to navigate to `Discover` and then select the `Discover` tab (and not `Logs Explorer`)
-2. Set `Data view` to `classified_trades` (this is the index where we asked Elasticsearch to store the results after applying the model)
-3. We want to look specifically at _non-training_ data which was labeled as fraudulent. To do that, set the `Filter` to
+2. Click `Try ES|QL`
+3. We want to look specifically at _non-training_ data which was labeled as fraudulent. To do that, enter the following ES|QL
   ```
-  attributes.com.example.data_source : "monkey" and ml.inference.classification.classification :"fraud"
+  FROM classified_trades |
+  WHERE attributes.com.example.data_source == "monkey" |
+  LIMIT 100 |
+  KEEP attributes.com.example.trade_id, attributes.com.example.action, attributes.com.example.day_of_week, attributes.com.example.region, attributes.com.example.share_price, attributes.com.example.shares, attributes.com.example.symbol, ml.inference.classification.classification
   ```
-4. Open a row and note that the attributes match the pattern of fraudulent transactions you previously generated (refer to that screen snapshot you took)
+4. Note that the attributes match the pattern of fraudulent transactions you previously generated (refer to that screen snapshot you took)
 
 # Custom Dashboard
 Now that's we've confirmed we are labeling transactions as fraudulent, let's visualize and validate our results!

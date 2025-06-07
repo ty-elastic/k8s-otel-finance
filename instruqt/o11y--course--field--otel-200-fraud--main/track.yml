@@ -19,5 +19,5 @@ lab_config:
   - Setting up your Elastic experience...
   override_challenge_layout: false
   hideStopButton: false
-checksum: "17444624312516352735"
+checksum: "17675753340299079606"
 enhanced_loading: false
