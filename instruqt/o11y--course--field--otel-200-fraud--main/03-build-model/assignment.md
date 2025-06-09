@@ -55,15 +55,11 @@ Under `1. Configuration`, set the following:
 8. Click `Continue`
 
 ## 2. Additional options
-1. We want to understand how our attributes ultimately affect classification. To do so, set `Feature importance values` to
-  ```
-  7
-  ```
-2. Set `Prediction field name` to
+1. Set `Prediction field name` to
   ```
   classification
   ```
-3. Click `Continue`
+2. Click `Continue`
 
 ## 3. Job details
 1. Set `Job ID` to

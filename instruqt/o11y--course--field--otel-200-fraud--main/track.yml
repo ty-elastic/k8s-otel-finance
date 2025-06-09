@@ -1,7 +1,8 @@
 slug: o11y--course--field--otel-200-fraud--main
 id: mjut1s5f2aif
 title: 'Observability 200: Fraud Detection with OTel and Elastic'
-description: ""
+description: Combine OpenTelemetry Tracing with Elastic's Machine Learning to detect
+  fraudulent transactions
 icon: ""
 tags: []
 owner: elastic
@@ -19,5 +20,5 @@ lab_config:
   - Setting up your Elastic experience...
   override_challenge_layout: false
   hideStopButton: false
-checksum: "7652721839981381755"
+checksum: "14953514982703485837"
 enhanced_loading: false

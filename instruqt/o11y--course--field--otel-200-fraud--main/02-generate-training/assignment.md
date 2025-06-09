@@ -20,16 +20,15 @@ difficulty: ""
 timelimit: 0
 enhanced_loading: null
 ---
-We know there has been a rash of fraudulent transactions. Our customer service team has been diligently labelling those transactions as fraudulent as they are reported. Unfortunately, we don't know why those transactions are fraudulent; there are simply too many variables to follow. This is, of course, an ideal application of a classification machine learning model.
+We know there has been a rash of fraudulent transactions. Our customer service team has been diligently labelling those transactions as fraudulent as they are reported. Unfortunately, we don't know why those transactions are fraudulent; there are simply too many variables for a human to track and follow. This is, of course, an ideal application of a classification machine learning model: determining complex relationships between many variables.
 
-To build a classification model, we first need data to train it against actual fraudulent data.
+To build our supervised classification model, we will need a set of transactions we know to be fraudulent.
 
 Setup Data Views
 ===
 First, let's create a custom Index Alias in Elasticsearch which looks at _just_ the trade data we want to model and classify.
 
-1. [button label="Elastic"](tab-0)
-2. Copy and paste the following into the left-hand pane of `Developer Tools`
+1. In Elastic, Copy and paste the following into the left-hand pane of `Developer Tools`
   ```
     POST /_aliases
     {
@@ -59,15 +58,16 @@ First, let's create a custom Index Alias in Elasticsearch which looks at _just_ 
       ]
     }
   ```
-3. Execute the `POST` command by clicking on the triangle on the right-hand side of the first line of the command
-4. Confirm the response
+2. Execute the `POST` command by clicking on the triangle on the right-hand side of the first line of the command
+   ![Setup](../assets/generate_devtools.png)
+3. Confirm the response
   ```nocopy
   {
     "acknowledged": true,
     "errors": false
   }
   ```
-5. Copy and paste the following into the left-hand pane of Elasticsearch `Developer Tools`:
+4. Copy and paste the following into the left-hand pane of Elasticsearch `Developer Tools`:
   ```
   POST kbn:/api/data_views/data_view
   {
@@ -78,13 +78,14 @@ First, let's create a custom Index Alias in Elasticsearch which looks at _just_ 
     }
   }
   ```
+5. Execute the `POST` command by clicking on the triangle on the right-hand side of the first line of the command
 6. The response should indicate that a Data View was created
 
 Obtaining training data
 ===
 We will need a dataset of already classified transactions to train our model. Typically, this would come via your customer service team marking existing transactions as fraudulent as they are reported.
 
-For our purposes, rather than include canned data already marked as fraudulent, we will put you in the mind of the criminal! You will be making a whole bunch of (secret) fraudulent transactions that we will pretend our customer service department finds (because they are reported by customers) and labels. The goal will be to see if the classification model you train with Elastic can find a pattern in your fraudulent trades.
+For our purposes, rather than include canned data already marked as fraudulent, we will put you in the mind of the criminal! You will be making a whole bunch of (secret) fraudulent transactions that we will presume our our customer service department labels as they are reported by customers. The goal will be to see if the classification model you train with Elastic can find a pattern in your fraudulent trades.
 
 > [!NOTE]
 > Criminals (at least smart ones), of course, don't intentionally follow a pattern. But they likely would _unintentionally_ practice one. For example, perhaps their schedule unintentionally dictates that they make their transactions on Mondays and Wednesdays. Or perhaps trading only certain stocks is financially advantageous to them? Remember, their prime directive is to make money and not necessarily to avoid getting caught.
@@ -98,9 +99,12 @@ Let's put on our black hats and get to work!
 
 While you are waiting for the training data to be generated, consider taking a screen snapshot of your training configuration or writing down the parameters. You will need to reference this later to check how well our model is predicting potential fraud in new transactions.
 
+> [!NOTE]
+> But wait... didn't we just "tell" Elastic our pattern for fraudulent transactions? Nope. We just made a bunch of fraudulent transactions as a criminal. The pattern of fraudulent transactions is known only to you, the criminal. From the perspective of Elastic and the trading company, all we know is that a bunch of recent transactions have been reported by customers as fraudulent.
+
 Validate training data
 ===
-Before we train our model, let's quickly check that the training data we just generated looks as expected:
+Before we train our model, let's quickly check that the training data we just generated looks as expected. We can easily do this using [ES|QL](https://www.elastic.co/docs/explore-analyze/query-filter/languages/esql), Elastic's powerful piped query language.
 1. [button label="Elastic"](tab-0)
 2. Use the navigation pane to navigate to `Discover` and then select the `Discover` tab (and not `Logs Explorer`)
 3. Click `Try ES|QL`

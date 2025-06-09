@@ -55,7 +55,7 @@ Let's first spot check things in Discover to ensure at least some transactions w
   FROM classified_trades |
   WHERE attributes.com.example.data_source == "monkey" |
   LIMIT 100 |
-  KEEP attributes.com.example.trade_id, attributes.com.example.action, attributes.com.example.day_of_week, attributes.com.example.region, attributes.com.example.share_price, attributes.com.example.shares, attributes.com.example.symbol, ml.inference.classification.classification
+  KEEP attributes.com.example.trade_id, attributes.com.example.action, attributes.com.example.day_of_week, attributes.com.example.region, attributes.com.example.share_price, attributes.com.example.shares, attributes.com.example.symbol, ml.inference.classification.classification, ml.inference.classification.prediction_probability
   ```
 
 Note `ml.inference.classification.classification`: that's the field Elasticsearch injected into every record after running trades against the model we built. Have a look at the trades which the model predicted as fraudulent; they should fall within the pattern of trades you generated as a criminal when we trained our model (refer to that screen snapshot you took).
@@ -71,13 +71,12 @@ We've created a custom dashboard which we can use to visually compare the classi
 > [!NOTE]
 > This dashboard is filtering out training data. You are looking solely at the transactions made by our `monkey` service.
 
-For example, if, as a criminal, you traded only on Mondays and Wednesdays, you should see transactions that `monkey` made on Mondays and Wednesdays as being partially fraudulent.
+For example, if, as a criminal, you traded only on Mondays and Wednesdays, you should see transactions that `monkey` made on Mondays and Wednesdays as labeled partially fraudulent. Why partially? Because our pattern wasn't _simply_ Monday and Wednesdays; there are other many other variables in play. Conversely, you wouldn't see transactions on Tuesday and Thursday labeled fraudulent.
 
 Summary
 ===
+In less than an hour we were able to build, deploy, and validate a model which can successful predict fraudulent transactions. All within Elasticsearch and without requiring months of work by your data science team!
 
-In less than an hour we were able to build, deploy, and validate a model which can successful predict fraudulent transactions. We built our model from actual fraudulent data (which you generated), classified as fraudulent (by our customer service team). We let Elastic do the heavy lifting of studying the complex relationship between the influencing variables to build a practical and fairly accurate model. All without requiring months of work by your data science team!
-
-We created this workshop to show just how easy it is with Elastic to get additional value out of your APM data. You could imagine applying this concept to many different verticals with many different classifiers (e.g., not just fraud).
+We created this workshop to show just how easy it is with Elastic to get additional value out of your existing APM data. You could imagine applying this concept to many different industries. Furthermore, `classification` isn't limited to being a single value (e.g., `fraud`); you can Elastic to model and predict many different values (e.g., labeling certain transactions one way, and others another).
 
 Want to learn more about Elastic's support for [OpenTelemetry](https://www.elastic.co/what-is/opentelemetry) or our out-of-the-box [Machine Learning](https://www.elastic.co/elasticsearch/machine-learning)? [Reach out to us!](https://www.elastic.co/contact)
