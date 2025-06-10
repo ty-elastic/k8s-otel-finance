@@ -31,6 +31,11 @@ tabs:
   hostname: kubernetes-vm
   path: ?folder=/workspace
   port: 8080
+- id: hqf54h8z6kod
+  title: Terminal (host-1)
+  type: terminal
+  hostname: host-1
+  workdir: /workspace/workshop
 difficulty: basic
 timelimit: 600
 enhanced_loading: null

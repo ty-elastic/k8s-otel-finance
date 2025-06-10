@@ -12,7 +12,7 @@ developers:
 show_timer: true
 idle_timeout: 900
 timelimit: 7200
-sandbox_preset: sa-otel-200-8-17
+sandbox_preset: managed-vm-elastic-8-18-2
 lab_config:
   extend_ttl: 900
   sidebar_enabled: true
@@ -24,5 +24,5 @@ lab_config:
     name: modern-dark
   override_challenge_layout: false
   hideStopButton: false
-checksum: "6612978030327873427"
+checksum: "3212489962258569064"
 enhanced_loading: false
