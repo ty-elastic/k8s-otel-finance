@@ -105,7 +105,7 @@ While you are waiting for the training data to be generated, consider taking a s
 Validate training data
 ===
 Before we train our model, let's quickly check that the training data we just generated looks as expected. We can easily do this using [ES|QL](https://www.elastic.co/docs/explore-analyze/query-filter/languages/esql), Elastic's powerful piped query language.
-1. [button label="Elastic"](tab-0)
+1. Navigate to the [button label="Elastic"](tab-0) tab
 2. Use the navigation pane to navigate to `Discover` and then select the `Discover` tab (and not `Logs Explorer`)
 3. Click `Try ES|QL`
 4. Enter the following ES|QL:
