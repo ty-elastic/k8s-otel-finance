@@ -1,10 +1,10 @@
 ---
 slug: application
-id: ylynqfneshqn
+id: hif5fin7f2ze
 type: challenge
 title: Applying Our Model
 tabs:
-- id: xs7t9jhyoxnu
+- id: yxgb00dluwvi
   title: Elastic
   type: service
   hostname: kubernetes-vm
@@ -21,7 +21,7 @@ To apply the model we just trained, we will be creating an Ingest Pipeline. That
 # Create an Ingest Pipeline
 1. On our Trained Models page, find the model `classification-*`
 2. On the right hand side of row containing our model, click `...` to open the contextual menu and select `Deploy model`
-  ![View](../assets/application_deploy.png)
+  ![View](../assets/application-deploy.png)
 3. Under `1. Details` select `Continue`
 4. Under `2. Configure processor` select `Continue`
 5. Under `3. Handle failures` select `Continue`
@@ -38,7 +38,7 @@ Open `Next steps`:
   classified_trades
   ```
 3. Enable `Create data view`
-  ![View](../assets/application_reindex.png)
+  ![View](../assets/application-reindex.png)
 4. Click `Reindex`
 5. Click 'Close'
 
@@ -58,7 +58,7 @@ Let's first spot check things in Discover to ensure at least some transactions w
   KEEP attributes.com.example.trade_id, attributes.com.example.action, attributes.com.example.day_of_week, attributes.com.example.region, attributes.com.example.share_price, attributes.com.example.shares, attributes.com.example.symbol, ml.inference.classification.classification, ml.inference.classification.prediction_probability
   ```
 
-Note `ml.inference.classification.classification`: that's the field Elasticsearch injected into every record after running trades against the model we built. Have a look at the trades which the model predicted as fraudulent; they should fall within the pattern of trades you generated as a criminal when we trained our model (refer to that screen snapshot you took).
+Note `ml.inference.classification.classification`: that's the field Elasticsearch injected into every record after running trades against the model we built. Have a look at the trades which the model classified as `fraud`; they should fall within the pattern of trades you generated as a criminal when we trained our model (refer to that screen snapshot you took). Conversely, trades classified as `unclassified` shouldn't fall within the pattern of trades you generated.
 
 # Custom Dashboard
 Now that's we've confirmed we are labeling transactions as fraudulent, let's visualize and validate our results!

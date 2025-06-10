@@ -16,7 +16,7 @@ class MarketTputSymbol extends React.Component {
         super(props);
         this.state = {
             tput_symbol_speed: 'default',
-            tput_symbol: 'MOT'
+            tput_symbol: 'OELK'
         };
 
         this.monkeyState = new MonkeyState(this, 'high_tput_per_symbol');
@@ -77,12 +77,12 @@ class MarketTputSymbol extends React.Component {
                             label="Symbol"
                             onChange={this.handleInputChange}
                         >
-                            <MenuItem value="MOT">MOT</MenuItem>
-                            <MenuItem value="MSI">MSI</MenuItem>
-                            <MenuItem value="GOGO">GOGO</MenuItem>
-                            <MenuItem value="INTEQ">INTEQ</MenuItem>
-                            <MenuItem value="VID">VID</MenuItem>
-                            <MenuItem value="ESTC">ESTC</MenuItem>
+                            <MenuItem value="ZVZZT">ZVZZT</MenuItem>
+                            <MenuItem value="ZALM">ZALM</MenuItem>
+                            <MenuItem value="ZYX">ZYX</MenuItem>
+                            <MenuItem value="CBAZ">CBAZ</MenuItem>
+                            <MenuItem value="BAA">BAA</MenuItem>
+                            <MenuItem value="OELK">OELK</MenuItem>
                         </Select>
                     </FormControl>
                     <Box width="100%"><Button variant="contained" data-transaction-name="MarketTputSymbol" type="submit">Submit</Button></Box>

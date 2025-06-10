@@ -14,7 +14,7 @@ ATTRIBUTE_PREFIX = "com.example"
 
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
-app.logger.info(f"variant: o11y--course--field--otel-200-fraud--main")
+app.logger.info(f"variant: o11y--course--field--o11y-300-fraud--main")
 
 import model
 

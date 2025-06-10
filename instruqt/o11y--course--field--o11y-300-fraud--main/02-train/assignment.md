@@ -1,16 +1,16 @@
 ---
-slug: generate-training
-id: icjbgncknxen
+slug: train
+id: bssypniepqhx
 type: challenge
 title: Training Our Model
 tabs:
-- id: mym97vj0hmjv
+- id: lkclexiu25ht
   title: Elastic
   type: service
   hostname: kubernetes-vm
   path: /app/dev_tools#/console/shell
   port: 30001
-- id: allim22boynn
+- id: gywkxajr5yqw
   title: Trader
   type: service
   hostname: host-1
@@ -59,7 +59,7 @@ First, let's create a custom Index Alias in Elasticsearch which looks at _just_ 
     }
   ```
 2. Execute the `POST` command by clicking on the triangle on the right-hand side of the first line of the command
-   ![Setup](../assets/generate_devtools.png)
+   ![Setup](../assets/train-devtools.png)
 3. Confirm the response
   ```nocopy
   {

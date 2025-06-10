@@ -1,0 +1,28 @@
+slug: otel-200-attributes
+id: mc5wjzkjj4ha
+title: Adding attributes to traces and logs with OpenTelemetry
+description: In this track, we explore best practices to add common attributes across
+  traces and logs across your distributed system.
+icon: ""
+tags:
+- otel-200
+owner: elastic
+developers:
+- tyrone.bekiares@elastic.co
+show_timer: true
+idle_timeout: 900
+timelimit: 7200
+sandbox_preset: sa-otel-200-8-17
+lab_config:
+  extend_ttl: 900
+  sidebar_enabled: true
+  feedback_recap_enabled: true
+  feedback_tab_enabled: false
+  loadingMessages:
+  - Setting up your Elastic experience...
+  theme:
+    name: modern-dark
+  override_challenge_layout: false
+  hideStopButton: false
+checksum: "6612978030327873427"
+enhanced_loading: false

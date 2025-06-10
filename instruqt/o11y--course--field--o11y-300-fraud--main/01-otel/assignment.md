@@ -1,21 +1,21 @@
 ---
 slug: otel
-id: i8ndsv1bxpb0
+id: ffanqsfd5xxx
 type: challenge
 title: Using OpenTelemetry to Record Transactions
 tabs:
-- id: lzoggpksfo6s
+- id: zvlkklx2ybeg
   title: Elastic
   type: service
   hostname: kubernetes-vm
   path: /app/apm/service-map?comparisonEnabled=true&rangeFrom=now-15m&rangeTo=now&offset=1d&kuery=data_stream.type%20:%22traces%22%20
   port: 30001
-- id: eiupcnl0d2ad
+- id: bvvjm9dfwxvd
   title: Trader Source Code
   type: code
   hostname: host-1
-  path: /workspace/workshop/src/trader/variants/o11y--course--field--otel-200-fraud--main/app.py
-- id: qtxb3kqiodpt
+  path: /workspace/workshop/src/trader/variants/o11y--course--field--o11y-300-fraud--main/app.py
+- id: x38jsry9hpqw
   title: Terminal (host-1)
   type: terminal
   hostname: host-1

@@ -18,7 +18,7 @@ class TradeRequest extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            symbol: 'MOT',
+            symbol: 'OELK',
             day_of_week: 'M',
             customer_id: "tb93",
             region: 'NA'

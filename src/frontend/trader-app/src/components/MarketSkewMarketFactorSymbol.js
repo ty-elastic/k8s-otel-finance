@@ -18,7 +18,7 @@ class MarketSkewMarketFactorSymbol extends React.Component {
         super(props);
         this.state = {
             skew_market_factor_symbol_amount: 0,
-            skew_market_factor_symbol: 'MOT',
+            skew_market_factor_symbol: 'OELK',
         };
 
         this.monkeyState = new MonkeyState(this, 'skew_market_factor_per_symbol');
@@ -80,12 +80,12 @@ class MarketSkewMarketFactorSymbol extends React.Component {
                             label="Symbol"
                             onChange={this.handleInputChange}
                         >
-                            <MenuItem value="MOT">MOT</MenuItem>
-                            <MenuItem value="MSI">MSI</MenuItem>
-                            <MenuItem value="GOGO">GOGO</MenuItem>
-                            <MenuItem value="INTEQ">INTEQ</MenuItem>
-                            <MenuItem value="VID">VID</MenuItem>
-                            <MenuItem value="ESTC">ESTC</MenuItem>
+                            <MenuItem value="ZVZZT">ZVZZT</MenuItem>
+                            <MenuItem value="ZALM">ZALM</MenuItem>
+                            <MenuItem value="ZYX">ZYX</MenuItem>
+                            <MenuItem value="CBAZ">CBAZ</MenuItem>
+                            <MenuItem value="BAA">BAA</MenuItem>
+                            <MenuItem value="OELK">OELK</MenuItem>
                         </Select>
                     </FormControl>
                     <Box width="100%"><Button variant="contained" data-transaction-name="MarketSkewMarketFactorSymbol" type="submit">Submit</Button></Box>
