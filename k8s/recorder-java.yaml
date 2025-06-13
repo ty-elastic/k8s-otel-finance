@@ -31,7 +31,7 @@ spec:
               value: password
             - name: POSTGRES_USER
               value: admin
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/recorder-java:$BUILD_TAG
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/recorder-java:$IMAGE_VERSION
           #imagePullPolicy: Never
           name: recorder-java
           ports:

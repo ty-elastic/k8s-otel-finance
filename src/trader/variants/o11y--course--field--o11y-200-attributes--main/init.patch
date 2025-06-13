@@ -1,0 +1,16 @@
+--- app.py	2025-06-04 10:46:51
++++ variants/o11y--course--field--o11y-200-attributes--main/app.py	2025-06-10 08:06:45
+@@ -8,9 +8,13 @@
+ 
+ import requests
+ 
++from opentelemetry import trace
++tracer = trace.get_tracer(__name__)
++ATTRIBUTE_PREFIX = "com.example"
++
+ app = Flask(__name__)
+ app.logger.setLevel(logging.INFO)
+-app.logger.info(f"variant: default")
++app.logger.info(f"variant: o11y--course--field--o11y-200-attributes--main")
+ 
+ import model

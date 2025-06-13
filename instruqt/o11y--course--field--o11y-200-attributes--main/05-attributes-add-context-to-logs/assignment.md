@@ -1,6 +1,6 @@
 ---
 slug: attributes-add-context-to-logs
-id: xuihx4xyapl4
+id: bpmmy02kyyxb
 type: challenge
 title: Attributes add context to logs
 notes:
@@ -8,13 +8,13 @@ notes:
   contents: In this challenge, we will learn how to automatically add common attributes
     to our log lines
 tabs:
-- id: lcfqicipvl0s
+- id: g3lshdcasiey
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm
   path: /app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:now-15m,to:now))&_a=(columns:!(),dataSource:(dataViewId:'logs-*',type:dataView),filters:!(),hideChart:!f,interval:auto,query:(language:kuery,query:''),sort:!(!('@timestamp',desc)))
   port: 30001
-- id: yc8yahckga0g
+- id: humujmeztiij
   title: VS Code
   type: service
   hostname: kubernetes-vm

@@ -29,7 +29,7 @@ spec:
               value: processor
             - name: IN_TOPIC
               value: notifications_q
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/processor:$BUILD_TAG
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/processor:$IMAGE_VERSION
           #imagePullPolicy: Never
           name: processor
       restartPolicy: Always

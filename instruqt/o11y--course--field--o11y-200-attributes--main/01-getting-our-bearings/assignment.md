@@ -1,6 +1,6 @@
 ---
 slug: getting-our-bearings
-id: vm9q92kpliwh
+id: kw6ykrvmf4a6
 type: challenge
 title: Getting our bearings
 notes:
@@ -19,19 +19,19 @@ notes:
 
     *We are creating an Elastic cluster just for you! This process will take 2 to 3 minutes. When the  `Start` bottom appears in the bottom-right, click it to get started!*
 tabs:
-- id: hsukym8vye8r
+- id: yzy96xriyxxh
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm
   path: /app/apm/service-map?comparisonEnabled=false&environment=ENVIRONMENT_ALL&rangeFrom=now-15m&rangeTo=now
   port: 30001
-- id: rkw0fkvdecbs
+- id: cxyduxjxs9dd
   title: VS Code
   type: service
   hostname: kubernetes-vm
   path: ?folder=/workspace
   port: 8080
-- id: hqf54h8z6kod
+- id: 26tvnjtcjc07
   title: Terminal (host-1)
   type: terminal
   hostname: host-1

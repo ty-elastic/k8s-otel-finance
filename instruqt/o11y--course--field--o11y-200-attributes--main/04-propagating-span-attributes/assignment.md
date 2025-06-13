@@ -1,6 +1,6 @@
 ---
 slug: propagating-span-attributes
-id: yc2qddeq2pyp
+id: ch9fc5djjiwk
 type: challenge
 title: Propagating span attributes
 notes:
@@ -8,13 +8,13 @@ notes:
   contents: In this challenge, we will learn how to propagate attributes from parent
     to child spans (even across services!)
 tabs:
-- id: xz2evmcgxz9s
+- id: iazynsfcgox9
   title: VS Code
   type: service
   hostname: kubernetes-vm
   path: ?folder=/workspace
   port: 8080
-- id: lw5rr9e93spg
+- id: xgyqdrptndyo
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm

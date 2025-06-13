@@ -83,4 +83,15 @@ For example, by adding a customer identifier to our traces, SREs can now observe
 
 Note how quickly and easily we can find traces for a specific customer without having to rely on manual correlation (e.g., what node serviced this customer's request at what time).
 
+We can also look at our spans using Discover
+1. Navigate to the [button label="Elastic"](tab-0) tab
+2. Use the navigation pane to navigate to `Discover` and then select the `Discover` tab (and not `Logs Explorer`)
+3. Click `Try ES|QL`
+4. Enter the following ES|QL:
+  ```
+  FROM traces-trader |
+  LIMIT 100 |
+  KEEP attributes.com.example.trade_id, attributes.com.example.action, attributes.com.example.day_of_week, attributes.com.example.region, attributes.com.example.share_price, attributes.com.example.shares, attributes.com.example.symbol
+  ```
+
 In the next section, we will see how we can start to leverage these trade-specific attributes to help us predict fraudulent transactions.

@@ -27,7 +27,7 @@ spec:
               value: recorder-java
             - name: RECORDER_HOST_CANARY
               value: recorder-go-zero
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/router:$BUILD_TAG
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/router:$IMAGE_VERSION
           #imagePullPolicy: Never
           name: router
           ports:

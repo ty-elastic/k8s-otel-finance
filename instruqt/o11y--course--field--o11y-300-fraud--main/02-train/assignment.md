@@ -26,7 +26,7 @@ To build our supervised classification model, we will need a set of transactions
 
 Setup Data Views
 ===
-First, let's create a custom Index Alias in Elasticsearch which looks at _just_ the trade data we want to model and classify.
+First, let's create a custom Index Alias in Elasticsearch which dynamically filters all of our APM trace data to look at _just_ the traces which represent trades.
 
 1. In Elastic, Copy and paste the following into the left-hand pane of `Developer Tools`
   ```
@@ -80,6 +80,17 @@ First, let's create a custom Index Alias in Elasticsearch which looks at _just_ 
   ```
 5. Execute the `POST` command by clicking on the triangle on the right-hand side of the first line of the command
 6. The response should indicate that a Data View was created
+
+Let's test our Index Alias in Discover and ensure it filters for _just_ the traces which represent trades:
+1. Navigate to the [button label="Elastic"](tab-0) tab
+2. Use the navigation pane to navigate to `Discover` and then select the `Discover` tab (and not `Logs Explorer`)
+3. Click `Try ES|QL`
+4. Enter the following ES|QL:
+  ```
+  FROM traces-trader |
+  LIMIT 100 |
+  KEEP attributes.com.example.trade_id, attributes.com.example.action, attributes.com.example.day_of_week, attributes.com.example.region, attributes.com.example.share_price, attributes.com.example.shares, attributes.com.example.symbol
+  ```
 
 Obtaining training data
 ===

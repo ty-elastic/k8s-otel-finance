@@ -57,7 +57,24 @@ helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kub
 
 sleep 30
 
-cd /workspace/workshop/instruqt/$INSTRUQT_TRACK_SLUG
+# patch -i /workspace/src/trader/patch/remove_attributes.diff /workspace/src/trader/app.py
+# patch -i /workspace/src/trader/patch/remove_blrp.diff /workspace/src/trader/app.py
+# patch -i /workspace/src/recorder-java/patch/remove_bsp.diff /workspace/src/recorder-java/Dockerfile
+# patch -F 3 -i /workspace/src/recorder-java/patch/remove_blrp.diff /workspace/src/recorder-java/Dockerfile
+# docker compose build
+# docker compose up -d
+
+for dir in /workspace/workshop/src/*/; do
+  echo $dir
+  if [[ -d "$dir" ]]; then
+    service=$(basename "$dir")
+    echo $service
+    if [ -d "$dir/variants/$INSTRUQT_TRACK_SLUG" ]; then
+        echo "patching"
+        patch -p1 < variants/$INSTRUQT_TRACK_SLUG/init.patch
+    fi
+  fi
+done
 ./install.sh
 
-retry_command_lin curl --silent --fail --output /dev/null --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" "$ELASTICSEARCH_URL/_cat/indices/.ds-traces-*?allow_no_indices=false"
+#retry_command_lin curl --silent --fail --output /dev/null --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" "$ELASTICSEARCH_URL/_cat/indices/.ds-traces-*?allow_no_indices=false"

@@ -1,6 +1,6 @@
 ---
 slug: adding-span-attributes
-id: 6lw1ijyxwrhd
+id: 0ymgtk4xfum1
 type: challenge
 title: Adding span attributes
 notes:
@@ -8,13 +8,13 @@ notes:
   contents: In this challenge, we will learn how to add attributes to OpenTelemetry
     spans
 tabs:
-- id: yxlvx2h0yqzd
+- id: bae3pzzurwwo
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm
   path: /app/apm/service-map?comparisonEnabled=false&environment=ENVIRONMENT_ALL&rangeFrom=now-15m&rangeTo=now
   port: 30001
-- id: fqrojah2vdgt
+- id: ycfyevqhusis
   title: VS Code
   type: service
   hostname: kubernetes-vm
