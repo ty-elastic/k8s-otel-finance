@@ -28,7 +28,7 @@ tabs:
 - id: cxyduxjxs9dd
   title: VS Code
   type: service
-  hostname: kubernetes-vm
+  hostname: host-1
   path: ?folder=/workspace
   port: 8080
 - id: 26tvnjtcjc07
