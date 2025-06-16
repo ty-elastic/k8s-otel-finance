@@ -17,8 +17,8 @@ tabs:
 - id: c2jhexjhpnif
   title: VS Code
   type: service
-  hostname: kubernetes-vm
-  path: ?folder=/workspace
+  hostname: host-1
+  path: ?folder=/workspace/workshop
   port: 8080
 difficulty: ""
 timelimit: 600

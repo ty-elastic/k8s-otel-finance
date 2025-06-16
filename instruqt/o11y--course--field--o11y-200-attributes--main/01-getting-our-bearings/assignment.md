@@ -23,13 +23,13 @@ tabs:
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm
-  path: /app/apm/service-map?comparisonEnabled=false&environment=ENVIRONMENT_ALL&rangeFrom=now-15m&rangeTo=now
+  path: /app/apm/service-map?comparisonEnabled=true&rangeFrom=now-15m&rangeTo=now&offset=1d&kuery=data_stream.type%20:%22traces%22%20
   port: 30001
 - id: cxyduxjxs9dd
   title: VS Code
   type: service
   hostname: host-1
-  path: ?folder=/workspace
+  path: ?folder=/workspace/workshop
   port: 8080
 - id: 26tvnjtcjc07
   title: Terminal (host-1)

@@ -11,14 +11,14 @@ tabs:
 - id: iazynsfcgox9
   title: VS Code
   type: service
-  hostname: kubernetes-vm
-  path: ?folder=/workspace
+  hostname: host-1
+  path: ?folder=/workspace/workshop
   port: 8080
 - id: xgyqdrptndyo
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm
-  path: /app/apm/service-map?comparisonEnabled=false&environment=ENVIRONMENT_ALL&rangeFrom=now-15m&rangeTo=now
+  path: /app/apm/service-map?comparisonEnabled=true&rangeFrom=now-15m&rangeTo=now&offset=1d&kuery=data_stream.type%20:%22traces%22%20
   port: 30001
 difficulty: basic
 timelimit: 600
