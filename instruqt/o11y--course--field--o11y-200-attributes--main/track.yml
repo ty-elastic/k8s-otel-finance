@@ -1,6 +1,6 @@
 slug: o11y--course--field--o11y-200-attributes--main
 id: zxeoxws6d0ty
-title: Adding attributes to traces and logs with OpenTelemetry
+title: 'Observability 200: Adding attributes to traces and logs with OpenTelemetry'
 description: In this track, we explore best practices to add common attributes across
   traces and logs across your distributed system.
 icon: ""
@@ -24,5 +24,5 @@ lab_config:
     name: modern-dark
   override_challenge_layout: false
   hideStopButton: false
-checksum: "1475783289397124022"
+checksum: "17012891649066075203"
 enhanced_loading: false
