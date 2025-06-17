@@ -67,18 +67,6 @@ sleep 30
 # docker compose build
 # docker compose up -d
 
-for dir in /workspace/workshop/src/*/; do
-  if [[ -d "$dir" ]]; then
-    service=$(basename "$dir")
-    echo $service
-    if [ -d "$dir/variants/$INSTRUQT_TRACK_SLUG" ]; then
-        echo "patching"
-        cd /workspace/workshop/src/$service
-        patch < variants/$INSTRUQT_TRACK_SLUG/init.patch
-    fi
-  fi
-done
-cd /workspace/workshop
-./install.sh
+/workspace/workshop/instruqt/patch.sh
 
-retry_command_lin curl --silent --fail --output /dev/null --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" "$ELASTICSEARCH_URL/_cat/indices/.ds-traces-*?allow_no_indices=false"
+#retry_command_lin curl --silent --fail --output /dev/null --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" "$ELASTICSEARCH_URL/_cat/indices/.ds-traces-*?allow_no_indices=false"
