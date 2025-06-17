@@ -110,12 +110,3 @@ While helpful, similar to logs, relying on arbitrary text strings is not ideal:
 
 Note that the results aren't particularly helpful in determining if this problem is specific to `l.hall` or more systemic.
 
-Adding labels to spans
-===
-
-Most/all existing APM frameworks do offer the ability to add labels to your traces, with some caveats:
-* adding labels generally means adding custom observability code to your service
-* prior to OpenTelemetry, each vendor had their own API for adding labels, so adding labels meant vendor lock-in
-* there was no way to automatically propagate labels through your services, so custom code would have to be added to each service in the calling chain leading to a similar problem as logs: each developer could name the `customer_id` label in a different fashion complicating search
-
-Let's see how OpenTelemetry can help address these concerns!

@@ -1,7 +1,5 @@
 arch=linux/amd64
 
-source build_vars.sh
-
 for dir in ../../src/*/; do
   echo $dir
   if [[ -d "$dir" ]]; then

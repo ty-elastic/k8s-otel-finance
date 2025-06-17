@@ -78,7 +78,7 @@ for dir in /workspace/workshop/src/*/; do
     fi
   fi
 done
-cd /workspace/workshop/instruqt/$INSTRUQT_TRACK_SLUG
+cd /workspace/workshop
 ./install.sh
 
-#retry_command_lin curl --silent --fail --output /dev/null --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" "$ELASTICSEARCH_URL/_cat/indices/.ds-traces-*?allow_no_indices=false"
+retry_command_lin curl --silent --fail --output /dev/null --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" "$ELASTICSEARCH_URL/_cat/indices/.ds-traces-*?allow_no_indices=false"

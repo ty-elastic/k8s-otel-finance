@@ -24,6 +24,16 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: null
 ---
+Adding labels to spans
+===
+
+Most/all existing APM frameworks do offer the ability to add labels to your traces, with some caveats:
+* adding labels generally means adding custom observability code to your service
+* prior to OpenTelemetry, each vendor had their own API for adding labels, so adding labels meant vendor lock-in
+* there was no way to automatically propagate labels through your services, so custom code would have to be added to each service in the calling chain leading to a similar problem as logs: each developer could name the `customer_id` label in a different fashion complicating search
+
+Let's see how OpenTelemetry can help address these concerns!
+
 Adding span attributes
 ===
 Among its many virtues, OpenTelemetry's support for common attributes which span across observability signals and your distributed services not only provides a solution to the aforementioned problems, but will also fuel the ML and AI based analysis we will consider in subsequent labs.
@@ -38,7 +48,7 @@ So what needs to be added on top of OpenTelemetry's auto-instrumentation to add 
 
 1. Open the [button label="VS Code"](tab-1) tab
 2. Navigate to `src` / `trader` / `app.py`
-3. Look for the python code around line 67:
+3. Look for the python code around line 36:
     ```python,nocopy
     customer_id = request.args.get('customer_id', default=None, type=str)
     ```
