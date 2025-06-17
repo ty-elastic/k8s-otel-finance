@@ -1,0 +1,9 @@
+export $(curl http://kubernetes-vm:9000/env | xargs)
+export $(cat /workspace/workshop/instruqt/$INSTRUQT_TRACK_SLUG/build_vars.sh | xargs)
+
+
+# cd $WORKSPACE_DIR
+# git reset --hard origin/main
+# patch -i /workspace/src/trader/patch/remove_blrp.diff /workspace/src/trader/app.py
+# patch -i /workspace/src/recorder-java/patch/remove_blrp.diff /workspace/src/recorder-java/Dockerfile
+# docker compose up -d --build
