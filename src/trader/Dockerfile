@@ -16,7 +16,8 @@ COPY model.py .
 COPY variants variants
 
 RUN if [ -d "variants/$COURSE" ]; then \
-        patch -p1 < variants/$COURSE/init.patch
+    echo $COURSE; \
+    patch < variants/$COURSE/init.patch; \
     fi
 
 ENV ROUTER_HOST="router"

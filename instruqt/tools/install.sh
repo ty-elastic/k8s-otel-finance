@@ -1,3 +1,8 @@
+source /opt/workshops/elastic-retry.sh
+
+export $(curl http://kubernetes-vm:9000/env | xargs)
+export $(cat /workspace/workshop/instruqt/$INSTRUQT_TRACK_SLUG/build_vars.sh | xargs)
+
 for dir in /workspace/workshop/src/*/; do
   if [[ -d "$dir" ]]; then
     service=$(basename "$dir")

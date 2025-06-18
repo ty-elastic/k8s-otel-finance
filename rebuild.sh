@@ -1,3 +1,5 @@
+export $(cat ./build_vars.sh | xargs)
+
 arch=linux/amd64
 
 while getopts "s:" opt
