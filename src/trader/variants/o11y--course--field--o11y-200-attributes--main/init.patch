@@ -1,12 +1,13 @@
---- app.py	2025-06-04 10:46:51
-+++ variants/o11y--course--field--o11y-200-attributes--main/app.py	2025-06-10 08:06:45
-@@ -8,9 +8,13 @@
+--- app.py	2025-06-18 20:59:42
++++ variants/o11y--course--field--o11y-200-attributes--main/app.py	2025-06-18 21:01:07
+@@ -8,9 +8,14 @@
  
  import requests
  
-+from opentelemetry import trace
-+tracer = trace.get_tracer(__name__)
++from opentelemetry import trace, baggage, context
++from opentelemetry.processor.baggage import BaggageSpanProcessor, ALLOW_ALL_BAGGAGE_KEYS
 +ATTRIBUTE_PREFIX = "com.example"
++tracer = trace.get_tracer(__name__)
 +
  app = Flask(__name__)
  app.logger.setLevel(logging.INFO)
@@ -14,3 +15,4 @@
 +app.logger.info(f"variant: o11y--course--field--o11y-200-attributes--main")
  
  import model
+ 

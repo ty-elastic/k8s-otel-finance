@@ -65,9 +65,9 @@ So what needs to be added on top of OpenTelemetry's auto-instrumentation to add 
     trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.customer_id", customer_id)
     ```
 6. Save the file (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`
-7. Enter the following in the command line pane of VS Code to recompile:
+7. Enter the following in the command line pane of VS Code to recompile the `trader` service:
     ```bash
-    docker compose up -d --build
+    ./rebuild.sh -s trader
     ```
 
 After issuing the rebuild command, wait for the build to complete...

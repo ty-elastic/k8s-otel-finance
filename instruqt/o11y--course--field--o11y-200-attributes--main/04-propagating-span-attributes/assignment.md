@@ -38,7 +38,7 @@ Adding elements to baggage is trivial.
 Let's return to the `trader` code:
 1. Open the [button label="VS Code"](tab-1) tab
 2. Navigate to `src` / `trader` / `app.py`
-3. Go back to the python code around line 67 where we previously added the customer_id attribute:
+3. Go back to the python code around line 36 where we previously added the customer_id attribute:
     ```python,nocopy
     customer_id = request.args.get('customer_id', default=None, type=str)
     trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.customer_id", customer_id)
