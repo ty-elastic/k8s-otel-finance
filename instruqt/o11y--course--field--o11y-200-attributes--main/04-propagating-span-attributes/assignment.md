@@ -71,20 +71,18 @@ Let's add the BaggageSpanProcessor to our Python trading app:
 
 1. Open the [button label="VS Code"](tab-1) tab
 2. Navigate to `src` / `trader` / `app.py`
-3. Look for the following code line 33 inside the `init_otel()` function:
+3. Look for the following code line around the top of `app.py`:
     ```python,nocopy
-    def init_otel():
-        tracer = trace.get_tracer("trader")
+        tracer = trace.get_tracer(__name__)
     ```
-4. Now let's attach the BaggageSpanProcessor to the default tracer provider by inserting the following line after `init_otel()`
+4. Now let's attach the BaggageSpanProcessor to the default tracer provider by inserting the following line before `tracer = trace.get_tracer(__name__)`
     ```python
     trace.get_tracer_provider().add_span_processor(BaggageSpanProcessor(ALLOW_ALL_BAGGAGE_KEYS))
     ```
 5. You should now have:
     ```python,nocopy
-    def init_otel():
         trace.get_tracer_provider().add_span_processor(BaggageSpanProcessor(ALLOW_ALL_BAGGAGE_KEYS))
-        tracer = trace.get_tracer("trader")
+        tracer = trace.get_tracer(__name__)
     ```
 6. Save the file (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`
 
