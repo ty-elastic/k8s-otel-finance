@@ -1,5 +1,5 @@
 FROM python:3.12.6-slim-bookworm
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y curl patch && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /python-docker
 
@@ -10,14 +10,17 @@ RUN edot-bootstrap --action=install
 RUN pip3 uninstall -y opentelemetry-instrumentation-click
 
 ARG COURSE=main
+ARG VARIANTS=true
 
 COPY app.py .
 COPY model.py .
 COPY variants variants
 
-RUN if [ -d "variants/$COURSE" ]; then \
-    echo $COURSE; \
-    patch < variants/$COURSE/init.patch; \
+RUN if [ $VARIANTS == "true" ]; then \
+    if [ -d "variants/$COURSE" ]; then \
+        echo $COURSE; \
+        patch < variants/$COURSE/init.patch; \
+        fi \
     fi
 
 ENV ROUTER_HOST="router"
