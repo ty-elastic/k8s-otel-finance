@@ -16,7 +16,7 @@ COPY app.py .
 COPY model.py .
 COPY variants variants
 
-RUN if [ $VARIANTS == "true" ]; then \
+RUN if [ "$VARIANTS" = "true" ]; then \
     if [ -d "variants/$COURSE" ]; then \
         echo $COURSE; \
         patch < variants/$COURSE/init.patch; \
