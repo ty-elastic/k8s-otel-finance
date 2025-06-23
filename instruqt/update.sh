@@ -9,16 +9,16 @@ for dir in ./courses/*/; do
     COURSE=$(basename "$dir")
     echo $COURSE
 
-    for dir in ../src/*/; do
-        echo $dir
-        if [[ -d "$dir" ]]; then
-            service=$(basename "$dir")
-            echo $service
-            echo $COURSE
-            docker build --platform $arch --build-arg COURSE=$COURSE --progress plain -t us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$COURSE $dir
-            docker push us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$COURSE
-        fi
-    done
+    # for dir in ../src/*/; do
+    #     echo $dir
+    #     if [[ -d "$dir" ]]; then
+    #         service=$(basename "$dir")
+    #         echo $service
+    #         echo $COURSE
+    #         docker build --platform $arch --build-arg COURSE=$COURSE --progress plain -t us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$COURSE $dir
+    #         docker push us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$COURSE
+    #     fi
+    # done
 
     cd ./courses/$COURSE
     instruqt track push --force

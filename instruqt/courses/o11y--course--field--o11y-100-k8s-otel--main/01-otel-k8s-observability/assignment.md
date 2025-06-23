@@ -4,7 +4,7 @@ id: tlqlxalymcmx
 type: challenge
 title: Using OpenTelemetry to Observe Kubernetes
 tabs:
-- id: yzy96xriyxxh
+- id: cuevwagwjc7g
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm

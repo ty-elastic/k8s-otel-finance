@@ -3,16 +3,20 @@ source /opt/workshops/elastic-retry.sh
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
 install=true
-while getopts "i:" opt
+operator=true
+while getopts "i:o:" opt
 do
    case "$opt" in
       i ) install="$OPTARG" ;;
+      i ) operator="$OPTARG" ;;
    esac
 done
 
 /opt/workshops/vscode-start.sh
 
-/workspace/workshop/instruqt/tools/otel.sh
+if [ "$operator" = "true" ]; then
+    /workspace/workshop/instruqt/tools/otel.sh
+fi
 
 /workspace/workshop/instruqt/tools/install.sh -i $install
 

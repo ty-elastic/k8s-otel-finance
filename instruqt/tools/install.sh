@@ -33,6 +33,7 @@ if [ -d "k8s/variants/$INSTRUQT_TRACK_SLUG" ]; then
     patch < variants/$INSTRUQT_TRACK_SLUG/init.patch
 fi
 
+export COURSE=$INSTRUQT_TRACK_SLUG
 for f in k8s/*.yaml; do envsubst < $f > $f.tmp && mv $f.tmp $f; done
 
 if [ "$install" = "true" ]; then
