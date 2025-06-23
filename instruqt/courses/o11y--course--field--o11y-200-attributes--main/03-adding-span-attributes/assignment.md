@@ -65,7 +65,7 @@ So what needs to be added on top of OpenTelemetry's auto-instrumentation to add 
     trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.customer_id", customer_id)
     ```
 6. Save the file (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`
-7. Enter the following in the command line pane of VS Code to recompile the `trader` service:
+7. Enter the following in the terminal pane of VS Code to recompile the `trader` service:
     ```bash
     ./rebuild.sh -s trader
     ```
@@ -82,17 +82,17 @@ Let's see how far this gets us:
 3. Click on the `Explorer` tab
 4. Copy
     ```kql
-    labels.com_example_customer_id : "l.hall"
+    attributes.com.example.customer_id : "l.hall"
     ```
     into the `Filter your data using KQL syntax` search bar toward the top of the Kibana window
 5. Click `Search`
 6. Click on the parent transaction `POST /trade/request` toward the top of the waterfall graph
-7. A flyout panel will open on the right, showing all of the metadata associated with the span. Note the presence of `labels.com_example_customer_id`.
+7. A flyout panel will open on the right, showing all of the metadata associated with the span. Note the presence of `attributes.com.example.customer_id`.
 
 Ah-ha! This is clearly a much cleaner approach to definitively searching for customer id than relying on text matching.
 
 8. Scroll down and click on the failed `SELECT trades.trades` child span
-9. A flyout panel will open on the right, showing all of the metadata associated with the span. Note the lack of the label `labels.com_example_customer_id`.
+9. A flyout panel will open on the right, showing all of the metadata associated with the span. Note the lack of the label `attributes.com.example.customer_id`.
 
 Unfortunately, _this_ span (which covers interactions with the database) _isn't_ labeled with `com.example.customer_id`. We only labeled one span (`POST /trade/request`), and while that is ultimately a parent of this span, labels applied to the parent are not applied to their children.
 

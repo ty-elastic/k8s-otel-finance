@@ -160,7 +160,7 @@ Wait for the build to complete....
 1. Open the [button label="Elasticsearch"](tab-1) tab
 2. Copy
     ```kql
-    labels.com_example_customer_id : "l.hall"
+    attributes.com.example.customer_id : "l.hall"
     ```
     into the `Filter your data using KQL syntax` search bar toward the top of the Kibana window
 3. Click on the refresh icon at the right of the time picker

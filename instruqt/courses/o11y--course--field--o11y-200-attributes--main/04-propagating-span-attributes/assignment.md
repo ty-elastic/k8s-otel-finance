@@ -85,63 +85,70 @@ Let's add the BaggageSpanProcessor to our Python trading app:
         tracer = trace.get_tracer(__name__)
     ```
 6. Save the file (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`
+7. Enter the following in the terminal pane of VS Code to recompile the `trader` service:
+    ```bash
+    ./rebuild.sh -s trader
+    ```
 
 # Adding the BaggageSpanProcessor to Java
 
 For Java, the BaggageSpanProcessor can be added purely at the orchestration layer:
 
-1. Open the [button label="VS Code"](tab-1) tab
-2. Open the terminal
-3. Download values.yaml:
+Get a copy of the latest values.yaml
+1. [button label="Elastic"](tab-0)
+2. Click `Add data` in lower-left
+3. Click `Kubernetes` > `OpenTelemetry (Full Observability)`
+4. Copy the URL to the `values.yaml`
+```
+https://raw.githubusercontent.com/elastic/elastic-agent/refs/tags/v8.17.4/deploy/helm/edot-collector/kube-stack/values.yaml
+```
+5. Open the [button label="VS Code"](tab-1) tab
+6. Enter the following in the terminal pane of VS Code to save the EDOT Collector values.yaml:
+```bash
+cd collector
+curl -o values.yaml https://raw.githubusercontent.com/elastic/elastic-agent/refs/tags/v8.17.4/deploy/helm/edot-collector/kube-stack/values.yaml
+```
+7. Navigate to `collector` / `values.yaml`
+8. Scroll to the bottom and find the `instrumentation` config for `java`
+9. Find
+    ```yaml
+    java:
+        image: docker.elastic.co/observability/elastic-otel-javaagent:1.3.0
     ```
-
-2. Navigate to `src` / `recorder-java` / `Dockerfile`
-3. Look for the Dockerfile directive around line 17:
-    ```dockerfile,nocopy
-    ENTRYPOINT ["java", \
-    "-javaagent:elastic-otel-javaagent.jar", \
-    "-Dotel.javaagent.extensions=opentelemetry-java-baggage-log-record-processor-all.jar", \
-    "-Dotel.java.experimental.span-stacktrace.min.duration=-1", \
-    "-Dotel.inferred.spans.enabled=true", "-Dotel.inferred.spans.sampling.interval=1ms", "-Dotel.inferred.spans.min.duration=0ms", "-Dotel.inferred.spans.included.classes=com.example.*", \
-    "-jar", "/recorder.jar"]
+10. Immediately thereafter, add these lines:
+    ```yaml
+        env:
+        - name: OTEL_JAVA_EXPERIMENTAL_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+            value: '*'
     ```
-4. Add the following line after `"-javaagent:elastic-otel-javaagent.jar", \`:
-    ```java
-    "-Dotel.java.experimental.span-attributes.copy-from-baggage.include=*", \
+11. You should have:
+    ```yaml
+    java:
+        image: docker.elastic.co/observability/elastic-otel-javaagent:1.3.0
+        env:
+        - name: OTEL_JAVA_EXPERIMENTAL_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+            value: '*'
     ```
-5. It should look like this:
-    ```dockerfile
-    ENTRYPOINT ["java", \
-    "-javaagent:elastic-otel-javaagent.jar", \
-    "-Dotel.java.experimental.span-attributes.copy-from-baggage.include=*", \
-    "-Dotel.java.experimental.span-stacktrace.min.duration=-1", \
-    "-Dotel.inferred.spans.enabled=true", "-Dotel.inferred.spans.sampling.interval=1ms", "-Dotel.inferred.spans.min.duration=0ms", "-Dotel.inferred.spans.included.classes=com.example.*", \
-    "-jar", "/recorder.jar"]
+12. Save the file (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`
+13. Redeploy the operator config by issuing the following:
     ```
-6. Save the file (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`
-
-We invoke the [OpenTelemetry Baggage Span Processor](https://github.com/open-telemetry/opentelemetry-java-contrib/tree/main/baggage-processor) extension via `-Dotel.java.experimental.span-attributes.copy-from-baggage.include=*`, which will hook into OpenTelemetry to automatically add attributes in baggage to the current span.
+    helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack   --namespace opentelemetry-operator-system   --values 'values.yaml'   --version '0.3.9'
+    kubectl -n trading rollout restart deployment/recorder-java
+    ```
 
 Let's test
 ===
-
-1. Enter the following in the command line pane of VS Code to recompile:
-    ```bash
-    docker compose up -d --build
-    ```
-
-Wait for the build to complete....
 
 1. Open the [button label="Elasticsearch"](tab-1) tab
 2. Navigate to `Observability` / `APM` / `Traces`
 3. Click on the `Explorer` tab
 4. Copy
     ```kql
-    labels.com_example_customer_id : "l.hall"
+    attributes.com.example.customer_id : "l.hall"
     ```
     into the `Filter your data using KQL syntax` search bar toward the top of the Kibana window
 5. Click `Search`
-6. Click on the child spans inside `trader`; note in the flyout for each that the `labels.com_example_customer_id` exists
+6. Click on the child spans inside `trader`; note in the flyout for each that the `attributes.com.example.customer_id` exists
 7. Scroll down and click on the failed `SELECT trades.trades` span
 8. Note that our label is _also_ applied to the SQL spans
 
