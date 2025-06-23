@@ -20,7 +20,7 @@ for dir in ./courses/*/; do
         fi
     done
 
-    cd $COURSE
+    cd ./courses/$COURSE
     instruqt track push --force
     cd ..
   fi
