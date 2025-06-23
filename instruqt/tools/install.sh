@@ -2,6 +2,14 @@ source /opt/workshops/elastic-retry.sh
 
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
+install=true
+while getopts "i:" opt
+do
+   case "$opt" in
+      i ) install="$OPTARG" ;;
+   esac
+done
+
 cat > /workspace/workshop/build_vars.sh << EOF
 COURSE=$INSTRUQT_TRACK_SLUG
 EOF
@@ -20,9 +28,13 @@ done
 
 cd /workspace/workshop
 
-if [ -d "k8s/variants/$INSTRUQT_TRACK_SLUG" ]; then \
-    echo $INSTRUQT_TRACK_SLUG; \
+if [ -d "k8s/variants/$INSTRUQT_TRACK_SLUG" ]; then
+    echo $INSTRUQT_TRACK_SLUG;
     patch < variants/$INSTRUQT_TRACK_SLUG/init.patch
 fi
 
-./install.sh
+for f in k8s/*.yaml; do envsubst < $f > $f.tmp && mv $f.tmp $f; done
+
+if [ "$install" = "true" ]; then
+  ./install.sh
+fi
