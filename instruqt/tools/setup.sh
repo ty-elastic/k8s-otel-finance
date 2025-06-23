@@ -2,8 +2,6 @@ source /opt/workshops/elastic-retry.sh
 
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
-cp -f /workspace/workshop/instruqt/$INSTRUQT_TRACK_SLUG/build_vars.sh /workspace/workshop/build_vars.sh
-
 /opt/workshops/vscode-start.sh
 
 /workspace/workshop/instruqt/tools/otel.sh
