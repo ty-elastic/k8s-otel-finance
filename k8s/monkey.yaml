@@ -24,7 +24,7 @@ spec:
       containers:
         - name: monkey
           image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/monkey:$IMAGE_VERSION
-          #imagePullPolicy: Never
+          #imagePullPolicy: Always
           ports:
             - containerPort: 9002
           env:

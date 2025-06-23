@@ -32,7 +32,7 @@ spec:
             - name: POSTGRES_USER
               value: admin
           image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/recorder-java:$IMAGE_VERSION
-          #imagePullPolicy: Never
+          #imagePullPolicy: Always
           name: recorder-java
           ports:
             - containerPort: 9003

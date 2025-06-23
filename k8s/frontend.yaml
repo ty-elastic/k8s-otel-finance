@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/frontend:$IMAGE_VERSION
-          #imagePullPolicy: Never
+          #imagePullPolicy: Always
           name: frontend
           volumeMounts:
             - mountPath: /build
@@ -56,7 +56,7 @@ spec:
     spec:
       containers:
         - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/proxy:$IMAGE_VERSION
-          #imagePullPolicy: Never
+          #imagePullPolicy: Always
           name: proxy
           ports:
             - containerPort: 80

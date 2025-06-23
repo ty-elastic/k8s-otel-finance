@@ -91,6 +91,10 @@ Let's add the BaggageSpanProcessor to our Python trading app:
 For Java, the BaggageSpanProcessor can be added purely at the orchestration layer:
 
 1. Open the [button label="VS Code"](tab-1) tab
+2. Open the terminal
+3. Download values.yaml:
+    ```
+    
 2. Navigate to `src` / `recorder-java` / `Dockerfile`
 3. Look for the Dockerfile directive around line 17:
     ```dockerfile,nocopy

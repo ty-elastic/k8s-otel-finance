@@ -40,7 +40,7 @@ spec:
             - name: KAFKA_PROCESS_ROLES
               value: broker,controller
           image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/kafka:$IMAGE_VERSION
-          #imagePullPolicy: Never
+          #imagePullPolicy: Always
           name: kafka
           ports:
             - containerPort: 9093

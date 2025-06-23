@@ -28,7 +28,6 @@ spec:
             - name: POSTGRES_USER
               value: admin
           image: postgres
-          #imagePullPolicy: Never
           name: postgresql
           ports:
             - containerPort: 5432
