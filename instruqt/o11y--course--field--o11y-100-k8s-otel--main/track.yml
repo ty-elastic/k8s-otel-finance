@@ -15,13 +15,15 @@ idle_timeout: 900
 timelimit: 7200
 sandbox_preset: managed-vm-elastic-8-18-2
 lab_config:
+  extend_ttl: 900
   sidebar_enabled: true
   feedback_recap_enabled: true
   feedback_tab_enabled: false
-  loadingMessages: true
+  loadingMessages:
+  - Setting up your Elastic experience...
   theme:
     name: modern-dark
   override_challenge_layout: false
   hideStopButton: false
-checksum: "10792627452150508081"
+checksum: "9204227354575282660"
 enhanced_loading: false

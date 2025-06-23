@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: trader
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/trader:$IMAGE_VERSION
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/trader:$COURSE
           #imagePullPolicy: Always
           ports:
             - containerPort: 9001

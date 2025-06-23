@@ -39,7 +39,7 @@ spec:
               value: "1"
             - name: KAFKA_PROCESS_ROLES
               value: broker,controller
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/kafka:$IMAGE_VERSION
+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/kafka:$COURSE
           #imagePullPolicy: Always
           name: kafka
           ports:

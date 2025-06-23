@@ -8,7 +8,7 @@ for dir in ../../src/*/; do
     service=$(basename "$dir")
     echo $service
     echo $COURSE
-    docker build --platform $arch --build-arg COURSE=$COURSE --progress plain -t us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$IMAGE_VERSION $dir
-    docker push us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$IMAGE_VERSION
+    docker build --platform $arch --build-arg COURSE=$COURSE --progress plain -t us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$COURSE $dir
+    docker push us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$COURSE
   fi
 done

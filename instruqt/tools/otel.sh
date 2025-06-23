@@ -1,7 +1,6 @@
 source /opt/workshops/elastic-retry.sh
 
 export $(curl http://kubernetes-vm:9000/env | xargs)
-export $(cat /workspace/workshop/instruqt/$INSTRUQT_TRACK_SLUG/build_vars.sh | xargs)
 
 output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_security/api_key" -d '
 {
