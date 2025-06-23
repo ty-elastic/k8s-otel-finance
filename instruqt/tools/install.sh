@@ -28,10 +28,12 @@ done
 
 cd /workspace/workshop
 
-if [ -d "k8s/variants/$INSTRUQT_TRACK_SLUG" ]; then
+cd k8s
+if [ -d "variants/$INSTRUQT_TRACK_SLUG" ]; then
     echo $INSTRUQT_TRACK_SLUG;
     patch < variants/$INSTRUQT_TRACK_SLUG/init.patch
 fi
+cd ..
 
 export COURSE=$INSTRUQT_TRACK_SLUG
 for f in k8s/*.yaml; do envsubst < $f > $f.tmp && mv $f.tmp $f; done
