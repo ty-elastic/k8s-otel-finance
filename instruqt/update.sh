@@ -1,8 +1,8 @@
 arch=linux/amd64
 
-git add -u
-git commit -m "updates"
-git push origin main
+# git add -u
+# git commit -m "updates"
+# git push origin main
 
 for dir in ./courses/*/; do
   if [[ -d "$dir" ]]; then
