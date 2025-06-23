@@ -1,0 +1,27 @@
+slug: o11y--course--field--o11y-100-k8s-otel--main
+id: gbvr1foje6xt
+title: 'Observability 100: Using OpenTelemetry to Observe Kubernetes'
+description: ""
+icon: ""
+tags:
+- co.elastic.workshops.sko
+- co.elastic.workshops.sko.sko26_fe_o11y
+- co.elastic.workshops
+owner: elastic
+developers:
+- tyrone.bekiares@elastic.co
+show_timer: true
+idle_timeout: 900
+timelimit: 7200
+sandbox_preset: managed-vm-elastic-8-18-2
+lab_config:
+  sidebar_enabled: true
+  feedback_recap_enabled: true
+  feedback_tab_enabled: false
+  loadingMessages: true
+  theme:
+    name: modern-dark
+  override_challenge_layout: false
+  hideStopButton: false
+checksum: "15028121807122383255"
+enhanced_loading: false
