@@ -15,7 +15,7 @@ for dir in ./*/; do
             service=$(basename "$dir")
             echo $service
             echo $COURSE
-            #docker build --platform $arch --build-arg COURSE=$COURSE --progress plain -t us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$COURSE $dir
+            docker build --platform $arch --build-arg COURSE=$COURSE --progress plain -t us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$COURSE $dir
             #docker push us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$COURSE
         fi
     done
