@@ -23,7 +23,7 @@ tabs:
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm
-  path: /app/apm/service-map?comparisonEnabled=true&rangeFrom=now-15m&rangeTo=now&offset=1d&kuery=data_stream.type%20:%22traces%22%20
+  path: /app/apm/service-map
   port: 30001
 - id: cxyduxjxs9dd
   title: VS Code

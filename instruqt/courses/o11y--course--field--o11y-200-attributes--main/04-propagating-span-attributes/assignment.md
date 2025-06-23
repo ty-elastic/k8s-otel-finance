@@ -18,7 +18,7 @@ tabs:
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm
-  path: /app/apm/service-map?comparisonEnabled=true&rangeFrom=now-15m&rangeTo=now&offset=1d&kuery=data_stream.type%20:%22traces%22%20
+  path: /app/apm/service-map
   port: 30001
 difficulty: basic
 timelimit: 600
@@ -105,10 +105,11 @@ https://raw.githubusercontent.com/elastic/elastic-agent/refs/tags/v8.17.4/deploy
 5. Open the [button label="VS Code"](tab-1) tab
 6. Enter the following in the terminal pane of VS Code to save the EDOT Collector values.yaml:
 ```bash
-cd collector
+mkdir -p operator
+cd operator
 curl -o values.yaml https://raw.githubusercontent.com/elastic/elastic-agent/refs/tags/v8.17.4/deploy/helm/edot-collector/kube-stack/values.yaml
 ```
-7. Navigate to `collector` / `values.yaml`
+7. Navigate to `operator` / `values.yaml`
 8. Scroll to the bottom and find the `instrumentation` config for `java`
 9. Find
     ```yaml
