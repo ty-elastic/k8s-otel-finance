@@ -2,7 +2,7 @@ source /opt/workshops/elastic-retry.sh
 
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
-cat > /workspace/workshop/instruqt/$INSTRUQT_TRACK_SLUG/build_vars.sh << EOF
+cat > /workspace/workshop/build_vars.sh << EOF
 COURSE=$INSTRUQT_TRACK_SLUG
 EOF
 

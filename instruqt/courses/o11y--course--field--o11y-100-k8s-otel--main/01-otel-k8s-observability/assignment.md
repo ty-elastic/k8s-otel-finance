@@ -4,8 +4,8 @@ id: tlqlxalymcmx
 type: challenge
 title: Using OpenTelemetry to Observe Kubernetes
 tabs:
-- id: yjhyhabfb2h0
-  title: Elastic
+- id: yzy96xriyxxh
+  title: Elasticsearch
   type: service
   hostname: kubernetes-vm
   path: /
@@ -53,19 +53,19 @@ With the advent of the OpenTelemetry Operator and related Helm chart, you can no
 
 ## Checking the Install
 
-Let's use what we learned in the last challenge to be sure everything installed correctly. First, list out the available namespaces:
+First, list out the available namespaces:
 ```bash,run
 kubectl get namespaces
-````
+```
 And get a list of pods running in the `opentelemetry-operator-system` namespace:
 ```bash,run
 kubectl  -n opentelemetry-operator-system get pods
-````
+```
 
 And let's look at the logs from the daemonset collector to see if it is exporting to Elasticsearch without error:
 ```bash
 kubectl  -n opentelemetry-operator-system logs opentelemetry-kube-stack-gateway-collector-<xxxxxxxxxx-xxxxx>
-````
+```
 
 ## Checking Observability
 
@@ -82,30 +82,30 @@ Finally, let's check for application traces. Navigate to the [button label="Elas
 Let's describe one of our application pods... Specifically, the monkey pod:
 ```bash,run
 kubectl -n trading describe pod monkey
-````
+```
 Look at the environment variables section; note that there are not yet any OTel environment variables loaded into the pod.
 
 It turns out that after you apply the OTel Operator to your Kubernetes cluster, you need to restart all of your application services:
 ```bash,run
 kubectl  -n trading rollout restart deployment
-````
+```
 
 Now let's wait for our monkey pod to restart:
 ```bash,run
 kubectl -n trading get pods
-````
+```
 
 And once it has restarted, let's describe it agaibn:
 ```bash,run
 kubectl -n trading describe pod monkey
-````
+```
 
 And now we can see OTel ENV vars being injected into the monkey pod. Let's check if we have APM data flowing in. Navigate to the [button label="Elastic"](tab-0) tab and click on `Applications` > `Service Inventory`. Ok cool, this is starting to look good. Click on the `trader` app and look at the `POST /trade/request` transaction. Scroll down to the bottom (trace samples) and look at the waterfall graph. Notice the broken trace. It looks like perhaps one of our applications is not being instrumented. Click on the `POST` span and look at `attributes.service.target.name`. Note that this `POST` is intended to target the `router` service, yet we don't see the `router` service in our Service Map.
 
 Let's look at our `router` pod and see if we can figure out what's up.
 ```bash,run
 kubectl -n trading describe pod router
-````
+```
 
 Huh. no OTel ENVs, even though the pod was restarted. Let's have a look at that deployment yaml. Click on the [button label="Code"](tab-2) button and examine the deployment yaml. Look at the deployment yaml for the `trader` service and compare it to the `router` service. Notice anything missing?
 
@@ -132,12 +132,12 @@ deployment.apps/router configured
 Wait for the `router` pod to restart:
 ```bash,run
 kubectl -n trading get pods
-````
+```
 
 And once it has restarted, let's describe it again:
 ```bash,run
 kubectl -n trading describe pod router
-````
+```
 
 And now it looks like our OTel ENVs are getting injected as expected. Let's check Elasticsearch. Navigate to the [button label="Elastic"](tab-0) tab and click on `Applications` > `Service Inventory`. Note that we can now see a full distributed trace, as expected!
 
