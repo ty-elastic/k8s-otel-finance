@@ -1,26 +1,26 @@
 ---
 slug: otel-k8s-observability
-id: fyssxfflpil8
+id: tlqlxalymcmx
 type: challenge
 title: Using OpenTelemetry to Observe Kubernetes
 tabs:
-- id: 6pgqntbj4jqg
+- id: yjhyhabfb2h0
   title: Elastic
   type: service
   hostname: kubernetes-vm
   path: /
   port: 30001
-- id: ctgmema9bnrl
+- id: xxmrlafl7d15
   title: Terminal
   type: terminal
   hostname: host-1
   workdir: /workspace/workshop
-- id: pwqmbb1h5jrk
+- id: bea8rsahfqcs
   title: Code
   type: code
   hostname: host-1
   path: /workspace/workshop/k8s
-- id: kmkfnrdhph1d
+- id: kgyoag2hyi6o
   title: Control
   type: service
   hostname: host-1
