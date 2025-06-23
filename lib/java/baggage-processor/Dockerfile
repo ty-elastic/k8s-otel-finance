@@ -15,6 +15,8 @@ RUN mv opentelemetry-java-contrib-main/baggage-processor/src src
 RUN rm -rf main.zip
 RUN rm -rf src/test
 
+RUN sed -i "s,java.experimental,java,g" src/main/java/io/opentelemetry/contrib/baggage/processor/BaggageProcessorCustomizer.java
+
 RUN ./gradlew build -x test
 
 FROM alpine:latest

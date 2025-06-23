@@ -4,11 +4,13 @@ export $(curl http://kubernetes-vm:9000/env | xargs)
 
 install=true
 operator=true
-while getopts "i:o:" opt
+wait=true
+while getopts "i:o:w:" opt
 do
    case "$opt" in
       i ) install="$OPTARG" ;;
-      i ) operator="$OPTARG" ;;
+      o ) operator="$OPTARG" ;;
+      w ) wait="$OPTARG" ;;
    esac
 done
 
@@ -20,4 +22,6 @@ fi
 
 /workspace/workshop/instruqt/tools/install.sh -i $install
 
-#retry_command_lin curl --silent --fail --output /dev/null --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" "$ELASTICSEARCH_URL/_cat/indices/.ds-traces-*?allow_no_indices=false"
+if [ "$wait" = "true" ]; then
+   retry_command_lin curl --silent --fail --output /dev/null --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" "$ELASTICSEARCH_URL/_cat/indices/.ds-traces-*?allow_no_indices=false"
+fi

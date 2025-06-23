@@ -3,4 +3,4 @@ export $(curl http://kubernetes-vm:9000/env | xargs)
 
 /opt/workshops/clone-code.sh -r ty-elastic/k8s-otel-finance -b $INSTRUQT_TRACK_SLUG -d false
 
-source /workspace/workshop/instruqt/tools/setup.sh -o false
+source /workspace/workshop/instruqt/tools/setup.sh -o false -w false
