@@ -94,7 +94,7 @@ For Java, the BaggageSpanProcessor can be added purely at the orchestration laye
 2. Open the terminal
 3. Download values.yaml:
     ```
-    
+
 2. Navigate to `src` / `recorder-java` / `Dockerfile`
 3. Look for the Dockerfile directive around line 17:
     ```dockerfile,nocopy

@@ -1,11 +1,12 @@
-slug: o11y--course--field--o11y-200-attributes--main
-id: zxeoxws6d0ty
-title: 'Observability 200: Adding attributes to traces and logs with OpenTelemetry'
-description: In this track, we explore best practices to add common attributes across
-  traces and logs across your distributed system.
+slug: o11y--course--field--o11y-100-k8s--main
+id: 4o37jatetfdd
+title: 'Observability 100: Getting Comfortable with Kubernetes'
+description: ""
 icon: ""
 tags:
-- otel-200
+- co.elastic.workshops.sko
+- co.elastic.workshops.sko.sko26_fe_o11y
+- co.elastic.workshops
 owner: elastic
 developers:
 - tyrone.bekiares@elastic.co
