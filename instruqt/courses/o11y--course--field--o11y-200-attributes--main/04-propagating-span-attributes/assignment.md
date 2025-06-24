@@ -103,40 +103,27 @@ Get a copy of the latest values.yaml
 https://raw.githubusercontent.com/elastic/elastic-agent/refs/tags/v8.17.4/deploy/helm/edot-collector/kube-stack/values.yaml
 ```
 5. Open the [button label="VS Code"](tab-1) tab
-6. Enter the following in the terminal pane of VS Code to save the EDOT Collector values.yaml:
-```bash
-mkdir -p operator
-cd operator
-curl -o values.yaml https://raw.githubusercontent.com/elastic/elastic-agent/refs/tags/v8.17.4/deploy/helm/edot-collector/kube-stack/values.yaml
-```
-7. Navigate to `operator` / `values.yaml`
-8. Scroll to the bottom and find the `instrumentation` config for `java`
-9. Find
+6. Create a new file in the folder `operator` with the following contents
     ```yaml
+    apiVersion: opentelemetry.io/v1alpha1
+    kind: Instrumentation
+    metadata:
+    name: elastic-instrumentation
+    spec:
     java:
         image: docker.elastic.co/observability/elastic-otel-javaagent:1.3.0
-    ```
-10. Immediately thereafter, add these lines:
-    ```yaml
         extensions:
-            image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/baggage-processor:latest
+        - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/baggage-processor
             dir: /extensions
         env:
         - name: OTEL_JAVA_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
             value: '*'
     ```
-11. You should have:
-    ```yaml
-    java:
-        image: docker.elastic.co/observability/elastic-otel-javaagent:1.3.0
-        env:
-        - name: OTEL_JAVA_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
-            value: '*'
-    ```
+7. Save the file as `operator/java.yaml`
 12. Save the file (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`
 13. Redeploy the operator config by issuing the following:
     ```
-    helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack   --namespace opentelemetry-operator-system   --values 'values.yaml'   --version '0.6.2'
+    kubectl -n opentelemetry-operator-system apply -f java.yaml
     kubectl -n trading rollout restart deployment/recorder-java
     ```
 
