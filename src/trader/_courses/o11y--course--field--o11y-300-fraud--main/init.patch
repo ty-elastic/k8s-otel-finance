@@ -1,5 +1,5 @@
 --- app.py	2025-06-04 10:46:51
-+++ variants/o11y--course--field--o11y-300-fraud--main/app.py	2025-06-10 08:06:45
++++ _courses/o11y--course--field--o11y-300-fraud--main/app.py	2025-06-10 08:06:45
 @@ -8,9 +8,13 @@
  
  import requests

@@ -65,45 +65,13 @@ Propagating Baggage with Extensions
 
 Notably, OpenTelemetry Baggage is merely a transport for contextual key/value pairs between spans and services. So how do we get the attributes in baggage to be automatically applied to every child span without having to introduce new code into our applications? Fortunately, OpenTelemetry supports a concept of [extensions](https://opentelemetry.io/docs/zero-code/java/agent/extensions/); namely, loadable modules which can hook into various parts of OpenTelemetry. There already exists an extension (`BaggageSpanProcessor`) for most popular languages which will apply attributes in baggage to the current span.
 
-# Adding the BaggageSpanProcessor to Python
-
-Let's add the BaggageSpanProcessor to our Python trading app:
-
-1. Open the [button label="VS Code"](tab-1) tab
-2. Navigate to `src` / `trader` / `app.py`
-3. Look for the following code line around the top of `app.py`:
-    ```python,nocopy
-        tracer = trace.get_tracer(__name__)
-    ```
-4. Now let's attach the BaggageSpanProcessor to the default tracer provider by inserting the following line before `tracer = trace.get_tracer(__name__)`
-    ```python
-    trace.get_tracer_provider().add_span_processor(BaggageSpanProcessor(ALLOW_ALL_BAGGAGE_KEYS))
-    ```
-5. You should now have:
-    ```python,nocopy
-        trace.get_tracer_provider().add_span_processor(BaggageSpanProcessor(ALLOW_ALL_BAGGAGE_KEYS))
-        tracer = trace.get_tracer(__name__)
-    ```
-6. Save the file (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`
-7. Enter the following in the terminal pane of VS Code to recompile the `trader` service:
-    ```bash
-    ./rebuild.sh -s trader
-    ```
-
 # Adding the BaggageSpanProcessor to Java
 
 For Java, the BaggageSpanProcessor can be added purely at the orchestration layer:
 
-Get a copy of the latest values.yaml
-1. [button label="Elastic"](tab-0)
-2. Click `Add data` in lower-left
-3. Click `Kubernetes` > `OpenTelemetry (Full Observability)`
-4. Copy the URL to the `values.yaml`
-```
-https://raw.githubusercontent.com/elastic/elastic-agent/refs/tags/v8.17.4/deploy/helm/edot-collector/kube-stack/values.yaml
-```
-5. Open the [button label="VS Code"](tab-1) tab
-6. Create a new file in the folder `operator` with the following contents
+1. Open the [button label="VS Code"](tab-1) tab
+2. Right-click on 
+3. Create a new file in the folder `operator` with the following contents
     ```yaml
     apiVersion: opentelemetry.io/v1alpha1
     kind: Instrumentation
@@ -116,14 +84,16 @@ https://raw.githubusercontent.com/elastic/elastic-agent/refs/tags/v8.17.4/deploy
         - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/baggage-processor
             dir: /extensions
         env:
-        - name: OTEL_JAVA_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+        - name: OTEL_JAVA_TEST_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
             value: '*'
     ```
-7. Save the file as `operator/java.yaml`
-12. Save the file (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`
-13. Redeploy the operator config by issuing the following:
+4. Save the file as `operator/java.yaml` (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`
+5. Redeploy the instrumentation CRD by issuing the following in the VSCode Terminal:
     ```
     kubectl -n opentelemetry-operator-system apply -f java.yaml
+    ```
+6. Redeploy the `recorder-java` service by issuing the following in the VSCode Terminal:
+    ```
     kubectl -n trading rollout restart deployment/recorder-java
     ```
 
@@ -139,9 +109,9 @@ Let's test
     ```
     into the `Filter your data using KQL syntax` search bar toward the top of the Kibana window
 5. Click `Search`
-6. Click on the child spans inside `trader`; note in the flyout for each that the `attributes.com.example.customer_id` exists
+6. Click on the child spans inside `recorder-java`; note in the flyout for each that the `attributes.com.example.customer_id` exists
 7. Scroll down and click on the failed `SELECT trades.trades` span
-8. Note that our label is _also_ applied to the SQL spans
+8. Note that our label is _also_ applied to the SQL spans!
 
 As you've seen, OpenTelemetry Baggage, with the help of OpenTelemetry Extensions, makes it possible to add contextual attributes across spans and services:
 * _without_ requiring explicit code to add attributes to child functions

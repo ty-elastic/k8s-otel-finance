@@ -15,10 +15,14 @@ RUN mv opentelemetry-java-contrib-main/baggage-processor/src src
 RUN rm -rf main.zip
 RUN rm -rf src/test
 
-RUN sed -i "s,java.experimental,java,g" src/main/java/io/opentelemetry/contrib/baggage/processor/BaggageProcessorCustomizer.java
+RUN mv src/main/java/io/opentelemetry/contrib src/main/java/io/opentelemetry/test
+RUN sed -i "s,io.opentelemetry.contrib.baggage.processor,io.opentelemetry.test.baggage.processor,g" src/main/java/io/opentelemetry/test/baggage/processor/*.java
+RUN sed -i "s,io.opentelemetry.contrib.baggage.processor,io.opentelemetry.test.baggage.processor,g" src/main/resources/META-INF/services/*
+
+RUN sed -i "s,java.experimental,java.test,g" src/main/java/io/opentelemetry/test/baggage/processor/BaggageProcessorCustomizer.java
 
 RUN ./gradlew build -x test
 
 FROM alpine:latest
 
-COPY --from=build /work/build/libs/io-opentelemetry-contrib-baggage-processor-1.0-all.jar /extensions/io-opentelemetry-contrib-baggage-processor.jar
+COPY --from=build /work/build/libs/io-opentelemetry-test-baggage-processor-1.0-all.jar /extensions/io-opentelemetry-test-baggage-processor.jar

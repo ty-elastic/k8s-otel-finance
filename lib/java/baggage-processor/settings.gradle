@@ -8,4 +8,4 @@ pluginManagement {
   }
 }
 
-rootProject.name = 'io-opentelemetry-contrib-baggage-processor'
+rootProject.name = 'io-opentelemetry-test-baggage-processor'

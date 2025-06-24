@@ -17,7 +17,7 @@ echo $COURSE
 echo $COURSE
 echo $LOCAL_DOCKER_REPO
 
-docker build --platform $ARCH --build-arg VARIANTS=false --build-arg COURSE=$COURSE --progress plain -t $LOCAL_DOCKER_REPO/$service:latest src/$service
+docker build --platform $ARCH --build-arg COURSES=false --build-arg COURSE=$COURSE --progress plain -t $LOCAL_DOCKER_REPO/$service:latest src/$service
 docker push $LOCAL_DOCKER_REPO/$service:latest
 
 sed "s,#imagePullPolicy,imagePullPolicy,g" k8s/$service.yaml | sed "s,us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$COURSE,$LOCAL_DOCKER_REPO/$service:latest,g" | envsubst | kubectl apply -f -

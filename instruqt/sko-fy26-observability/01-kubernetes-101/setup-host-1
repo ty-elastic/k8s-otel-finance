@@ -1,0 +1,5 @@
+/opt/workshops/clone-code.sh -r ty-elastic/k8s-otel-finance -b main -d false
+
+cd /workspace/workshop
+cd k8s
+patch < diff/router.patch

@@ -10,16 +10,16 @@ RUN edot-bootstrap --action=install
 RUN pip3 uninstall -y opentelemetry-instrumentation-click
 
 ARG COURSE=main
-ARG VARIANTS=true
+ARG COURSES=true
 
 COPY app.py .
 COPY model.py .
-COPY variants variants
+COPY _courses _courses
 
-RUN if [ "$VARIANTS" = "true" ]; then \
-    if [ -d "variants/$COURSE" ]; then \
+RUN if [ "$COURSES" = "true" ]; then \
+    if [ -d "_courses/$COURSE" ]; then \
         echo $COURSE; \
-        patch < variants/$COURSE/init.patch; \
+        patch < _courses/$COURSE/init.patch; \
         fi \
     fi
 

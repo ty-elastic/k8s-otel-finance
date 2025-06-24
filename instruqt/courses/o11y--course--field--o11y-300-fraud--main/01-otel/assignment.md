@@ -14,7 +14,7 @@ tabs:
   title: Trader Source Code
   type: code
   hostname: host-1
-  path: /workspace/workshop/src/trader/variants/o11y--course--field--o11y-300-fraud--main/app.py
+  path: /workspace/workshop/src/trader/_courses/o11y--course--field--o11y-300-fraud--main/app.py
 - id: x38jsry9hpqw
   title: Terminal (host-1)
   type: terminal

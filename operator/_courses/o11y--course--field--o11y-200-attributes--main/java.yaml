@@ -9,7 +9,7 @@ spec:
       - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/baggage-processor
         dir: /extensions
     env:
-      - name: OTEL_JAVA_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+      - name: OTEL_JAVA_TEST_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
         value: '*'
-      - name: OTEL_JAVA_LOG_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+      - name: OTEL_JAVA_TEST_LOG_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
         value: '*'

@@ -4,7 +4,7 @@
         echo $dir
         if [[ -d "$dir" ]]; then
             extension=$(basename "$dir")
-            docker build --platform $arch --progress plain -t us-central1-docker.pkg.dev/elastic-sa/tbekiares/$extension $dir
-            docker push us-central1-docker.pkg.dev/elastic-sa/tbekiares/$extension
+            docker build --platform $arch --progress plain -t us-central1-docker.pkg.dev/elastic-sa/tbekiares/$extension:new4 $dir
+            docker push us-central1-docker.pkg.dev/elastic-sa/tbekiares/$extension:new4
         fi
     done

@@ -1,5 +1,5 @@
 --- app.py	2025-06-18 20:59:42
-+++ variants/o11y--course--field--o11y-200-attributes--main/app.py	2025-06-18 21:01:07
++++ _courses/o11y--course--field--o11y-200-attributes--main/app.py	2025-06-18 21:01:07
 @@ -8,9 +8,14 @@
  
  import requests

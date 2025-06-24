@@ -1,0 +1,37 @@
+slug: sko-fy26-observability
+id: sp0yvtxgtdqn
+title: SKO FY26 Observability K8s & OTel
+description: ""
+icon: ""
+tags:
+- co.elastic.workshops.sko
+- co.elastic.workshops.sko.sko26_fe_o11y
+- co.elastic.workshops
+owner: elastic
+developers:
+- tyrone.bekiares@elastic.co
+- stephen.brown@elastic.co
+- simon.hearne@elastic.co
+instructors:
+- giovanni.blanco@elastic.co
+- roger.galo@elastic.co
+- danielle.silva@elastic.co
+- alexis.charveriat@elastic.co
+- william.d.pitt@elastic.co
+- karina.compton@elastic.co
+- ryan.burnham@elastic.co
+show_timer: true
+idle_timeout: 3600
+timelimit: 10800
+sandbox_preset: managed-vm-elastic-8-18-0
+lab_config:
+  extend_ttl: 3600
+  sidebar_enabled: true
+  feedback_recap_enabled: true
+  feedback_tab_enabled: false
+  loadingMessages:
+  - Preparing your workshop...
+  override_challenge_layout: false
+  hideStopButton: false
+checksum: "3800233938832839225"
+enhanced_loading: false

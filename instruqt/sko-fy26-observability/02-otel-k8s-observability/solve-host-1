@@ -1,0 +1,5 @@
+cd /workspace/workshop
+cd k8s
+git reset --hard origin/main
+cd ..
+kubectl apply -f k8s
