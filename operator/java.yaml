@@ -1,0 +1,15 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: elastic-instrumentation
+spec:
+  java:
+    image: docker.elastic.co/observability/elastic-otel-javaagent:1.3.0
+    extensions:
+      - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/baggage-processor
+        dir: /extensions
+    env:
+      - name: OTEL_JAVA_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+        value: '*'
+      - name: OTEL_JAVA_LOG_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+        value: '*'

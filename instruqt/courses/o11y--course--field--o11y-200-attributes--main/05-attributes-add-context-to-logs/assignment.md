@@ -118,6 +118,35 @@ We can craft a similar solution for Java:
 
 And like the BaggageSpanProcessor, we can install it purely at the orchestration layer:
 
+7. Navigate to `operator` / `values.yaml`
+8. Scroll to the bottom and find the `instrumentation` config for `java`
+9. Find
+    ```yaml
+    java:
+        image: docker.elastic.co/observability/elastic-otel-javaagent:1.3.0
+    ```
+10. Immediately thereafter, add these lines:
+    ```yaml
+        env:
+        - name: OTEL_JAVA_LOG_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+            value: '*'
+    ```
+11. You should have:
+    ```yaml
+    java:
+        image: docker.elastic.co/observability/elastic-otel-javaagent:1.3.0
+        env:
+        - name: OTEL_JAVA_LOG_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+            value: '*'
+    ```
+12. Save the file (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`
+13. Redeploy the operator config by issuing the following:
+    ```
+    helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack   --namespace opentelemetry-operator-system   --values 'values.yaml'   --version '0.3.9'
+    kubectl -n trading rollout restart deployment/recorder-java
+
+
+
 1. Open the [button label="VS Code"](tab-1) tab
 2. Navigate to `src` / `recorder-java` / `Dockerfile`
 3. Look for the Dockerfile directive around line 17:

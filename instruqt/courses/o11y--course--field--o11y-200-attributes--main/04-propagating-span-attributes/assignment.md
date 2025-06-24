@@ -118,8 +118,11 @@ curl -o values.yaml https://raw.githubusercontent.com/elastic/elastic-agent/refs
     ```
 10. Immediately thereafter, add these lines:
     ```yaml
+        extensions:
+            image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/baggage-processor:latest
+            dir: /extensions
         env:
-        - name: OTEL_JAVA_EXPERIMENTAL_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+        - name: OTEL_JAVA_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
             value: '*'
     ```
 11. You should have:
@@ -127,13 +130,13 @@ curl -o values.yaml https://raw.githubusercontent.com/elastic/elastic-agent/refs
     java:
         image: docker.elastic.co/observability/elastic-otel-javaagent:1.3.0
         env:
-        - name: OTEL_JAVA_EXPERIMENTAL_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+        - name: OTEL_JAVA_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
             value: '*'
     ```
 12. Save the file (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`
 13. Redeploy the operator config by issuing the following:
     ```
-    helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack   --namespace opentelemetry-operator-system   --values 'values.yaml'   --version '0.3.9'
+    helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack   --namespace opentelemetry-operator-system   --values 'values.yaml'   --version '0.6.2'
     kubectl -n trading rollout restart deployment/recorder-java
     ```
 

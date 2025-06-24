@@ -21,4 +21,4 @@ RUN ./gradlew build -x test
 
 FROM alpine:latest
 
-COPY --from=build /work/build/libs/io-opentelemetry-contrib-baggage-processor-1.0-all.jar /io-opentelemetry-contrib-baggage-processor.jar
+COPY --from=build /work/build/libs/io-opentelemetry-contrib-baggage-processor-1.0-all.jar /extensions/io-opentelemetry-contrib-baggage-processor.jar
