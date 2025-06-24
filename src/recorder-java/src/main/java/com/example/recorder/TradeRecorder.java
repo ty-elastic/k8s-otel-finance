@@ -23,12 +23,6 @@ public class TradeRecorder {
     public Trade recordTrade (Trade trade){
         Trade savedTrade = tradeRepo.save(trade);
 
-        // intentionally make this slow to compare to go variant
-        // try {
-        //     Thread.sleep(10);
-        // }
-        // catch (Exception e) {}
-
         log.info("trade committed for " + trade.customerId);
         return savedTrade;
     }

@@ -70,7 +70,7 @@ Notably, OpenTelemetry Baggage is merely a transport for contextual key/value pa
 For Java, the BaggageSpanProcessor can be added purely at the orchestration layer:
 
 1. Open the [button label="VS Code"](tab-1) tab
-2. Right-click on 
+2. Right-click on
 3. Create a new file in the folder `operator` with the following contents
     ```yaml
     apiVersion: opentelemetry.io/v1alpha1

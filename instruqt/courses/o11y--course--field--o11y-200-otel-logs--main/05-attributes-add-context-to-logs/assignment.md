@@ -1,6 +1,6 @@
 ---
 slug: attributes-add-context-to-logs
-id: bpmmy02kyyxb
+id: 2hcp4ngcaqys
 type: challenge
 title: Attributes add context to logs
 notes:
@@ -8,13 +8,13 @@ notes:
   contents: In this challenge, we will learn how to automatically add common attributes
     to our log lines
 tabs:
-- id: g3lshdcasiey
+- id: ltrmvqela5wb
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm
   path: /app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:now-15m,to:now))&_a=(columns:!(),dataSource:(dataViewId:'logs-*',type:dataView),filters:!(),hideChart:!f,interval:auto,query:(language:kuery,query:''),sort:!(!('@timestamp',desc)))
   port: 30001
-- id: humujmeztiij
+- id: ho1zsqnqy1xb
   title: VS Code
   type: service
   hostname: host-1
@@ -46,75 +46,7 @@ While most OpenTelemetry SDK distributions today include extensions to automatic
 
 Fortunately, it is easy to author our own OpenTelemetry extensions!
 
-# Python
-
-Let's look at what I authored for Python:
-
-1. Open the [button label="VS Code"](tab-1) tab
-2. Navigate to `lib` / `python` / `baggage-log-record-processor` / `src` / `processor.py`
-3. Note that we just follow the same basic pattern employed to apply baggage attributes to spans:
-    ```python,nocopy
-    def emit(
-        self, log_data: logs.LogData
-    ) -> None:
-        if self._shutdown:
-            # Processor is already shutdown, ignoring call
-            return
-        baggage = get_all_baggage(context.get_current())
-        for key, value in baggage.items():
-            if self._baggage_key_predicate(key):
-                log_data.log_record.attributes[key] = value
-    ```
-    Essentially, for each log record to be emitted, copy all of the attributes from baggage and apply them to the log record as an attribute.
-
-And let's add that to our Python app:
-
-1. Open the [button label="VS Code"](tab-1) tab
-2. Navigate to `src` / `trader` / `app.py`
-3. Look for the following code line 33 inside the `init_otel()` function:
-    ```python,nocopy
-    def init_otel():
-        trace.get_tracer_provider().add_span_processor(BaggageSpanProcessor(ALLOW_ALL_BAGGAGE_KEYS))
-        tracer = trace.get_tracer("trader")
-
-        if 'OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED' in os.environ:
-            print("enable otel logging")
-    ```
-4. Now let's attach the BaggageSpanProcessor to the default tracer provider by inserting the following line after `print("enable otel logging")`
-    ```python
-    logs.get_logger_provider().add_log_record_processor(BaggageLogRecordProcessor(ALLOW_ALL_BAGGAGE_KEYS))
-    ```
-5. You should now have:
-    ```python,nocopy
-    def init_otel():
-        trace.get_tracer_provider().add_span_processor(BaggageSpanProcessor(ALLOW_ALL_BAGGAGE_KEYS))
-        tracer = trace.get_tracer("trader")
-
-        if 'OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED' in os.environ:
-            print("enable otel logging")
-            logs.get_logger_provider().add_log_record_processor(BaggageLogRecordProcessor(ALLOW_ALL_BAGGAGE_KEYS))
-    ```
-6. Save the file (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`
-
 # Java
-
-We can craft a similar solution for Java:
-
-1. Open the [button label="VS Code"](tab-1) tab
-2. Navigate to `lib` / `java` / `src` / `main` / `java` / `com` / `example` / `baggage` / `logrecord` / `processor` / `BaggageLogRecordProcessor.java`
-3. Note that we just follow the same basic pattern employed to apply baggage attributes to spans:
-    ```java,nocopy
-    public void onEmit(Context context, ReadWriteLogRecord logRecord) {
-        // add baggage to log attributes
-        Baggage baggage = Baggage.fromContext(context);
-        baggage.forEach(
-                (key, value) -> logRecord.setAttribute(
-                        // add prefix to key to not override existing attributes
-                        AttributeKey.stringKey(key),
-                        value.getValue()));
-    }
-    ```
-    Essentially, for each log record to be emitted, copy all of the attributes from baggage and apply them to the log record as an attribute.
 
 And like the BaggageSpanProcessor, we can install it purely at the orchestration layer:
 
@@ -128,15 +60,25 @@ And like the BaggageSpanProcessor, we can install it purely at the orchestration
 10. Immediately thereafter, add these lines:
     ```yaml
         env:
-        - name: OTEL_JAVA_LOG_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+        - name: OTEL_JAVA_TEST_LOG_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
             value: '*'
     ```
 11. You should have:
     ```yaml
+    apiVersion: opentelemetry.io/v1alpha1
+    kind: Instrumentation
+    metadata:
+    name: elastic-instrumentation
+    spec:
     java:
         image: docker.elastic.co/observability/elastic-otel-javaagent:1.3.0
+        extensions:
+        - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/baggage-processor
+            dir: /extensions
         env:
-        - name: OTEL_JAVA_LOG_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+        - name: OTEL_JAVA_TEST_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
+            value: '*'
+        - name: OTEL_JAVA_TEST_LOG_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
             value: '*'
     ```
 12. Save the file (Command-S on Mac, Ctrl-S on Windows) or use the VS Code "hamburger" menu and select `File` / `Save`

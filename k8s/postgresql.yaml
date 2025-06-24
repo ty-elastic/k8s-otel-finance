@@ -19,16 +19,30 @@ spec:
         app: trading
         service: postgresql
     spec:
+      volumes:
+      - name: shared-log
+        emptyDir: {}
       containers:
-        - env:
+        - name: logtail
+          image: busybox
+          args: ["/bin/sh", "-c", "while ! tail -f /var/log/postgresql/postgresql.json ; do sleep 1 ; done"]
+          volumeMounts:
+          - name: shared-log
+            mountPath: /var/log/postgresql
+
+        - name: postgresql
+          env:
             - name: POSTGRES_DB
               value: trades
             - name: POSTGRES_PASSWORD
               value: password
             - name: POSTGRES_USER
               value: admin
+          volumeMounts:
+          - name: shared-log
+            mountPath: /var/log/postgresql
           image: postgres
-          name: postgresql
+          args: ["-c", "log_statement=all", "-c", "logging_collector=on", "-c", "log_destination=jsonlog", "-c", "log_directory=/var/log/postgresql", "-c", "log_filename=postgresql"]
           ports:
             - containerPort: 5432
               protocol: TCP
@@ -52,3 +66,4 @@ spec:
     app: trading
     service: postgresql
 ---
+
