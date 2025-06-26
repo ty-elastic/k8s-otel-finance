@@ -19,22 +19,22 @@ spec:
         app: trading
         service: postgresql
       annotations:
-        io.opentelemetry.discovery.logs.logtail/enabled: "true"
-        io.opentelemetry.discovery.logs.logtail/config: |
+        io.opentelemetry.discovery.logs.postgresql/enabled: "true"
+        io.opentelemetry.discovery.logs.postgresql/config: |
           operators:
           - type: container
-          - type: json_parser
-            on_error: send_quiet
+          - type: regex_parser
+            on_error: send
             parse_from: body
-            parse_to: body
-          - type: time_parser
-            parse_from: body.timestamp
-            layout_type: strptime
-            layout: '%Y-%m-%d %H:%M:%S.%L %Z'
-            on_error: send_quiet
+            regex: '^(?P<timestamp_field>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} [A-z]+)\s\[\d{2}\]\s(?P<severity_field>[A-Z]+):\s*(?<msg_field>.*)$'
+            timestamp:
+              parse_from: attributes.timestamp_field
+              on_error: send
+              layout_type: strptime
+              layout: '%Y-%m-%d %H:%M:%S.%L %Z'
           - type: severity_parser
-            parse_from: body.error_severity
-            on_error: send_quiet
+            parse_from: attributes.severity_field
+            on_error: send
             mapping:
               warn: 
                 - WARNING
@@ -56,30 +56,19 @@ spec:
                 - DEBUG5
               fatal:
                 - FATAL
-                - PANIC  
+                - PANIC
           - type: move
             on_error: send_quiet
-            from: body.session_id
-            to: attributes.session_id
-          - type: regex_parser
+            from: attributes.msg_field
+            to: body
+          - type: remove
             on_error: send_quiet
-            parse_from: body.detail
-            regex: ".*2 = '(?<customer_id>[\\w.]*)"
-          - type: add
-            field: attributes.tag22
-            value: custom-value22
+            field: attributes.timestamp_field
+          - type: remove
+            on_error: send_quiet
+            field: attributes.severity_field
     spec:
-      volumes:
-      - name: shared-log
-        emptyDir: {}
       containers:
-        - name: logtail
-          image: busybox
-          args: ["/bin/sh", "-c", "while ! tail -f /var/log/postgresql/postgresql.json 2>/dev/null ; do sleep 1 ; done"]
-          volumeMounts:
-          - name: shared-log
-            mountPath: /var/log/postgresql
-
         - name: postgresql
           env:
             - name: POSTGRES_DB
@@ -88,11 +77,8 @@ spec:
               value: password
             - name: POSTGRES_USER
               value: admin
-          volumeMounts:
-          - name: shared-log
-            mountPath: /var/log/postgresql
           image: postgres
-          args: ["-c", "log_statement=all", "-c", "logging_collector=on", "-c", "log_destination=jsonlog", "-c", "log_directory=/var/log/postgresql", "-c", "log_filename=postgresql"]
+          args: ["-c", "log_statement=all"]
           ports:
             - containerPort: 5432
               protocol: TCP
