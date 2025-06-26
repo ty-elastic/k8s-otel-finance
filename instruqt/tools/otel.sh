@@ -50,7 +50,7 @@ kubectl create secret generic elastic-secret-otel \
   --from-literal=elastic_api_key=$ELASTICSEARCH_APIKEY
 
 cd collector
-curl -o values.yaml https://raw.githubusercontent.com/elastic/elastic-agent/refs/tags/v9.0.2/deploy/helm/edot-collector/kube-stack/values.yaml
+curl -o values.yaml https://raw.githubusercontent.com/elastic/elastic-agent/refs/tags/v9.0.3/deploy/helm/edot-collector/kube-stack/values.yaml
 if [ -d "_courses/$INSTRUQT_TRACK_SLUG" ]; then
     echo $INSTRUQT_TRACK_SLUG;
     patch < _courses/$INSTRUQT_TRACK_SLUG/init.patch
