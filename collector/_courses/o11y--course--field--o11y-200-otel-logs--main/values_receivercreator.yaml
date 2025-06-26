@@ -17,7 +17,7 @@ crds:
 defaultCRConfig:
   image:
     repository: "docker.elastic.co/elastic-agent/elastic-agent"
-    tag: "9.0.3"
+    tag: "9.1.0-SNAPSHOT"
   targetAllocator:
     enabled: false # Enable/disable the Operator's Target allocator.
     # Refer to: https://github.com/open-telemetry/opentelemetry-operator/tree/main/cmd/otel-allocator
@@ -202,6 +202,11 @@ collectors:
       runAsGroup: 0
     scrape_configs_file: "" # [Prometheus metrics](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-kube-stack#scrape_configs_file-details)
     config:
+      extensions:
+        k8s_observer:
+          observe_nodes: true
+          observe_services: true
+          observe_ingresses: true
       exporters:
         # [Debug exporter](https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/debugexporter/README.md)
         debug:
@@ -354,13 +359,18 @@ collectors:
           exclude:
             # exlude collector logs
             - /var/log/pods/*opentelemetry-kube-stack*/*/*.log
-          include:
+            # exclude pod logs (handled by receiver creator)
             - /var/log/pods/*/*/*.log
           include_file_name: false
           include_file_path: true
           operators:
             - id: container-parser # Extract container's metadata
               type: container
+        receiver_creator/logs:
+          watch_observers: [k8s_observer]
+          discovery:
+            enabled: true
+          receivers: {}
         # [Hostmetrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver)
         hostmetrics:
           collection_interval: 10s
@@ -468,10 +478,11 @@ collectors:
             - container.id
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       service:
+        extensions: [k8s_observer]
         pipelines:
           logs/node:
             receivers:
-              - filelog
+              - receiver_creator/logs
             processors:
               - batch
               - k8sattributes

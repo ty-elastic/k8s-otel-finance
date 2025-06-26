@@ -4,5 +4,3 @@ export $(curl http://kubernetes-vm:9000/env | xargs)
 /opt/workshops/clone-code.sh -r ty-elastic/k8s-otel-finance -b $INSTRUQT_TRACK_SLUG -d false
 
 source /workspace/workshop/instruqt/tools/setup.sh
-
-retry_command_lin curl -X POST host-1:9090/monkey/err/db/customer/l.hall/100\?err_db_oneshot=true
