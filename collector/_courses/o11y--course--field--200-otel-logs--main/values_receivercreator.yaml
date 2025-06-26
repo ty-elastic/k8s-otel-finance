@@ -192,9 +192,17 @@ collectors:
         value: ""
       - name: ELASTIC_AGENT_OTEL
         value: '"true"'
+    volumeMounts:
+      - name: varlogpods
+        mountPath: /var/log/pods
+        readOnly: true
+    volumes:
+      - name: varlogpods
+        hostPath:
+          path: /var/log/pods
     presets:
       logsCollection:
-        enabled: true # Enable/disable the collection of node's logs.
+        enabled: false # Enable/disable the collection of node's logs.
         storeCheckpoints: true # Store checkpoints for log collection, allowing for resumption from the last processed log.
     hostNetwork: true # Use the host's network namespace. This allows the daemon to access the network interfaces of the host directly.
     securityContext: # Run the daemon as the root user and group for proper metrics collection.
@@ -351,21 +359,6 @@ collectors:
               endpoint: 0.0.0.0:4317
             http:
               endpoint: 0.0.0.0:4318
-        # [File Log Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver)
-        filelog:
-          retry_on_failure:
-            enabled: true
-          start_at: end
-          exclude:
-            # exlude collector logs
-            - /var/log/pods/*opentelemetry-kube-stack*/*/*.log
-            # exclude pod logs (handled by receiver creator)
-            - /var/log/pods/*/*/*.log
-          include_file_name: false
-          include_file_path: true
-          operators:
-            - id: container-parser # Extract container's metadata
-              type: container
         receiver_creator/logs:
           watch_observers: [k8s_observer]
           discovery:

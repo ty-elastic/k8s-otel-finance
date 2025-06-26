@@ -1,5 +1,5 @@
---- values.yaml	2025-06-26 11:31:28
-+++ values_receivercreator.yaml	2025-06-26 11:32:26
+--- values.yaml	2025-06-26 14:56:52
++++ values_receivercreator.yaml	2025-06-26 15:10:05
 @@ -17,7 +17,7 @@
  defaultCRConfig:
    image:
@@ -9,7 +9,26 @@
    targetAllocator:
      enabled: false # Enable/disable the Operator's Target allocator.
      # Refer to: https://github.com/open-telemetry/opentelemetry-operator/tree/main/cmd/otel-allocator
-@@ -202,6 +202,11 @@
+@@ -192,9 +192,17 @@
+         value: ""
+       - name: ELASTIC_AGENT_OTEL
+         value: '"true"'
++    volumeMounts:
++      - name: varlogpods
++        mountPath: /var/log/pods
++        readOnly: true
++    volumes:
++      - name: varlogpods
++        hostPath:
++          path: /var/log/pods
+     presets:
+       logsCollection:
+-        enabled: true # Enable/disable the collection of node's logs.
++        enabled: false # Enable/disable the collection of node's logs.
+         storeCheckpoints: true # Store checkpoints for log collection, allowing for resumption from the last processed log.
+     hostNetwork: true # Use the host's network namespace. This allows the daemon to access the network interfaces of the host directly.
+     securityContext: # Run the daemon as the root user and group for proper metrics collection.
+@@ -202,6 +210,11 @@
        runAsGroup: 0
      scrape_configs_file: "" # [Prometheus metrics](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-kube-stack#scrape_configs_file-details)
      config:
@@ -21,27 +40,33 @@
        exporters:
          # [Debug exporter](https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/debugexporter/README.md)
          debug:
-@@ -354,13 +359,18 @@
-           exclude:
-             # exlude collector logs
-             - /var/log/pods/*opentelemetry-kube-stack*/*/*.log
--          include:
-+            # exclude pod logs (handled by receiver creator)
-             - /var/log/pods/*/*/*.log
-           include_file_name: false
-           include_file_path: true
-           operators:
-             - id: container-parser # Extract container's metadata
-               type: container
+@@ -346,21 +359,11 @@
+               endpoint: 0.0.0.0:4317
+             http:
+               endpoint: 0.0.0.0:4318
+-        # [File Log Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver)
+-        filelog:
+-          retry_on_failure:
 +        receiver_creator/logs:
 +          watch_observers: [k8s_observer]
 +          discovery:
-+            enabled: true
+             enabled: true
+-          start_at: end
+-          exclude:
+-            # exlude collector logs
+-            - /var/log/pods/*opentelemetry-kube-stack*/*/*.log
+-          include:
+-            - /var/log/pods/*/*/*.log
+-          include_file_name: false
+-          include_file_path: true
+-          operators:
+-            - id: container-parser # Extract container's metadata
+-              type: container
 +          receivers: {}
          # [Hostmetrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver)
          hostmetrics:
            collection_interval: 10s
-@@ -468,10 +478,11 @@
+@@ -468,10 +471,11 @@
              - container.id
        # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
        service:

@@ -1,0 +1,104 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: trading
+    service: postgresql
+  name: postgresql
+  namespace: trading
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading
+      service: postgresql
+  template:
+    metadata:
+      labels:
+        app: trading
+        service: postgresql
+      annotations:
+        io.opentelemetry.discovery.logs.postgresql/enabled: "true"
+        io.opentelemetry.discovery.logs.postgresql/config: |
+          operators:
+          - type: container
+          - type: regex_parser
+            on_error: send
+            parse_from: body
+            regex: '^(?P<timestamp_field>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} [A-z]+)\s\[\d{2}\]\s(?P<severity_field>[A-Z]+):\s*(?<msg_field>.*)$'
+            timestamp:
+              parse_from: attributes.timestamp_field
+              on_error: send
+              layout_type: strptime
+              layout: '%Y-%m-%d %H:%M:%S.%L %Z'
+          - type: severity_parser
+            parse_from: attributes.severity_field
+            on_error: send
+            mapping:
+              warn: 
+                - WARNING
+                - NOTICE
+              error:
+                - ERROR
+              info: 
+                - LOG
+                - INFO
+              debug1:
+                - DEBUG1
+              debug2:
+                - DEBUG2
+              debug3:
+                - DEBUG3
+              debug4:
+                - DEBUG4
+              debug5:
+                - DEBUG5
+              fatal:
+                - FATAL
+                - PANIC
+          - type: move
+            on_error: send_quiet
+            from: attributes.msg_field
+            to: body
+          - type: remove
+            on_error: send_quiet
+            field: attributes.timestamp_field
+          - type: remove
+            on_error: send_quiet
+            field: attributes.severity_field
+    spec:
+      containers:
+        - name: postgresql
+          env:
+            - name: POSTGRES_DB
+              value: trades
+            - name: POSTGRES_PASSWORD
+              value: password
+            - name: POSTGRES_USER
+              value: admin
+          image: postgres
+          args: ["-c", "log_statement=all"]
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: trading
+    service: postgresql
+  name: postgresql
+  namespace: trading
+spec:
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+  selector:
+    app: trading
+    service: postgresql
+---
