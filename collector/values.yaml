@@ -17,7 +17,7 @@ crds:
 defaultCRConfig:
   image:
     repository: "docker.elastic.co/elastic-agent/elastic-agent"
-    tag: "9.1.0-SNAPSHOT"
+    tag: "9.0.3"
   targetAllocator:
     enabled: false # Enable/disable the Operator's Target allocator.
     # Refer to: https://github.com/open-telemetry/opentelemetry-operator/tree/main/cmd/otel-allocator
@@ -192,17 +192,9 @@ collectors:
         value: ""
       - name: ELASTIC_AGENT_OTEL
         value: '"true"'
-    volumeMounts:
-    - name: varlogpods
-      mountPath: /var/log/pods
-      readOnly: true
-    volumes:
-      - name: varlogpods
-        hostPath:
-          path: /var/log/pods
     presets:
       logsCollection:
-        enabled: false # Enable/disable the collection of node's logs.
+        enabled: true # Enable/disable the collection of node's logs.
         storeCheckpoints: true # Store checkpoints for log collection, allowing for resumption from the last processed log.
     hostNetwork: true # Use the host's network namespace. This allows the daemon to access the network interfaces of the host directly.
     securityContext: # Run the daemon as the root user and group for proper metrics collection.
@@ -210,11 +202,6 @@ collectors:
       runAsGroup: 0
     scrape_configs_file: "" # [Prometheus metrics](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-kube-stack#scrape_configs_file-details)
     config:
-      extensions:
-        k8s_observer:
-          observe_nodes: true
-          observe_services: true
-          observe_ingresses: true
       exporters:
         # [Debug exporter](https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/debugexporter/README.md)
         debug:
@@ -360,26 +347,21 @@ collectors:
             http:
               endpoint: 0.0.0.0:4318
         # [File Log Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver)
-        # filelog:
-        #   retry_on_failure:
-        #     enabled: true
-        #   start_at: end
-        #   exclude:
-        #     # exlude collector logs
-        #     - /var/log/pods/*opentelemetry-kube-stack*/*/*.log
-        #   include:
-        #     - /var/log/pods/*/*/*.log
-        #   include_file_name: false
-        #   include_file_path: true
-        #   operators:
-        #     - id: container-parser # Extract container's metadata
-        #       type: container
-        # [Hostmetrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver)
-        receiver_creator/logs:
-          watch_observers: [k8s_observer]
-          discovery:
+        filelog:
+          retry_on_failure:
             enabled: true
-          receivers: {}
+          start_at: end
+          exclude:
+            # exlude collector logs
+            - /var/log/pods/*opentelemetry-kube-stack*/*/*.log
+          include:
+            - /var/log/pods/*/*/*.log
+          include_file_name: false
+          include_file_path: true
+          operators:
+            - id: container-parser # Extract container's metadata
+              type: container
+        # [Hostmetrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver)
         hostmetrics:
           collection_interval: 10s
           root_path: /hostfs # Mounted node's root file system
@@ -486,11 +468,10 @@ collectors:
             - container.id
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       service:
-        extensions: [k8s_observer]
         pipelines:
           logs/node:
             receivers:
-              - receiver_creator/logs
+              - filelog
             processors:
               - batch
               - k8sattributes
@@ -503,7 +484,6 @@ collectors:
               - resource/cloud
             exporters:
               - otlp/gateway
-              #- debug
           metrics/node/otel:
             receivers:
               - kubeletstats
