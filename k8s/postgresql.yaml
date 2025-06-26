@@ -18,6 +18,56 @@ spec:
       labels:
         app: trading
         service: postgresql
+      annotations:
+        io.opentelemetry.discovery.logs.logtail/enabled: "true"
+        io.opentelemetry.discovery.logs.logtail/config: |
+          operators:
+          - type: container
+          - type: json_parser
+            on_error: send_quiet
+            parse_from: body
+            parse_to: body
+          - type: time_parser
+            parse_from: body.timestamp
+            layout_type: strptime
+            layout: '%Y-%m-%d %H:%M:%S.%L %Z'
+            on_error: send_quiet
+          - type: severity_parser
+            parse_from: body.error_severity
+            on_error: send_quiet
+            mapping:
+              warn: 
+                - WARNING
+                - NOTICE
+              error:
+                - ERROR
+              info: 
+                - LOG
+                - INFO
+              debug1:
+                - DEBUG1
+              debug2:
+                - DEBUG2
+              debug3:
+                - DEBUG3
+              debug4:
+                - DEBUG4
+              debug5:
+                - DEBUG5
+              fatal:
+                - FATAL
+                - PANIC  
+          - type: move
+            on_error: send_quiet
+            from: body.session_id
+            to: attributes.session_id
+          - type: regex_parser
+            on_error: send_quiet
+            parse_from: body.detail
+            regex: ".*2 = '(?<customer_id>[\\w.]*)"
+          - type: add
+            field: attributes.tag22
+            value: custom-value22
     spec:
       volumes:
       - name: shared-log
@@ -25,7 +75,7 @@ spec:
       containers:
         - name: logtail
           image: busybox
-          args: ["/bin/sh", "-c", "while ! tail -f /var/log/postgresql/postgresql.json ; do sleep 1 ; done"]
+          args: ["/bin/sh", "-c", "while ! tail -f /var/log/postgresql/postgresql.json 2>/dev/null ; do sleep 1 ; done"]
           volumeMounts:
           - name: shared-log
             mountPath: /var/log/postgresql
