@@ -1,9 +1,9 @@
 export $(cat ./build_vars.sh | xargs)
 
 arch=linux/amd64
-LOCAL_DOCKER_REPO=localhost:5000
+LOCAL_DOCKER_REPO=localhost:5093
 
-docker run -d -p 5000:5000 --restart=always --name registry registry:2
+docker run -d -p 5093:5000 --restart=always --name registry registry:2
 
 while getopts "s:a:" opt
 do

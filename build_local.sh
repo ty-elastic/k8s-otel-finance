@@ -5,9 +5,10 @@ arch=linux/amd64
 
 build=true
 push=false
-while getopts "b:p:" opt
+while getopts "b:p:a:" opt
 do
    case "$opt" in
+      a ) arch="$OPTARG" ;;
       b ) build="$OPTARG" ;;
       p ) push="$OPTARG" ;;
    esac
@@ -31,7 +32,7 @@ if [ "$build" = "true" ]; then
 fi
 
 if [ "$push" = "true" ]; then
-    for f in k8s/*.yaml; do envsubst < $f | kubectl apply -f -; done
+    for f in k8s/*.yaml;do sed "s,#imagePullPolicy: Always,imagePullPolicy: Always,g" $f | envsubst | kubectl apply -f -; done
 else
     for f in k8s/*.yaml; do sed "s,#imagePullPolicy: Always,imagePullPolicy: Never,g" $f | envsubst | kubectl apply -f -; done
 fi

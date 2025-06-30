@@ -1,4 +1,4 @@
-FROM node:latest as frontend
+FROM node:20-alpine as frontend
 
 RUN mkdir -p /app
 WORKDIR /app

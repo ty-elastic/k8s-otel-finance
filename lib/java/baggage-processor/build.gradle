@@ -16,8 +16,6 @@ plugins {
   id "io.opentelemetry.instrumentation.muzzle-check" version "2.13.3-alpha"
 }
 
-
-group 'io.opentelemetry.example'
 version '1.0'
 
 ext {

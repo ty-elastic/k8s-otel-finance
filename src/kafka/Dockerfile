@@ -1,4 +1,4 @@
-FROM apache/kafka-native
+FROM apache/kafka-native:3.9.1
 
 USER root
 RUN apk add openjdk8

@@ -6,7 +6,7 @@ spec:
   java:
     image: docker.elastic.co/observability/elastic-otel-javaagent:1.3.0
     extensions:
-      - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/baggage-processor
+      - image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/baggage-processor:$COURSE
         dir: /extensions
     env:
       - name: OTEL_JAVA_TEST_SPAN_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
