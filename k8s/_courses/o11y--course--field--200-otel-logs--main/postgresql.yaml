@@ -26,7 +26,7 @@ spec:
           - type: regex_parser
             on_error: send
             parse_from: body
-            regex: '^(?P<timestamp_field>\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}.\d{3}\s[A-z]+)\s\[\d{2}\]\s(?P<severity_field>[A-Z]+):\s*(?<msg_field>.*?)\s*(\/\*traceparent=\x27(?P<version>\d*)?-(?P<trace_id>\S*)-(?P<span_id>\S*)-(?P<trace_flags>\d*)\x27\*\/)?$'
+            regex: '^(?P<timestamp_field>\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}.\d{3}\s[A-z]+)\s\[\d+\]\s(?P<severity_field>[A-Z]+):\s*(?<msg_field>.*?)\s*(\/\*traceparent=\x27(?P<version>\d*)?-(?P<trace_id>\S*)-(?P<span_id>\S*)-(?P<trace_flags>\d*)\x27\*\/)?$'
             timestamp:
               parse_from: attributes.timestamp_field
               on_error: send

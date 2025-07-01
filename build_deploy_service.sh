@@ -2,12 +2,14 @@ arch=linux/amd64
 course=latest
 service=all
 local=true
+variant=none
 while getopts "s:a:l:" opt
 do
    case "$opt" in
       s ) service="$OPTARG" ;;
       a ) arch="$OPTARG" ;;
       l ) local="$OPTARG" ;;
+      v ) variant="$OPTARG" ;;
    esac
 done
 
@@ -18,4 +20,4 @@ fi
 echo $service
 
 ./build.sh -a $arch -c $course -s $service -l $local -x true -y false -z false
-./deploy.sh -c $course -s $service -l $local
+./deploy.sh -c $course -s $service -l $local -v $variant

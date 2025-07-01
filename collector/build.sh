@@ -12,6 +12,7 @@ done
 
 collector_distribution_image_name=$repo/otelcol
 
+echo $collector_distribution_image_name:$course
 docker build \
   -t $collector_distribution_image_name:$course \
   --platform=$arch .

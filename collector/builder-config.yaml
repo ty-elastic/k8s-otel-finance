@@ -51,6 +51,7 @@ processors:
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor $CORE_VERSION
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor $CORE_VERSION
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/transformprocessor $CORE_VERSION
+  - gomod: github.com/elastic/opentelemetry-collector-components/processor/lsmintervalprocessor $ELASTICTRACEPROCESSOR_VERSION
 
 connectors:
   - gomod: github.com/elastic/opentelemetry-collector-components/connector/elasticapmconnector $ELASTICAPMCONNECTOR_VERSION
