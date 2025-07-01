@@ -30,7 +30,7 @@ spec:
               value: password
             - name: POSTGRES_USER
               value: admin
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/recorder-go-zero:$COURSE
+          image: $REPO/recorder-go-zero:$COURSE
           #imagePullPolicy: Always
           name: recorder-go-zero
           ports:

@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: monkey
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/monkey:$COURSE
+          image: $REPO/monkey:$COURSE
           #imagePullPolicy: Always
           ports:
             - containerPort: 9002

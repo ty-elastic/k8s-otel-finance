@@ -32,7 +32,7 @@ spec:
               value: password
             - name: POSTGRES_USER
               value: admin
-          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/recorder-java:$COURSE
+          image: $REPO/recorder-java:$COURSE
           #imagePullPolicy: Always
           ports:
             - containerPort: 9003

@@ -1,16 +1,19 @@
-export collector_distribution_image_name=us-central1-docker.pkg.dev/elastic-sa/tbekiares/otelcol
-export version=$COURSE
+arch=linux/amd64
+course=latest
+repo=us-central1-docker.pkg.dev/elastic-sa/tbekiares
+while getopts "a:c:r:" opt
+do
+   case "$opt" in
+      a ) arch="$OPTARG" ;;
+      c ) course="$OPTARG" ;;
+      r ) repo="$OPTARG" ;;
+   esac
+done
 
-# Enable Docker multi-arch builds
-docker run --rm --privileged tonistiigi/binfmt --install all
-docker buildx create --name mybuilder --use
+collector_distribution_image_name=$repo/otelcol
 
-# Build the Docker image as Linux AMD and ARM,
-# and loads the build result to "docker images"
-docker buildx build --load \
-  -t $collector_distribution_image_name:$version \
-  --platform=linux/amd64,linux/arm64 .
+docker build \
+  -t $collector_distribution_image_name:$course \
+  --platform=$arch .
 
-# Test the newly-built image
-# docker run -it --rm -p 4317:4317 -p 4318:4318 \
-#     --name otelcol <collector_distribution_image_name>:<version>
+docker push $collector_distribution_image_name:$course

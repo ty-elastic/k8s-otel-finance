@@ -10,17 +10,14 @@ RUN edot-bootstrap --action=install
 RUN pip3 uninstall -y opentelemetry-instrumentation-click
 
 ARG COURSE=main
-ARG COURSES=true
 
 COPY app.py .
 COPY model.py .
 COPY _courses _courses
 
-RUN if [ "$COURSES" = "true" ]; then \
-    if [ -d "_courses/$COURSE" ]; then \
+RUN if [ -d "_courses/$COURSE" ]; then \
         echo $COURSE; \
         patch < _courses/$COURSE/init.patch; \
-        fi \
     fi
 
 ENV ROUTER_HOST="router"

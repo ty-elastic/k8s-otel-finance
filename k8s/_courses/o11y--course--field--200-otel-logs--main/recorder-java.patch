@@ -25,7 +25,7 @@
 +          emptyDir: {}
 +      initContainers:
 +        - name: sqlcommentor
-+          image: us-central1-docker.pkg.dev/elastic-sa/tbekiares/sqlcommenter:$COURSE
++          image: $REPO/sqlcommenter:$COURSE
 +          command: ["cp"]
 +          args: ["/lib/com-example-sqlcommentor.jar", "/usr/src/app/lib/com-example-sqlcommentor.jar"]
 +          volumeMounts:

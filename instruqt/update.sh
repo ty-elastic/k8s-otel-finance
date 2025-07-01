@@ -1,10 +1,10 @@
 arch=linux/amd64
-
 build=true
 course=all
-while getopts "b:c:" opt
+while getopts "a:b:c:" opt
 do
    case "$opt" in
+      a ) arch="$OPTARG" ;;
       b ) build="$OPTARG" ;;
       c ) course="$OPTARG" ;;
    esac
@@ -21,21 +21,11 @@ for dir in ./courses/*/; do
     echo $current_course
     
     if [ "$course" = "all" ] | [ "$course" = "$current_course" ]; then
-      if [ "$build" = "true" ]; then
-        for service_dir in ../src/*/; do
-            echo $service_dir
-            if [[ -d "$service_dir" ]]; then
-                service=$(basename "$service_dir")
-                echo $service
-                echo $current_course
-                docker build --platform $arch --build-arg current_course=$current_course --progress plain -t us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$current_course $service_dir
-                docker push us-central1-docker.pkg.dev/elastic-sa/tbekiares/$service:$current_course
-            fi
-        done
 
-        cd ../lib
+      if [ "$build" = "true" ]; then
+        cd ..
         ./build.sh -c $current_course -a $arch
-        cd ../instruqt
+        cd instruqt
       fi
 
       cd courses/$current_course
