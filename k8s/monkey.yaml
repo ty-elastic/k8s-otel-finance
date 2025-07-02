@@ -24,7 +24,7 @@ spec:
       containers:
         - name: monkey
           image: $REPO/monkey:$COURSE
-          #imagePullPolicy: Always
+          imagePullPolicy: Always
           ports:
             - containerPort: 9002
           env:

@@ -28,7 +28,7 @@ spec:
             - name: RECORDER_HOST_CANARY
               value: recorder-go-zero
           image: $REPO/router:$COURSE
-          #imagePullPolicy: Always
+          imagePullPolicy: Always
           name: router
           ports:
             - containerPort: 9000

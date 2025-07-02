@@ -24,7 +24,7 @@ spec:
       containers:
         - name: trader
           image: $REPO/trader:$COURSE
-          #imagePullPolicy: Always
+          imagePullPolicy: Always
           ports:
             - containerPort: 9001
       restartPolicy: Always

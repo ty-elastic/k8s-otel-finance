@@ -352,6 +352,27 @@ collectors:
               - tag_name: app.label.version
                 key: app.kubernetes.io/version
                 from: pod
+        k8sattributes/logs:
+          filter:
+            # Only retrieve pods running on the same node as the collector
+            node_from_env_var: OTEL_K8S_NODE_NAME
+          passthrough: false
+          pod_association:
+            # Below association takes a look at the k8s.pod.ip and k8s.pod.uid resource attributes or connection's context, and tries to match it with the pod having the same attribute.
+            - sources:
+                - from: resource_attribute
+                  name: k8s.pod.ip
+            - sources:
+                - from: resource_attribute
+                  name: k8s.pod.uid
+            - sources:
+                - from: connection
+          extract:
+            annotations:
+              # Extracts the value of a pod annotation with key `annotation-one` and inserts it as a resource attribute with key `a1`
+              - tag_name: com.example.log.format
+                key: com.example.logs/format
+                from: pod
       receivers:
         # [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver)
         otlp:
@@ -478,7 +499,7 @@ collectors:
         routing/logs:
           default_pipelines: [logs/node]
           table:
-            - context: log
+            - context: resource
               condition: attributes["com.example.log.format"] == "otlpjson"
               pipelines: [logs/node_raw_otlpjson]
       service:
@@ -486,6 +507,7 @@ collectors:
         pipelines:
           logs/node_raw:
             receivers: [receiver_creator/logs]
+            processors: [k8sattributes/logs]
             exporters: [routing/logs]
           logs/node_raw_otlpjson:
             receivers: [routing/logs]

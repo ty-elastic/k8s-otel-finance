@@ -40,7 +40,7 @@ spec:
             - name: KAFKA_PROCESS_ROLES
               value: broker,controller
           image: $REPO/kafka:$COURSE
-          #imagePullPolicy: Always
+          imagePullPolicy: Always
           name: kafka
           ports:
             - containerPort: 9093

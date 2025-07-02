@@ -24,7 +24,7 @@ spec:
       containers:
         - name: notifier
           image: $REPO/notifier:$COURSE
-          #imagePullPolicy: Always
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
       restartPolicy: Always

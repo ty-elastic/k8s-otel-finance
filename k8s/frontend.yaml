@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - image: $REPO/frontend:$COURSE
-          #imagePullPolicy: Always
+          imagePullPolicy: Always
           name: frontend
           volumeMounts:
             - mountPath: /build
@@ -56,7 +56,7 @@ spec:
     spec:
       containers:
         - image: $REPO/proxy:$COURSE
-          #imagePullPolicy: Always
+          imagePullPolicy: Always
           name: proxy
           ports:
             - containerPort: 80

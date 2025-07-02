@@ -27,16 +27,12 @@ for file in k8s/*.yaml; do
     echo $current_service
     if [ "$service" = "all" ] | [ "$service" = "$current_service" ]; then
         echo "deploying..."
-        if [ "$course" = "latest" ]; then
-            sed "s,#imagePullPolicy,imagePullPolicy,g" k8s/$service.yaml | envsubst | kubectl apply -f -
+        echo "k8s/_courses/$variant.yaml"
+        if [ -f "k8s/_courses/$variant.yaml" ]; then
+            echo "applying variant"
+            envsubst < k8s/_courses/$variant.yaml | kubectl apply -f -
         else
-            echo "k8s/_courses/$course/$variant.yaml"
-            if [ -f "k8s/_courses/$course/$variant.yaml" ]; then
-                echo "applying variant"
-                envsubst < k8s/_courses/$course/$variant.yaml | kubectl apply -f -
-            else
-                envsubst < k8s/$service.yaml | kubectl apply -f -
-            fi
+            envsubst < k8s/$service.yaml | kubectl apply -f -
         fi
         kubectl -n trading rollout restart deployment/$current_service
     fi
