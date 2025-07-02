@@ -13,3 +13,13 @@ spec:
         value: '*'
       - name: OTEL_JAVA_TEST_LOG_ATTRIBUTES_COPY_FROM_BAGGAGE_INCLUDE
         value: '*'
+      - name: OTEL_LOGS_EXPORTER
+        value: 'experimental-otlp/stdout'
+      - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_LOG_ATTRIBUTES
+        value: 'true'
+      - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_KEY_VALUE_PAIR_ATTRIBUTES
+        value: 'true'
+      - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_MDC_ATTRIBUTES
+        value: '*'
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: "com.example.log.preferred_format=otlpjson"
