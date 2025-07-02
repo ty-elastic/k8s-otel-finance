@@ -28,6 +28,7 @@ spec:
     metadata:
       annotations:
         instrumentation.opentelemetry.io/inject-java: "opentelemetry-operator-system/elastic-instrumentation"
+        io.opentelemetry.discovery.logs/enabled: "true"
       labels:
         app: trading
         service: recorder-java

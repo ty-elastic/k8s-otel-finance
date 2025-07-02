@@ -364,6 +364,8 @@ collectors:
           watch_observers: [k8s_observer]
           discovery:
             enabled: true
+          default_annotations:
+            io.opentelemetry.discovery.logs/enabled: "true"
           receivers: {}
         # [Hostmetrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver)
         hostmetrics:
@@ -471,12 +473,27 @@ collectors:
           extra_metadata_labels:
             - container.id
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
+      connectors:
+        otlpjson: {}
+        routing/logs:
+          default_pipelines: [logs/node]
+          table:
+            - context: log
+              condition: attributes["com.example.log.format"] == "otlpjson"
+              pipelines: [logs/node_raw_otlpjson]
       service:
         extensions: [k8s_observer]
         pipelines:
+          logs/node_raw:
+            receivers: [receiver_creator/logs]
+            exporters: [routing/logs]
+          logs/node_raw_otlpjson:
+            receivers: [routing/logs]
+            exporters: [otlpjson]
           logs/node:
             receivers:
-              - receiver_creator/logs
+              - routing/logs
+              - otlpjson
             processors:
               - batch
               - k8sattributes

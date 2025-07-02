@@ -8,7 +8,7 @@ RUN apt-get update
 RUN apt-get install -y gettext-base
 
 ## VERSIONS
-ENV OCB_VERSION=0.127.0
+ENV OCB_VERSION=0.128.0
 
 ENV CORE_VERSION=v$OCB_VERSION
 

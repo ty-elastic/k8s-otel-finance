@@ -3,7 +3,7 @@ course=latest
 service=all
 local=true
 variant=none
-while getopts "s:a:l:" opt
+while getopts "s:a:l:v:" opt
 do
    case "$opt" in
       s ) service="$OPTARG" ;;
@@ -13,6 +13,7 @@ do
    esac
 done
 
+echo $local
 if [ "$local" = "true" ]; then
    docker run -d -p 5093:5000 --restart=always --name registry registry:2
 fi

@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>
-                logback: %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg %kvp{DOUBLE}%n
-            </pattern>
-        </encoder>
-    </appender>
-    <root level="INFO">
-        <appender-ref ref="console"/>
-    </root>
+  <logger name="com.example" level="debug"/>
+  <root level="info">
+    <!-- No appender as the OTel Agent emits otlpjson logs through stdout -->
+    <!--
+      IMPORTANT enable a console appender to troubleshoot cases where
+      logs are missing in the OTel backend
+    -->
+  </root>
 </configuration>
