@@ -382,14 +382,14 @@ collectors:
               conditions:
                 - body != nil and resource.attributes["com.example.logs.flask"] == "true"
               statements:
-                - set(cache, ExtractGrokPatterns(body, "%{IP:clientip} - - \\[%{GREEDYDATA:timestamp}\\] \x22%{WORD:action} %{URIPATHPARAM:request} %{WORD:protocol}/%{NUMBER:protocolNum}\x22 %{NUMBER:response} -", true))
-                - set(attributes["http.method"], cache["action"])
-                - set(attributes["http.url"], cache["request"])
-                - set(attributes["http.status_code"], cache["response"])
-                - set(attributes["client.address"], cache["clientip"])
-                - set(attributes["network.protocol.name"], cache["protocol"])
-                - set(attributes["network.protocol.version"], cache["protocolNum"])
-                - set(time, Time(Concat([cache["timestamp"], "UTC"], " "), "%d/%b/%Y %H:%M:%S %Z"))
+                - set(cache, ExtractGrokPatterns(body, "%{IP:client_address} - - \\[%{GREEDYDATA:time}\\] \x22%{WORD:method} %{URIPATHPARAM:url} %{WORD:protocol_name}/%{NUMBER:protocol_version}\x22 %{NUMBER:status_code} -", true))
+                - set(attributes["http.method"], cache["method"])
+                - set(attributes["http.url"], cache["url"])
+                - set(attributes["http.status_code"], cache["status_code"])
+                - set(attributes["client.address"], cache["client_address"])
+                - set(attributes["network.protocol.name"], cache["protocol_name"])
+                - set(attributes["network.protocol.version"], cache["protocol_version"])
+                - set(time, Time(Concat([cache["time"], "UTC"], " "), "%d/%b/%Y %H:%M:%S %Z"))
       receivers:
         # [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver)
         otlp:
