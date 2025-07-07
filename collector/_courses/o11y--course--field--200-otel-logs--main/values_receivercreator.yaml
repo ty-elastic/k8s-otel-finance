@@ -352,12 +352,44 @@ collectors:
               - tag_name: app.label.version
                 key: app.kubernetes.io/version
                 from: pod
-        transform/logs:
-          error_mode: propagate
+        k8sattributes/logs:
+          filter:
+            # Only retrieve pods running on the same node as the collector
+            node_from_env_var: OTEL_K8S_NODE_NAME
+          passthrough: false
+          pod_association:
+            # Below association takes a look at the k8s.pod.ip and k8s.pod.uid resource attributes or connection's context, and tries to match it with the pod having the same attribute.
+            - sources:
+                - from: resource_attribute
+                  name: k8s.pod.ip
+            - sources:
+                - from: resource_attribute
+                  name: k8s.pod.uid
+            - sources:
+                - from: connection
+          extract:
+            annotations:
+              - tag_name: com.example.logs.format
+                key: com.example.logs/format
+                from: pod
+              - tag_name: com.example.logs.flask
+                key: com.example.logs/flask
+                from: pod
+        transform/parse_flask:
+          error_mode: ignore
           log_statements:
             - context: log
+              conditions:
+                - body != nil and resource.attributes["com.example.logs.flask"] == "true"
               statements:
-              - set(resource.attributes["com.example.log.format"], "otlpjson") where IsMatch(log.body, "^.*\x7B\x22key\x22:\x22com\x2Eexample\x2Elog\x2Epreferred_format\x22,\x22value\x22:\x7B\x22stringValue\x22:\x22otlpjson\x22\x7D\x7D.*$")
+                - set(cache, ExtractGrokPatterns(body, "%{IP:clientip} - - \\[%{GREEDYDATA:timestamp}\\] \x22%{WORD:action} %{URIPATHPARAM:request} %{WORD:protocol}/%{NUMBER:protocolNum}\x22 %{NUMBER:response} -", true))
+                - set(attributes["http.method"], cache["action"])
+                - set(attributes["http.url"], cache["request"])
+                - set(attributes["http.status_code"], cache["response"])
+                - set(attributes["client.address"], cache["clientip"])
+                - set(attributes["network.protocol.name"], cache["protocol"])
+                - set(attributes["network.protocol.version"], cache["protocolNum"])
+                - set(time, Time(Concat([cache["timestamp"], "UTC"], " "), "%d/%b/%Y %H:%M:%S %Z"))
       receivers:
         # [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver)
         otlp:
@@ -478,6 +510,7 @@ collectors:
               enabled: true
           extra_metadata_labels:
             - container.id
+
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       connectors:
         otlpjson: {}
@@ -485,14 +518,14 @@ collectors:
           default_pipelines: [logs/node]
           table:
             - context: resource
-              condition: attributes["com.example.log.format"] == "otlpjson"
+              condition: attributes["com.example.logs.format"] == "otlpjson"
               pipelines: [logs/node_raw_otlpjson]
       service:
         extensions: [k8s_observer]
         pipelines:
           logs/node_raw:
             receivers: [receiver_creator/logs]
-            processors: [transform/logs]
+            processors: [k8sattributes/logs]
             exporters: [routing/logs]
           logs/node_raw_otlpjson:
             receivers: [routing/logs]
@@ -500,7 +533,6 @@ collectors:
           logs/node:
             receivers:
               - routing/logs
-              - otlpjson
             processors:
               - batch
               - k8sattributes
@@ -541,7 +573,10 @@ collectors:
           logs/apm:
             receivers:
               - otlp
+              - otlpjson
             processors:
+              - k8sattributes/logs
+              - transform/parse_flask
               - batch
               - resource/hostname
             exporters:
