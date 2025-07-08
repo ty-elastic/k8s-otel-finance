@@ -60,8 +60,6 @@ spec:
               value: 'true'
             - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_KEY_VALUE_PAIR_ATTRIBUTES
               value: 'true'
-            - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_MDC_ATTRIBUTES
-              value: '*'
 
             - name: JAVA_TOOL_OPTIONS
               value: "-Dloader.path=/usr/src/app/lib"

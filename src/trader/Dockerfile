@@ -4,10 +4,10 @@ RUN apt-get update && apt-get install -y curl patch && rm -rf /var/lib/apt/lists
 WORKDIR /python-docker
 
 COPY requirements.txt .
-RUN pip3 install --root-user-action=ignore -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip pip3 install --root-user-action=ignore -r requirements.txt
 
-RUN edot-bootstrap --action=install
-RUN pip3 uninstall -y opentelemetry-instrumentation-click
+# RUN --mount=type=cache,target=/root/.cache/pip edot-bootstrap --action=install
+# RUN --mount=type=cache,target=/root/.cache/pip pip3 uninstall -y opentelemetry-instrumentation-click
 
 ARG COURSE=main
 
