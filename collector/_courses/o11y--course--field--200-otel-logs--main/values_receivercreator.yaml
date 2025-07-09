@@ -382,14 +382,16 @@ collectors:
               conditions:
                 - body != nil and resource.attributes["com.example.logs.flask"] == "true"
               statements:
-                - set(cache, ExtractGrokPatterns(body, "%{IP:client_address} - - \\[%{GREEDYDATA:time}\\] \x22%{WORD:method} %{URIPATHPARAM:url} %{WORD:protocol_name}/%{NUMBER:protocol_version}\x22 %{NUMBER:status_code} -", true))
-                - set(attributes["http.method"], cache["method"])
-                - set(attributes["http.url"], cache["url"])
-                - set(attributes["http.status_code"], cache["status_code"])
-                - set(attributes["client.address"], cache["client_address"])
-                - set(attributes["network.protocol.name"], cache["protocol_name"])
-                - set(attributes["network.protocol.version"], cache["protocol_version"])
-                - set(time, Time(Concat([cache["time"], "UTC"], " "), "%d/%b/%Y %H:%M:%S %Z"))
+                - set(cache, ExtractGrokPatterns(body, "%{IP:client_address} - - \\[%{GREEDYDATA:time}\\] \x22.*(?<method>(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|CONNECT|TRACE)) %{URIPATH:path}(?:%{URIPARAM:param})? %{WORD:protocol_name}/%{NUMBER:protocol_version}.*\x22 %{NUMBER:status_code} -", true))
+                - set(attributes["http.method"], cache["method"]) where cache["method"] != nil
+                - set(attributes["http.url"], Concat([cache["path"], cache["query"]], "")) where cache["path"] != nil and where cache["query"] != nil
+                - set(attributes["url.path"], cache["path"]) where cache["path"] != nil
+                - set(attributes["url.query"], cache["query"]) where cache["query"] != nil            
+                - set(attributes["http.status_code"], cache["status_code"]) where cache["status_code"] != nil       
+                - set(attributes["client.address"], cache["client_address"]) where cache["client_address"] != nil   
+                - set(attributes["network.protocol.name"], cache["protocol_name"]) where cache["protocol_name"] != nil 
+                - set(attributes["network.protocol.version"], cache["protocol_version"]) where cache["protocol_version"] != nil 
+                - set(time, Time(Concat([cache["time"], "UTC"], " "), "%d/%b/%Y %H:%M:%S %Z")) where cache["time"] != nil 
       receivers:
         # [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver)
         otlp:

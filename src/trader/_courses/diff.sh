@@ -1,0 +1,1 @@
+diff -Naru ../app.py o11y--course--field--200-otel-logs--main/app.py > o11y--course--field--200-otel-logs--main/init.patch

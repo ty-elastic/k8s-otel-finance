@@ -20,5 +20,5 @@ fi
 
 echo $service
 
-./build.sh -a $arch -c $course -s $service -l $local -x true -y false -z false
+./build.sh -a $arch -c $course -s $service -l $local -v $variant -x true -y false -z false
 ./deploy.sh -c $course -s $service -l $local -v $variant

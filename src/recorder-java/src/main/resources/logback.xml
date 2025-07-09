@@ -2,7 +2,6 @@
 <configuration>
   <logger name="com.example" level="debug"/>
   <root level="info">
-    <!-- No appender as the OTel Agent emits otlpjson logs through stdout -->
     <!--
       IMPORTANT enable a console appender to troubleshoot cases where
       logs are missing in the OTel backend

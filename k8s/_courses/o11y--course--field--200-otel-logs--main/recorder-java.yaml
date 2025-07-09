@@ -28,8 +28,8 @@ spec:
     metadata:
       annotations:
         instrumentation.opentelemetry.io/inject-java: "opentelemetry-operator-system/elastic-instrumentation"
-        io.opentelemetry.discovery.logs/enabled: "true"
-        com.example.logs/format: "otlpjson"
+        #io.opentelemetry.discovery.logs/enabled: "true"
+        #com.example.logs/format: "otlpjson"
       labels:
         app: trading
         service: recorder-java
@@ -54,8 +54,8 @@ spec:
             - configMapRef:
                 name: recorder-java-config
           env:
-            - name: OTEL_LOGS_EXPORTER
-              value: 'experimental-otlp/stdout'
+            # - name: OTEL_LOGS_EXPORTER
+            #   value: 'experimental-otlp/stdout'
             - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_LOG_ATTRIBUTES
               value: 'true'
             - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_CAPTURE_KEY_VALUE_PAIR_ATTRIBUTES

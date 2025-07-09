@@ -9,15 +9,15 @@ RUN --mount=type=cache,target=/root/.cache/pip pip3 install --root-user-action=i
 # RUN --mount=type=cache,target=/root/.cache/pip edot-bootstrap --action=install
 # RUN --mount=type=cache,target=/root/.cache/pip pip3 uninstall -y opentelemetry-instrumentation-click
 
-ARG COURSE=main
+ARG VARIANT=none
 
 COPY app.py .
 COPY model.py .
 COPY _courses _courses
 
-RUN if [ -d "_courses/$COURSE" ]; then \
-        echo $COURSE; \
-        patch < _courses/$COURSE/init.patch; \
+RUN if [ -d "_courses/$VARIANT" ]; then \
+        echo $VARIANT; \
+        patch < _courses/$VARIANT/init.patch; \
     fi
 
 ENV ROUTER_HOST="router"
