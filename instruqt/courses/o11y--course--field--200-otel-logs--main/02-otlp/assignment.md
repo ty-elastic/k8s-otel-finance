@@ -47,6 +47,13 @@ That said, there are inherent advantages to using a network-based logging protoc
 2) less io overhead (no file operations)
 3) the Collector need not be local to the node running the applications (though you would typically want a Collector per node for other reasons)
 
+Additionally, using an OTel supported method for logs offers the following benefits:
+1) logs are automatically formatted with OTel Semantic Conventions 
+2) key/values applied to log statements are automatically emitted as attributes
+3) traceid and spanid are automatically added
+4) contextual metadata (e.g., node name) are automatically emitted as attributes
+5) baggage can be automatically applied as attributes
+
 Java
 ===
 
@@ -74,10 +81,16 @@ You can easily add attributes to logs using the primitives provided by your logg
 
 Switching back to [button label="Elasticsearch"](tab-1) tab, you'll notice that this log line has other facets like span.id, etc.
 
+You'll also notice that it has high-value custom metadata added, like "customer_id". Switching back to Java, you'll note that these attributes are not applied in the recorder-java service. Where did they come from?
+
+Switching to VS Code, then python, look at app.py. See add to attributes and baggage. Then switch to Elastic. look at service map. follow trace from trader service. see how all logs emit with attributes.
+
 Python
 ===
 
+talk about flask.
 
+ES|QL. then how to do it with OTTL. need to use OTTL.
 
 
 Let's look at where we are starting.

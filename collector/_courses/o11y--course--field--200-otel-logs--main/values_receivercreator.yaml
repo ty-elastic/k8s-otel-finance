@@ -17,7 +17,7 @@ crds:
 defaultCRConfig:
   image:
     repository: "us-central1-docker.pkg.dev/elastic-sa/tbekiares/otelcol"
-    tag: "latest"
+    tag: "$COURSE"
   imagePullPolicy: Always
   targetAllocator:
     enabled: false # Enable/disable the Operator's Target allocator.

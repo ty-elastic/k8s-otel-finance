@@ -3,10 +3,11 @@ source /opt/workshops/elastic-retry.sh
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
 deploy=true
-while getopts "i:" opt
+while getopts "i:o:" opt
 do
    case "$opt" in
       d ) deploy="$OPTARG" ;;
+      o ) otel="$OPTARG" ;;
    esac
 done
 
@@ -32,5 +33,5 @@ fi
 cd ..
 
 if [ "$deploy" = "true" ]; then
-  ./deploy.sh -c $INSTRUQT_TRACK_SLUG
+  ./deploy.sh -c $INSTRUQT_TRACK_SLUG -o $otel
 fi
