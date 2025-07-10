@@ -1,6 +1,6 @@
 ---
-slug: life-before-attributes
-id: hafho7mr5qnl
+slug: ottl
+id: ahmyfvb4yziz
 type: challenge
 title: Life before attributes
 notes:
@@ -8,13 +8,13 @@ notes:
   contents: In this challenge, we will consider the challenges of working with limited
     context while performing Root Cause Analysis of a reported issue
 tabs:
-- id: 68svgtugx14r
+- id: dekcztd9nux2
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm
   path: /app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:now-15m,to:now))&_a=(columns:!(),dataSource:(dataViewId:'logs-*',type:dataView),filters:!(),hideChart:!f,interval:auto,query:(language:kuery,query:''),sort:!(!('@timestamp',desc)))
   port: 30001
-- id: 3xagckoq1xei
+- id: 1vkc4xk5xxzv
   title: VS Code
   type: service
   hostname: host-1

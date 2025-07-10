@@ -40,27 +40,26 @@ timelimit: 600
 enhanced_loading: null
 ---
 
-The advent of OpenTelemetry has forever changed how we capture observability signals. While OTel initially focused on delivering traces and metrics, logging support is now stable and gaining adoption.
+The advent of OpenTelemetry has forever changed how we capture observability signals. While OTel initially focused on delivering traces and metrics, support for log capture is now stable and gaining adoption, particularly in Kubernetes environments.
 
-Notably, OpenTelemetry generally advocates for edge vs. centralized log parsing. Conceptually, pushing log parsing as close to the edge should ultimately make the parsing more robust; as you make changes to the edges of your network (e.g., upgrading an application version), you can, in lock step, update applicable log parsing rules.
-
-To that spirit, this lab explores 3 models for using OpenTelemetry to collect log signals. Within each model, we explore various options for parsing log messages.
+In this lab, we will explore 3 models for using OpenTelemetry to collect log signals:
 
 1) Service to Collector via OTLP
 
 In this model, we forgo log files entirely, routing log messages directly via the network (OTLP) from service to Collector.
 ![service-map.png](../assets/method1.png)
 
-2) Service to Collector via otlpjson log files
+2) Service to Collector via log files formatted in `otlpjson`
 
-In this model, we output logs from select services to a log file written in `otlpjson` format. This makes it trivial to import into a Collector.
+In this model, we output logs from select services to a log file written in `otlpjson` format.
 ![service-map.png](../assets/method2.png)
 
 3) Service to Collector via free-format log files
 
-In this model, we output logs from select services to a log file in an arbitrary format. This model requires the most manipulation.
+In this model, we output logs from select services to a log file written in an arbitrary format.
 ![service-map.png](../assets/method3.png)
 
+Additionally for each model considered, will also discuss how to parse log messages to derive more value from them. We will show how you can leverage Elastic's support for query-time parsing using ES|QL. We will also show you how you can parse logs at the edge using OpenTelemetry's Transformation Language (OTTL). Notably, OpenTelemetry generally advocates for edge vs. centralized log parsing. This is a change from how we've historically handled log parsing. Conceptually, pushing log parsing as close to the edge should ultimately make the parsing more robust; as you make changes at the edges of your system (e.g., upgrading the version of a deployed service), you can, in lock step, update applicable log parsing rules.
 
 Getting Our Bearings
 ===

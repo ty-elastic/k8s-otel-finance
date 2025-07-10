@@ -46,6 +46,7 @@ def reset():
     
 def decode_common_args():
     trade_id = str(uuid.uuid4())
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.trade_id", trade_id)
 
     customer_id = request.args.get('customer_id', default=None, type=str)
     set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.customer_id", customer_id)

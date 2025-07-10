@@ -2,7 +2,7 @@ FROM maven:3-eclipse-temurin-17 AS build
 COPY src /usr/src/app/src  
 COPY pom.xml /usr/src/app
 WORKDIR /usr/src/app
-RUN mvn package -Dmaven.test.skip
+RUN --mount=type=cache,target=/root/.m2 mvn package -Dmaven.test.skip
 
 FROM eclipse-temurin:17
 

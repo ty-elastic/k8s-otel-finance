@@ -4,7 +4,7 @@ WORKDIR /work
 
 COPY . .
 
-RUN ./gradlew build -x test
+RUN --mount=type=cache,target=/root/.gradle ./gradlew build -x test
 
 FROM alpine:latest
 

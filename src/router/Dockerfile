@@ -7,7 +7,7 @@ COPY package*.json ./
 COPY tsconfig.json ./
 COPY app.ts ./
 
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm npm install
 
 EXPOSE 9000
 

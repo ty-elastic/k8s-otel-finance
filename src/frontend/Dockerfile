@@ -6,7 +6,7 @@ WORKDIR /app
 # Copy package.json and package-lock.json to the working directory
 COPY trader-app/package*.json ./
 # Install dependencies
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm npm install
 
 COPY trader-app/src src
 COPY trader-app/public public

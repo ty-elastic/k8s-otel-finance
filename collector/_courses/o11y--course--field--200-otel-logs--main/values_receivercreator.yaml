@@ -17,7 +17,7 @@ crds:
 defaultCRConfig:
   image:
     repository: "us-central1-docker.pkg.dev/elastic-sa/tbekiares/otelcol"
-    tag: "$COURSE"
+    tag: "latest"
   imagePullPolicy: Always
   targetAllocator:
     enabled: false # Enable/disable the Operator's Target allocator.
@@ -384,7 +384,7 @@ collectors:
               statements:
                 - set(cache, ExtractGrokPatterns(body, "%{IP:client_address} - - \\[%{GREEDYDATA:time}\\] \x22.*(?<method>(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|CONNECT|TRACE)) %{URIPATH:path}(?:%{URIPARAM:param})? %{WORD:protocol_name}/%{NUMBER:protocol_version}.*\x22 %{NUMBER:status_code} -", true))
                 - set(attributes["http.method"], cache["method"]) where cache["method"] != nil
-                - set(attributes["http.url"], Concat([cache["path"], cache["query"]], "")) where cache["path"] != nil and where cache["query"] != nil
+                - set(attributes["http.url"], Concat([cache["path"], cache["query"]], "")) where cache["path"] != nil and cache["query"] != nil
                 - set(attributes["url.path"], cache["path"]) where cache["path"] != nil
                 - set(attributes["url.query"], cache["query"]) where cache["query"] != nil            
                 - set(attributes["http.status_code"], cache["status_code"]) where cache["status_code"] != nil       

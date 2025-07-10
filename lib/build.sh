@@ -14,7 +14,7 @@ for dir in java/*/; do
     echo $dir
     if [[ -d "$dir" ]]; then
         extension=$(basename "$dir")
-        docker build --platform $arch --progress plain -t $repo/$extension:$course $dir
+        docker buildx build --platform $arch --progress plain -t $repo/$extension:$course $dir
         docker push $repo/$extension:$course
     fi
 done

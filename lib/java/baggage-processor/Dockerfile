@@ -21,7 +21,7 @@ RUN sed -i "s,io.opentelemetry.contrib.baggage.processor,io.opentelemetry.test.b
 
 RUN sed -i "s,java.experimental,java.test,g" src/main/java/io/opentelemetry/test/baggage/processor/BaggageProcessorCustomizer.java
 
-RUN ./gradlew build -x test
+RUN --mount=type=cache,target=/root/.gradle ./gradlew build -x test
 
 FROM alpine:latest
 

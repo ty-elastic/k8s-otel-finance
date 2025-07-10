@@ -19,8 +19,9 @@ for dir in ./courses/*/; do
   if [[ -d "$dir" ]]; then
     current_course=$(basename "$dir")
     echo $current_course
+    echo $course
     
-    if [ "$course" = "all" ] | [ "$course" = "$current_course" ]; then
+    if [[ "$course" == "all" || "$course" == "$current_course" ]]; then
 
       if [ "$build" = "true" ]; then
         cd ..

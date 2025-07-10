@@ -4,6 +4,6 @@ WORKDIR /app
 COPY *.cs .
 COPY appsettings.json .
 COPY *.csproj .
-RUN dotnet publish -c Release -o out
+RUN --mount=type=cache,target=/root/.nuget/packages dotnet publish -c Release -o out
 
 ENTRYPOINT [ "./out/Notifier", "--urls", "http://*:5000" ]

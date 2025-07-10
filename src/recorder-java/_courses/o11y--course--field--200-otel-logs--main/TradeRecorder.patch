@@ -1,0 +1,12 @@
+--- ../src/main/java/com/example/recorder/TradeRecorder.java	2025-07-10 14:50:36
++++ o11y--course--field--200-otel-logs--main/TradeRecorder.java	2025-07-10 14:51:43
+@@ -22,7 +22,8 @@
+     public Trade recordTrade (Trade trade){
+         Trade savedTrade = tradeRepo.save(trade);
+ 
+-        TransactionAspectSupport.currentTransactionStatus();
++        TransactionStatus status = TransactionAspectSupport.currentTransactionStatus();
++        log.atInfo().addKeyValue(Main.ATTRIBUTE_PREFIX + ".hash_code", status.hashCode()).log("trade committed for " + trade.customerId);
+  
+         return savedTrade;
+     }
