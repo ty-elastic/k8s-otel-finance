@@ -2,7 +2,7 @@
 slug: otlp
 id: 0xjtiwwhgb8h
 type: challenge
-title: Life before attributes
+title: OpenTelemetry Logging with OTLP
 notes:
 - type: text
   contents: In this challenge, we will consider the challenges of working with limited
@@ -27,10 +27,10 @@ enhanced_loading: null
 
 In this model, we will be sending logs directly from a service to an OpenTelemetry Collector via the network using the OTLP protocol. This is typically the most straightforward way to accommodate logging with OpenTelemetry.
 
-![service-map.png](../assets/method1.png)
+![method-1](../assets/method1.png)
 
 Looking at the diagram:
-1) A service leverages an existing logging frameworks (e.g., logback in Java) to generate log statements
+1) A service leverages an existing logging framework (e.g., [logback](https://logback.qos.ch) in Java) to generate log statements
 2) On startup, the OTel SDK injects a new output module into the logging framework. This module formats the log metadata to appropriate OTel semantic conventions (e.g., log.level), adds appropriate contextual metadata (e.g., k8s namespace), and outputs the log lines via OTLP (typically buffered) to a Collector
 3) a Collector (typically, but not necessarily) on the same node as the service receives the log lines
 4) the Collector adds additional metadata and optionally applies parsing via a Transform Processor
@@ -40,7 +40,7 @@ While this model is relatively simple to implement, it assumes 2 things:
 
 1) The service can be instrumented with OpenTelemetry (either through runtime zero-configuration instrumentation, or through explicit instrumentation). This essentially rules out use of this method for most "third-party" applications and services.
 
-2) Your OTel pipelines are robust enough to forgo file-based logging. Traditional logging relied on services writing to files, and agents tailing those log files. File-based logging inherently adds a semi-reliable, FIFO, disk-based queue between services and the collector. If there is a downstream failure in the telemetry pipeline (e.g., a failure in the Collector or downstream of the Collector), the file will serve as a temporary, reasonably robust buffer mechanism.
+2) Your OTel pipelines are robust enough to forgo file-based logging. Traditional logging relied on services writing to files and agents "tailing" those log files. File-based logging inherently adds a semi-reliable, FIFO, disk-based queue between services and the collector. If there is a downstream failure in the telemetry pipeline (e.g., a failure in the Collector or downstream of the Collector), the file will serve as a temporary, reasonably robust buffer.
 
 That said, there are inherent advantages to using a network-based logging protocol where possible: namely:
 1) not having to deal with file rotation
@@ -54,14 +54,9 @@ Additionally, exporting logs from a service using the OTel SDK offers the follow
 4) contextual metadata (e.g., node name) are automatically emitted as attributes
 5) baggage can be automatically applied as attributes
 
-Java
-===
+Let's have a look at the logs from our "recorder-java" service:
 
-1. Open the [button label="VS Code"](tab-1) tab
-2. Navigate to src/recorder-java/src/main/resources/logback.xml
-3. Note that no Logback appenders are specified (they are automatically injected by the OTel SDK on startup)
-
-1. Open the [button label="Elasticsearch"](tab-1) tab
+1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Copy
     ```kql
     service.name: "recorder-java"
@@ -70,54 +65,127 @@ Java
 3. Click on the refresh icon at the right of the time picker
 4. Open up a "trade committed for <customer_id>" record
 
-Say we wanted to add a custom attribute to the log statement. Of course, we could encode it in the log line text itself, but then we might wind up having to parse it out later. Instead, with OTel, we can easily add this as an attribute to the log record.
-
-The SLF4J logging API supports structured logging with KeyValue pairs. The OTel SDK will automatically turn this into attributes.
+And now let's confirm these logs are coming by way of OTLP directly from service to the Collector, and not via an intermediate log file:
 
 1. Open the [button label="VS Code"](tab-1) tab
-2. Navigate to src/recorder-java/src/main/java/com/example/recorder/TradeRecorder.java
-3. Modify the following line:
+2. Navigate to `src/recorder-java/src/main/resources/logback.xml`
+3. Note that no appenders are specified in the logback configuration (they are automatically injected by the OTel SDK on startup)
+
+Let's validate that no logs are being written to stdout (which would be picked up and dumped to a log file by Kubernetes):
+
+1. If it isn't already open, open a Terminal Window from the bottom of the "VS Code" window
+2. Enter the following into the terminal to get a list of the active Kubernetes pods that comprise our trading system:
+  ```bash
+  kubectl -n trading get pods
   ```
-  TransactionAspectSupport.currentTransactionStatus();
+2. Find the active `recorder-java-...` pod
+3. Get console logs from the active pod:
+  ```bash,nocopy
+  kubectl -n trading logs <recorder-java-...>
   ```
-  to:
+  (replace ... with the pod instance id)
+
+Note that there are no logs being written to stdout from `recorder-java` because we have not configured any appenders in the logback configuration.
+
+This confirms that logs coming from the `recorder-java` application to our OTel Collector via OTLP, and not by way of a log file.
+
+Attributes
+===
+
+## Attributes via Structured Logging
+
+Let's jump back to Elasticsearch:
+
+1. Open the [button label="Elasticsearch"](tab-0) tab
+2. Copy
+    ```kql
+    service.name: "recorder-java"
+    ```
+    into the `Filter your data using KQL syntax` search bar toward the top of the Kibana window
+3. Click on the refresh icon at the right of the time picker
+4. Open up a "trade committed for <customer_id>" record
+
+Now say we wanted to record a commit identifier for each record logged in our database. We could encode that into the log line itself, but then we would likely just have to parse that out later, which adds complexity. With OTel, we can easily add this as an attribute to the log record!
+
+The SLF4J logging API supports structured logging with KeyValue pairs. The OTel SDK will automatically turn this into attributes.
+1. Open the [button label="VS Code"](tab-1) tab
+2. Navigate to `src/recorder-java/src/main/java/com/example/recorder/TradeRecorder.java`
+3. Find the following line:
+  ```
+  log.atInfo().log("trade committed for " + trade.customerId);
+  ```
+  and change it to:
   ```
   TransactionStatus status = TransactionAspectSupport.currentTransactionStatus();
   log.atInfo().addKeyValue(Main.ATTRIBUTE_PREFIX + ".hash_code", status.hashCode()).log("trade committed for " + trade.customerId);
   ```
+  Note that we can use `addKeyValue()` to add arbitrary attributes to our log lines. We prefix the attributes with `Main.ATTRIBUTE_PREFIX` as best practice to ensure no conflict with other metadata.
 4. Recompile and deploy the `recorder-java` service. In the VS Code Terminal, enter:
   ```
   ./builddeploy.sh -s recorder-java
   ```
 
+> [!NOTE]
+> It is generally considered best practice to prepend any custom attributes with a prefix scoped to your enterprise, like `com.example`
+
+
 Check Elasticsearch:
-1. Open the [button label="Elasticsearch"](tab-1) tab
+1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Close current log record
 3. Click refresh
 4. Open newest log record
 5. Note addition of attribute `attributes.com.example.hash_code`
 
-You'll also note attributes like `attributes.com.example.customer_id`. We didn't add that in our logging statement. How did it get there?
+## Attributes via Baggage
+
+Note that the log record has other custom attributes like `attributes.com.example.customer_id`. We didn't add that in our logging statement. How did it get there?
+
+This is a great example of the power of using OpenTelemetry Baggage. Baggage lets us inject attributes early on in our distributed service mesh and then automatically distribute and apply them downstream to every span and log message emitted in context.
+
+Let's see where they are coming from:
+1. Open the [button label="Elasticsearch"](tab-0) tab
+2. Navigate to Service Map
+3. Open `trader`
+4. Traces, /trade/request
+5. Click first span
+6. See attributes
+
+Check attributes applied to trader service.
 
 1. Open the [button label="VS Code"](tab-1) tab
 2. Navigate to src/trader/app.py
-3.
+3. Look for calls to `set_attribute_and_baggage` inside the `decode_common_args()` function
 
+Here, we are pushing attributes into OTel Baggage. OTel is propagating that baggage with every call to a distributed surface. The baggage follows the context of a given span through all dependent services. Within a given service, we can leverage BaggageProcessor extensions to automatically apply metadata in baggage as attributes to the active span (including logs).
 
-1. Open the [button label="VS Code"](tab-1) tab
-2. Navigate to src/recorder-java/src/main/java/com/example/recorder/TradeRecorder.java
-3. Note the line `log.atInfo().addKeyValue...` that adds the `hash_code` attribute
+Let's add an additional attribute in our trader service.
 
-You can easily add attributes to logs using the primitives provided by your logging framework (here, logback)
+1. In `src/trader/app.py`, add the following to the top of the decode_common_args() function:
+  ```
+    trade_id = str(uuid.uuid4())
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.trade_id", trade_id)
+  ```
+2. Rebuild trader service. In the VS Code Terminal, enter:
+  ```
+  ./builddeploy.sh -s trader
+  ```
 
-Switching back to [button label="Elasticsearch"](tab-1) tab, you'll notice that this log line has other facets like span.id, etc.
+3. Open the [button label="Elasticsearch"](tab-1) tab
+4. Copy
+    ```kql
+    service.name: "recorder-java"
+    ```
+    into the `Filter your data using KQL syntax` search bar toward the top of the Kibana window
+5. Click on the refresh icon at the right of the time picker
+6. Open up a "trade committed for <customer_id>" record
+7. Note the addition of the `trade_id` attribute
+8. You'll note that OTel has automatically added other things like trace_id.
 
-You'll also notice that it has high-value custom metadata added, like "customer_id". Switching back to Java, you'll note that these attributes are not applied in the recorder-java service. Where did they come from?
-
-Switching to VS Code, then python, look at app.py. See add to attributes and baggage. Then switch to Elastic. look at service map. follow trace from trader service. see how all logs emit with attributes.
-
-Python
+Parsing
 ===
+
+
+It is worth noting that OpenTelemetry generally advocates for edge vs. centralized log parsing. This is a notable change from how we've historically handled log parsing. Conceptually, pushing log parsing as close to the edge should ultimately make the parsing more robust; as you make changes at the edges of your system (e.g., upgrading the version of a deployed service), you can, in lock step, update applicable log parsing rules.
 
 talk about flask.
 

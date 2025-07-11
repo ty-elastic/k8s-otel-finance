@@ -22,7 +22,7 @@ public class TradeRecorder {
     public Trade recordTrade (Trade trade){
         Trade savedTrade = tradeRepo.save(trade);
 
-        TransactionAspectSupport.currentTransactionStatus();
+        log.atInfo().log("trade committed for " + trade.customerId);
  
         return savedTrade;
     }
