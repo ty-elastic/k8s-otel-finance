@@ -94,8 +94,7 @@ Attributes
 
 ## Attributes via Structured Logging
 
-Let's jump back to Elasticsearch:
-
+Let's jump back to Elasticsearch and have a closer look at the logs from our `recorder-java` service:
 1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Copy
     ```kql
@@ -128,7 +127,6 @@ The SLF4J logging API supports structured logging with KeyValue pairs. The OTel 
 > [!NOTE]
 > It is generally considered best practice to prepend any custom attributes with a prefix scoped to your enterprise, like `com.example`
 
-
 Check Elasticsearch:
 1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Close current log record
@@ -138,19 +136,24 @@ Check Elasticsearch:
 
 ## Attributes via Baggage
 
-Note that the log record has other custom attributes like `attributes.com.example.customer_id`. We didn't add that in our logging statement. How did it get there?
+Note that the log record has other custom attributes like `attributes.com.example.customer_id`. We didn't add that in our logging statement in `recorder-java`. How did it get there?
 
 This is a great example of the power of using OpenTelemetry Baggage. Baggage lets us inject attributes early on in our distributed service mesh and then automatically distribute and apply them downstream to every span and log message emitted in context.
 
 Let's see where they are coming from:
 1. Open the [button label="Elasticsearch"](tab-0) tab
-2. Navigate to Service Map
-3. Open `trader`
-4. Traces, /trade/request
-5. Click first span
-6. See attributes
+2. Navigate to `Applications` / `Service Inventory` / `Service Map`
+3. Click on `trader` and select `Service Details`
+4. Under `Transactions`, select `POST /trade/request`
+5. Scroll down to waterfall graph
+5. Click on the first span
+6. Note the presence of `attributes.com.example.customer_id`
+7. Close the flyout
+8. Now click on the `Logs` tab to see logs associated with this trace (this works because OTel automatically stamps each log line with the current `trace.id` if generated within an active trace)
+9. Find an entry from `recorder-java` of the pattern `trade committed for <customer id>`
+10. Note `attributes.com.example.customer_id`
 
-Check attributes applied to trader service.
+Let's look at the code which initially stuck `customer_id` into OTel baggage:
 
 1. Open the [button label="VS Code"](tab-1) tab
 2. Navigate to src/trader/app.py
@@ -184,27 +187,35 @@ Let's add an additional attribute in our trader service.
 Parsing
 ===
 
-
 It is worth noting that OpenTelemetry generally advocates for edge vs. centralized log parsing. This is a notable change from how we've historically handled log parsing. Conceptually, pushing log parsing as close to the edge should ultimately make the parsing more robust; as you make changes at the edges of your system (e.g., upgrading the version of a deployed service), you can, in lock step, update applicable log parsing rules.
 
-talk about flask.
+We are going to look at 3 different ways to parse log lines:
+1) query-time via ES|QL
+2) edge with OTTL
+3) centralized with Elasticsearch Streams (in Tech Preview)
 
-ES|QL. then how to do it with OTTL. need to use OTTL.
+Our `trader` service leverages the Flask framework. While we can control the format of the log lines pushed via stdout from our Python code, the Flask framework generates log lines in its own Apache-like format.
 
+## ES|QL
 
-Let's look at where we are starting.
-
-FROM logs-* | WHERE service.name == "trader" | GROK message """%{IP:client_address} - - \[%{GREEDYDATA:time}\] \x22%{WORD:method} %{URIPATH:path}(?:%{URIPARAM:param})? %{WORD:protocol_name}/%{NUMBER:protocol_version}\x22 %{NUMBER:status_code} -""" | WHERE status_code IS NOT NULL | STATS status = COUNT(status_code) BY status_code, method, path
-
+Let's first try query-time parsing using ES|QL:
 
 1. Open the [button label="Elasticsearch"](tab-1) tab
-2. Copy
-    ```kql
-    service.name: "trader"
+2. Click the 'Try ES|QL' button
+3. Copy
+    ```esql
+    FROM logs-* | WHERE service.name == "trader" | GROK message """%{IP:client_address} - - \[%{GREEDYDATA:time}\] \x22%{WORD:method} %{URIPATH:path}(?:%{URIPARAM:param})? %{WORD:protocol_name}/%{NUMBER:protocol_version}\x22 %{NUMBER:status_code} -""" | WHERE status_code IS NOT NULL | STATS status = COUNT(status_code) BY status_code, method, path
     ```
-    into the `Filter your data using KQL syntax` search bar toward the top of the Kibana window
-3. Click on the refresh icon at the right of the time picker
-4. Note that the body includes a timestamp and log level
+    into the `ES|QL` box
+4. Click 'Run'
+
+## OTTL
+
+
+## Elasticsearch Streans
+
+
+
 
 Ideally, we want timestamps and log level as first class citizens.
 

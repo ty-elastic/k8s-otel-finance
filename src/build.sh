@@ -22,8 +22,7 @@ for service_dir in ./*/; do
             echo $service
             echo $course
             echo $variant
-            docker buildx build --platform $arch --build-arg VARIANT=$variant --progress plain -t $repo/$current_service:$course $service_dir
-            docker push $repo/$current_service:$course
+            docker buildx build --platform $arch --build-arg VARIANT=$variant --progress plain -t $repo/$current_service:$course --output "type=registry,name=$repo/$current_service:$course" $service_dir
         fi
     fi
 done

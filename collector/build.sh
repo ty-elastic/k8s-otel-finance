@@ -13,8 +13,6 @@ done
 collector_distribution_image_name=$repo/otelcol
 
 echo $collector_distribution_image_name:$course
-docker build \
+docker buildx build \
   -t $collector_distribution_image_name:$course \
-  --platform=$arch .
-
-docker push $collector_distribution_image_name:$course
+  --platform=$arch --output "type=registry,name=$collector_distribution_image_name:$course" $dir.
