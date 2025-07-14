@@ -34,7 +34,6 @@ if [ "$otel" = "true" ]; then
         patch < _courses/$variant/init.patch
         envsubst < values.yaml > values.yaml.tmp && mv values.yaml.tmp values.yaml
     fi
-
     helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack \
     --namespace opentelemetry-operator-system \
     --values 'values.yaml' \
@@ -48,6 +47,7 @@ if [ "$otel" = "true" ]; then
         echo "applying variant"
         envsubst < _courses/$variant/init.yaml | kubectl -n opentelemetry-operator-system apply -f -
     fi
+    cd ..
 
     sleep 30
 fi
