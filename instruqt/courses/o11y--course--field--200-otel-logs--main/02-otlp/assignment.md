@@ -25,14 +25,14 @@ timelimit: 600
 enhanced_loading: null
 ---
 
-In this model, we will be sending logs directly from a service to an OpenTelemetry Collector via the network using the OTLP protocol. This is typically the most straightforward way to accommodate logging with OpenTelemetry.
+In this model, we will be sending logs directly from a service to an OpenTelemetry [Collector](https://opentelemetry.io/docs/collector/) over the network using the [OTLP](https://opentelemetry.io/docs/specs/otel/protocol/) protocol. This is typically the most straightforward way to accommodate logging with OpenTelemetry.
 
-![method-1](../assets/method1.png)
+![method-1](../assets/method1.svg)
 
 Looking at the diagram:
 1) A service leverages an existing logging framework (e.g., [logback](https://logback.qos.ch) in Java) to generate log statements
 2) On startup, the OTel SDK injects a new output module into the logging framework. This module formats the log metadata to appropriate OTel semantic conventions (e.g., log.level), adds appropriate contextual metadata (e.g., k8s namespace), and outputs the log lines via OTLP (typically buffered) to a Collector
-3) a Collector (typically, but not necessarily) on the same node as the service receives the log lines
+3) a Collector (typically, but not necessarily) on the same node as the service receives the log lines via the `otlp` receiver
 4) the Collector adds additional metadata and optionally applies parsing via a Transform Processor
 5) the Collector then outputs the logs downstream (either directly to Elasticsearch, or more typically through a gateway Collector, and then to Elasticsearch)
 
@@ -172,7 +172,6 @@ Let's add an additional attribute in our trader service.
   ```
   ./builddeploy.sh -s trader
   ```
-
 3. Open the [button label="Elasticsearch"](tab-1) tab
 4. Copy
     ```kql
@@ -191,10 +190,19 @@ It is worth noting that OpenTelemetry generally advocates for edge vs. centraliz
 
 We are going to look at 3 different ways to parse log lines:
 1) query-time via ES|QL
-2) edge with OTTL
-3) centralized with Elasticsearch Streams (in Tech Preview)
+2) centralized with Elasticsearch Streams (in Tech Preview)
+3) edge with OTTL
 
 Our `trader` service leverages the Flask framework. While we can control the format of the log lines pushed via stdout from our Python code, the Flask framework generates log lines in its own Apache-like format.
+
+Let's look at those lines:
+
+3. Open the [button label="Elasticsearch"](tab-1) tab
+4. Copy
+    ```kql
+    service.name: "trader"
+    ```
+    into the `Filter your data using KQL syntax` search bar toward the top of the Kibana window
 
 ## ES|QL
 
@@ -204,16 +212,22 @@ Let's first try query-time parsing using ES|QL:
 2. Click the 'Try ES|QL' button
 3. Copy
     ```esql
-    FROM logs-* | WHERE service.name == "trader" | GROK message """%{IP:client_address} - - \[%{GREEDYDATA:time}\] \x22%{WORD:method} %{URIPATH:path}(?:%{URIPARAM:param})? %{WORD:protocol_name}/%{NUMBER:protocol_version}\x22 %{NUMBER:status_code} -""" | WHERE status_code IS NOT NULL | STATS status = COUNT(status_code) BY status_code, method, path
+    FROM logs-* | WHERE service.name == "trader" | GROK message """%{IP:client_address} - - \[%{GREEDYDATA:timestamp}\] \x22%{WORD:method} %{URIPATH:path}(?:%{URIPARAM:param})? %{WORD:protocol_name}/%{NUMBER:protocol_version}\x22 %{NUMBER:status_code} -""" | EVAL @timestamp = DATE_PARSE("dd/MMM/yyyy HH:mm:ss", timestamp) | WHERE status_code IS NOT NULL | KEEP @timestamp, timestamp
     ```
     into the `ES|QL` box
 4. Click 'Run'
 
+here, we've parsed
+
+FROM logs-* | WHERE service.name == "trader" | GROK message """%{IP:client_address} - - \[%{GREEDYDATA:timestamp}\] \x22%{WORD:method} %{URIPATH:path}(?:%{URIPARAM:param})? %{WORD:protocol_name}/%{NUMBER:protocol_version}\x22 %{NUMBER:status_code} -""" | EVAL @timestamp = DATE_PARSE("dd/MMM/yyyy HH:mm:ss", timestamp) | WHERE status_code IS NOT NULL | KEEP @timestamp, timestamp
+
+FROM logs-* | WHERE service.name == "trader" | GROK message """%{IP:client_address} - - \[%{GREEDYDATA:time}\] \x22%{WORD:method} %{URIPATH:path}(?:%{URIPARAM:param})? %{WORD:protocol_name}/%{NUMBER:protocol_version}\x22 %{NUMBER:status_code} -""" | WHERE status_code IS NOT NULL | STATS status = COUNT(status_code) BY status_code, method, path
 ## OTTL
 
 
 ## Elasticsearch Streans
 
+dd/MMM/yyyy HH:mm:ss
 
 
 
