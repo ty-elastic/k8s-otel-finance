@@ -3,7 +3,7 @@ source /opt/workshops/elastic-retry.sh
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
 deploy=true
-while getopts "i:o:" opt
+while getopts "i:o:d:" opt
 do
    case "$opt" in
       d ) deploy="$OPTARG" ;;

@@ -25,7 +25,7 @@ timelimit: 600
 enhanced_loading: null
 ---
 
-In this model, we will be sending logs directly from a service to an OpenTelemetry [Collector](https://opentelemetry.io/docs/collector/) over the network using the [OTLP](https://opentelemetry.io/docs/specs/otel/protocol/) protocol. This is typically the most straightforward way to accommodate logging with OpenTelemetry.
+In this model, we will be sending logs directly from a service to an OpenTelemetry [Collector](https://opentelemetry.io/docs/collector/) over the network using the [OTLP](https://opentelemetry.io/docs/specs/otel/protocol/) protocol. This is the default mechanism the OpenTelemetry SDKs use for exporting logs from a service.
 
 ![method-1](../assets/method1.svg)
 
@@ -54,7 +54,12 @@ Additionally, exporting logs from a service using the OTel SDK offers the follow
 4) contextual metadata (e.g., node name) are automatically emitted as attributes
 5) baggage can be automatically applied as attributes
 
-Let's have a look at the logs from our "recorder-java" service:
+Configuration
+===
+
+Most of the languages supported by OpenTelemetry are automatically instrumented for logging via OTLP by default. In the case of Java, for example, the OTel SDK, when in zero-code instrumentation, will automatically 
+
+Let's have a look at the logs from our `recorder-java` service:
 
 1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Copy
@@ -63,7 +68,7 @@ Let's have a look at the logs from our "recorder-java" service:
     ```
     into the `Filter your data using KQL syntax` search bar toward the top of the Kibana window
 3. Click on the refresh icon at the right of the time picker
-4. Open up a "trade committed for <customer_id>" record
+4. Open up the first "trade committed for <customer_id>" log record
 
 And now let's confirm these logs are coming by way of OTLP directly from service to the Collector, and not via an intermediate log file:
 
@@ -71,9 +76,9 @@ And now let's confirm these logs are coming by way of OTLP directly from service
 2. Navigate to `src/recorder-java/src/main/resources/logback.xml`
 3. Note that no appenders are specified in the logback configuration (they are automatically injected by the OTel SDK on startup)
 
-Let's validate that no logs are being written to stdout (which would be picked up and dumped to a log file by Kubernetes):
+Let's further validate that no logs are being written to stdout (which would be picked up and dumped to a log file by Kubernetes):
 
-1. If it isn't already open, open a Terminal Window from the bottom of the "VS Code" window
+1. If it isn't already open, open a Terminal Window from the bottom of the [button label="VS Code"](tab-1) tab
 2. Enter the following into the terminal to get a list of the active Kubernetes pods that comprise our trading system:
   ```bash
   kubectl -n trading get pods

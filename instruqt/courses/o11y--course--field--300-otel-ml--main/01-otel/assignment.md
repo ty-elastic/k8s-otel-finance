@@ -8,13 +8,13 @@ tabs:
   title: Elastic
   type: service
   hostname: kubernetes-vm
-  path: /app/apm/service-map?comparisonEnabled=true&rangeFrom=now-15m&rangeTo=now&offset=1d&kuery=data_stream.type%20:%22traces%22%20
+  path: /app/apm/service-map?comparisonEnabled=true&rangeFrom=now-15m&rangeTo=now&offset=1d
   port: 30001
 - id: yv5jjrnmmrvc
   title: Trader Source Code
   type: code
   hostname: host-1
-  path: /workspace/workshop/src/trader/_courses/o11y--course--field--o11y-300-fraud--main/app.py
+  path: /workspace/workshop/src/trader/app.py
 - id: ihs77qki7oyl
   title: Terminal (host-1)
   type: terminal

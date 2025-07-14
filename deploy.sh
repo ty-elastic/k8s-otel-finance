@@ -29,14 +29,15 @@ if [ "$service" != "none" ]; then
         current_service=$(basename "$file")
         current_service="${current_service%.*}"
         echo $current_service
-        if [ "$service" = "all" ] | [ "$service" = "$current_service" ]; then
+        echo $service
+        if [[ "$service" == "all" || "$service" == "current_service" ]]; then
             echo "deploying..."
             echo "k8s/_courses/$variant.yaml"
             if [ -f "k8s/_courses/$variant.yaml" ]; then
                 echo "applying variant"
                 envsubst < k8s/_courses/$variant.yaml | kubectl apply -f -
             else
-                envsubst < k8s/$service.yaml | kubectl apply -f -
+                envsubst < k8s/$current_service.yaml | kubectl apply -f -
             fi
             kubectl -n trading rollout restart deployment/$current_service
         fi

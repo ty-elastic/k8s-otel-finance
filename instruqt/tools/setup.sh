@@ -42,7 +42,7 @@ echo '{
 
 echo "Enable Streams"
 enable_streams() {
-    local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$KIBANA_URL_LOCAL/internal/kibana/settings" \
+    local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$KIBANA_URL/internal/kibana/settings" \
     -H 'Content-Type: application/json'\
     --header "kbn-xsrf: true" --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
     -d '{"changes":{"observability:enableStreamsUI":true}}')
