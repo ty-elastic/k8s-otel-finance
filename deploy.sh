@@ -23,30 +23,7 @@ fi
 export COURSE=$course
 export REPO=$repo
 
-if [ "$service" != "none" ]; then
-
-    for file in k8s/*.yaml; do
-        current_service=$(basename "$file")
-        current_service="${current_service%.*}"
-        echo $current_service
-        echo $service
-        if [[ "$service" == "all" || "$service" == "current_service" ]]; then
-            echo "deploying..."
-            echo "k8s/_courses/$variant.yaml"
-            if [ -f "k8s/_courses/$variant.yaml" ]; then
-                echo "applying variant"
-                envsubst < k8s/_courses/$variant.yaml | kubectl apply -f -
-            else
-                envsubst < k8s/$current_service.yaml | kubectl apply -f -
-            fi
-            kubectl -n trading rollout restart deployment/$current_service
-        fi
-    done
-
-fi
-
 if [ "$otel" = "true" ]; then
-
     # ---------- COLLECTOR
 
     cd collector
@@ -73,5 +50,24 @@ if [ "$otel" = "true" ]; then
     fi
 
     sleep 30
+fi
 
+if [ "$service" != "none" ]; then
+    for file in k8s/*.yaml; do
+        current_service=$(basename "$file")
+        current_service="${current_service%.*}"
+        echo $current_service
+        echo $service
+        if [[ "$service" == "all" || "$service" == "current_service" ]]; then
+            echo "deploying..."
+            echo "k8s/_courses/$variant.yaml"
+            if [ -f "k8s/_courses/$variant.yaml" ]; then
+                echo "applying variant"
+                envsubst < k8s/_courses/$variant.yaml | kubectl apply -f -
+            else
+                envsubst < k8s/$current_service.yaml | kubectl apply -f -
+            fi
+            kubectl -n trading rollout restart deployment/$current_service
+        fi
+    done
 fi

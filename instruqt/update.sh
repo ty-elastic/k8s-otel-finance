@@ -25,7 +25,7 @@ for dir in ./courses/*/; do
 
       if [ "$build" = "true" ]; then
         cd ..
-        ./build.sh -c $current_course -a $arch
+        ./build.sh -c $current_course -a $arch -v $current_course
         cd instruqt
       fi
 
