@@ -104,7 +104,14 @@ For our purposes, rather than include canned data already marked as fraudulent, 
 Let's put on our black hats and get to work!
 1. Click on the [button label="Trader"](tab-1) tab
 2. Click `Classification`
-3. Decide what pattern your fraudulent transactions will follow. Maybe you only trade on certain days of the week or from certain regions? Or you only trade a certain number of certain stocks at certain prices? Come up with any combination you'd like! Leave `Classification` and `Data Source` fields as defaults, and be careful not to make your transactions _too_ specific or wide (e.g., don't limit trading to between just 5-10 shares of one stock, or leaving everything as default).
+3. Decide what pattern your fraudulent transactions will follow. Maybe you only trade on certain days of the week or from certain regions? Or you only trade a certain number of certain stocks at certain prices? Come up with any combination you'd like! Leave `Classification` and `Data Source` fields as defaults, and be careful not to make your transactions _too_ specific or wide (e.g., don't limit trading to between just 5-10 shares of one stock, or leaving everything as default). An example might be:
+  ```
+  Day of Week: Monday, Wednesday Friday
+  Region: EMEA
+  Symbol: ZVZZT, ZYX, CBAZ
+  Action: Buy, Sell
+  Shares: 10-200
+  ```
 4. Click `SUBMIT`
 5. Wait for the spinner to stop; this indicates that training data generation is complete (this could take a minute or two)
 
@@ -124,6 +131,6 @@ Before we train our model, let's quickly check that the training data we just ge
   FROM traces-trader |
   WHERE attributes.com.example.data_source == "training" AND attributes.com.example.classification == "fraud" |
   LIMIT 100 |
-  KEEP attributes.com.example.trade_id, attributes.com.example.action, attributes.com.example.day_of_week, attributes.com.example.region, attributes.com.example.share_price, attributes.com.example.shares, attributes.com.example.symbol
+  KEEP attributes.com.example.trade_id, attributes.com.example.action, attributes.com.example.day_of_week, attributes.com.example.region, attributes.com.example.share_price, attributes.com.example.shares, attributes.com.example.symbol, attributes.com.example.classification
   ```
 5. Verify that the fraudulent training data we generated was recorded and labeled as expected.
