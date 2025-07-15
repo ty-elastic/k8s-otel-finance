@@ -6,6 +6,7 @@ import time
 import os
 from threading import Thread
 import concurrent.futures
+import ipaddress
 
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
@@ -28,6 +29,24 @@ CUSTOMERS_PER_REGION = {
     'LATAM': ['j.casey', 'l.hall'],
     'EU': ['q.bert', 'carol.halley'],
     'EMEA': ['mr.t', 'u.hoo']
+}
+
+USERAGENTS_PER_USER = {
+    'b.smith': "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1",
+    'l.johnson': "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/138.0.7204.119 Mobile/15E148 Safari/604.1",
+    'j.casey': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    'l.hall': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    'carol.halley': "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15",
+    'q.bert': "Mozilla/5.0 (iPad; CPU OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1",
+    'mr.t': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
+    'u.hoo': "Mozilla/5.0 (Macintosh; Intel Mac OS X 15.5; rv:140.0) Gecko/20100101 Firefox/140.0"
+}
+
+CLIENTIPS_PER_REGION = {
+    'NA': '107.80.0.0/16',
+    'LATAM': '186.189.224.0/20',
+    'EU': '149.254.212.0/24',
+    'EMEA': '95.85.100.0/24'
 }
 
 SYMBOLS = ['ZVZZT', 'ZALM', 'ZYX', 'CBAZ', 'BAA', 'OELK']
@@ -71,8 +90,17 @@ def generate_trade_request(*, customer_id, symbol, day_of_week, region, latency_
         if classification is not None:
             params['classification'] = classification
 
+        headers = {}
+        if region is not None and region in CLIENTIPS_PER_REGION:
+            network = ipaddress.ip_network(CLIENTIPS_PER_REGION[region])
+            ip_list = [str(ip) for ip in network]
+            headers["X-Forwarded-For"]= random.choice(ip_list)
+        if customer_id is not None and customer_id in USERAGENTS_PER_USER:
+            headers['User-Agent']= USERAGENTS_PER_USER[customer_id]
+            
         trade_response = requests.post(f"http://{os.environ['TRADER_SERVICE']}/trade/request", 
                                        params=params,
+                                       headers=headers,
                                        timeout=TRADE_TIMEOUT)
         trade_response.raise_for_status()
     except Exception as inst:
@@ -90,7 +118,7 @@ def generate_trade_requests():
             now = time.time()
             if now - day_start >= S_PER_DAY:
                 idx_of_week = (idx_of_week + 1) % len(DAYS_OF_WEEK)
-                print(f"advance to {DAYS_OF_WEEK[idx_of_week]}")
+                app.logger.info(f"advance to {DAYS_OF_WEEK[idx_of_week]}")
                 day_start = now
 
             sleep = float(random.randint(NORMAL_TPUT_SLEEP_MS[0], NORMAL_TPUT_SLEEP_MS[1]) / 1000)
@@ -371,7 +399,17 @@ def canary_region_delete(region):
 
 def generate_trade_force(*, customer_id, day_of_week, region, symbol, action, shares, share_price, data_source, classification):
     try:
+
+        headers = {}
+        if region is not None and region in CLIENTIPS_PER_REGION:
+            network = ipaddress.ip_network(CLIENTIPS_PER_REGION[region])
+            ip_list = [str(ip) for ip in network]
+            headers["X-Forwarded-For"]= random.choice(ip_list)
+        if customer_id is not None and customer_id in USERAGENTS_PER_USER:
+            headers['User-Agent']= USERAGENTS_PER_USER[customer_id]
+
         trade_response = requests.post(f"http://{os.environ['TRADER_SERVICE']}/trade/force", 
+                                       headers=headers,
                                        params={'symbol': symbol,
                                                'day_of_week': day_of_week, 
                                                'shares': shares, 

@@ -7,6 +7,7 @@ import uuid
 import math
 
 import requests
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from opentelemetry import trace, baggage, context
 from opentelemetry.processor.baggage import BaggageSpanProcessor, ALLOW_ALL_BAGGAGE_KEYS
@@ -16,6 +17,11 @@ ATTRIBUTE_PREFIX = "com.example"
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 app.logger.info(f"variant: o11y--course--field--200-otel-logs--main")
+
+ # Apply ProxyFix to correctly handle X-Forwarded-For
+# x_for=1 indicates that one proxy is setting the X-Forwarded-For header
+# Adjust x_for based on the number of proxies in front of your Flask app
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 import model
 

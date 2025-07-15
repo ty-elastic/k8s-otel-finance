@@ -17,6 +17,7 @@ spec:
     metadata:
       annotations:
         instrumentation.opentelemetry.io/inject-nodejs: "opentelemetry-operator-system/elastic-instrumentation"
+        io.opentelemetry.discovery.logs/enabled: "true"
       labels:
         app: trading
         service: router

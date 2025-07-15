@@ -58,7 +58,7 @@ if [ "$service" != "none" ]; then
         current_service="${current_service%.*}"
         echo $current_service
         echo $service
-        if [[ "$service" == "all" || "$service" == "current_service" ]]; then
+        if [[ "$service" == "all" || "$service" == "$current_service" ]]; then
             echo "deploying..."
             echo "k8s/_courses/$variant.yaml"
             if [ -f "k8s/_courses/$variant.yaml" ]; then
