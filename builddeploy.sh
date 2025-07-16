@@ -3,10 +3,12 @@ course=latest
 service=all
 local=true
 variant=none
-while getopts "s:a:l:v:" opt
+otel=false
+while getopts "s:a:l:v:o:" opt
 do
    case "$opt" in
       s ) service="$OPTARG" ;;
+      o ) otel="$OPTARG" ;;
       a ) arch="$OPTARG" ;;
       l ) local="$OPTARG" ;;
       v ) variant="$OPTARG" ;;
@@ -21,4 +23,4 @@ fi
 echo $service
 
 ./build.sh -a $arch -c $course -s $service -l $local -v $variant -x true -y false -z false
-./deploy.sh -c $course -s $service -l $local -v $variant
+./deploy.sh -c $course -s $service -l $local -v $variant -o $otel

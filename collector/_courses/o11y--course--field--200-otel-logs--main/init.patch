@@ -1,6 +1,14 @@
---- values.yaml	2025-07-10 14:23:40
-+++ o11y--course--field--200-otel-logs--main/values_receivercreator.yaml	2025-07-10 14:17:58
-@@ -16,8 +16,9 @@
+--- values.yaml	2025-07-15 12:06:00
++++ o11y--course--field--200-otel-logs--main/values_receivercreator.yaml	2025-07-15 10:56:09
+@@ -6,6 +6,7 @@
+   manager:
+     extraArgs:
+       - --enable-go-instrumentation
++      - --enable-nginx-instrumentation
+   admissionWebhooks:
+     certManager:
+       enabled: false # For production environments, it is [recommended to use cert-manager for better security and scalability](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-operator#tls-certificate-requirement).
+@@ -16,8 +17,9 @@
    create: true # Install the OpenTelemetry Operator CRDs.
  defaultCRConfig:
    image:
@@ -12,7 +20,7 @@
    targetAllocator:
      enabled: false # Enable/disable the Operator's Target allocator.
      # Refer to: https://github.com/open-telemetry/opentelemetry-operator/tree/main/cmd/otel-allocator
-@@ -192,9 +193,17 @@
+@@ -192,9 +194,17 @@
          value: ""
        - name: ELASTIC_AGENT_OTEL
          value: '"true"'
@@ -31,7 +39,7 @@
          storeCheckpoints: true # Store checkpoints for log collection, allowing for resumption from the last processed log.
      hostNetwork: true # Use the host's network namespace. This allows the daemon to access the network interfaces of the host directly.
      securityContext: # Run the daemon as the root user and group for proper metrics collection.
-@@ -202,6 +211,11 @@
+@@ -202,6 +212,11 @@
        runAsGroup: 0
      scrape_configs_file: "" # [Prometheus metrics](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-kube-stack#scrape_configs_file-details)
      config:
@@ -43,11 +51,10 @@
        exporters:
          # [Debug exporter](https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/debugexporter/README.md)
          debug:
-@@ -337,7 +351,47 @@
-                 from: pod
+@@ -338,6 +353,46 @@
                - tag_name: app.label.version
                  key: app.kubernetes.io/version
-+                from: pod
+                 from: pod
 +        k8sattributes/logs:
 +          filter:
 +            # Only retrieve pods running on the same node as the collector
@@ -67,7 +74,7 @@
 +            annotations:
 +              - tag_name: com.example.logs.format
 +                key: com.example.logs/format
-                 from: pod
++                from: pod
 +              - tag_name: com.example.logs.flask
 +                key: com.example.logs/flask
 +                from: pod
@@ -91,7 +98,7 @@
        receivers:
          # [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver)
          otlp:
-@@ -346,21 +400,13 @@
+@@ -346,21 +401,13 @@
                endpoint: 0.0.0.0:4317
              http:
                endpoint: 0.0.0.0:4318
@@ -119,7 +126,7 @@
          # [Hostmetrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver)
          hostmetrics:
            collection_interval: 10s
-@@ -466,12 +512,29 @@
+@@ -466,12 +513,29 @@
                enabled: true
            extra_metadata_labels:
              - container.id
@@ -150,7 +157,7 @@
              processors:
                - batch
                - k8sattributes
-@@ -512,7 +575,10 @@
+@@ -512,7 +576,10 @@
            logs/apm:
              receivers:
                - otlp
@@ -161,3 +168,10 @@
                - batch
                - resource/hostname
              exporters:
+@@ -683,4 +750,4 @@
+   python:
+     image: docker.elastic.co/observability/elastic-otel-python:1.0.0
+   go:
+-    image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.21.0
++    image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.21.0
+\ No newline at end of file

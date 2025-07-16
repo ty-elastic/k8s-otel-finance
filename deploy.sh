@@ -36,8 +36,11 @@ if [ "$otel" = "true" ]; then
     fi
     helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack \
     --namespace opentelemetry-operator-system \
+    --set "manager.extraArgs={--enable-nginx-instrumentation,--enable-go-instrumentation}" \
     --values 'values.yaml' \
     --version '0.3.9'
+    
+    kubectl -n opentelemetry-operator-system rollout restart deployment/opentelemetry-kube-stack-opentelemetry-operator 
     cd ..
 
     # ---------- OPERATOR
