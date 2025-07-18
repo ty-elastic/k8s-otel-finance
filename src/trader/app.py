@@ -16,7 +16,7 @@ app.logger.info(f"variant: default")
  # Apply ProxyFix to correctly handle X-Forwarded-For
 # x_for=1 indicates that one proxy is setting the X-Forwarded-For header
 # Adjust x_for based on the number of proxies in front of your Flask app
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2)
 
 import model
 
@@ -33,44 +33,48 @@ def reset():
     return None
     
 def decode_common_args():
+    params = request.get_json()
+
     trade_id = str(uuid.uuid4())
 
-    customer_id = request.args.get('customer_id', default=None, type=str)
+    customer_id = params.get('customer_id', None)
+    if customer_id is None:
+        raise Exception("malformatted customer_id", request.remote_addr)
 
-    day_of_week = request.args.get('day_of_week', default=None, type=str)
+    day_of_week = params.get('day_of_week', None)
     if day_of_week is None:
         day_of_week = random.choice(['M', 'Tu', 'W', 'Th', 'F'])
 
-    region = request.args.get('region', default="NA", type=str)
+    region = params.get('region', "NA")
 
-    symbol = request.args.get('symbol', default='ESTC', type=str)
+    symbol = params.get('symbol', 'ESTC')
 
-    data_source = request.args.get('data_source', default='monkey', type=str)
+    data_source = params.get('data_source', 'monkey')
 
-    classification = request.args.get('classification', default=None, type=str)
+    classification = params.get('classification', None)
 
-    canary = request.args.get('canary', default="false", type=str)
+    canary = params.get('canary', False)
 
     # forced errors
-    latency_amount = request.args.get('latency_amount', default=0, type=float)
-    latency_action = request.args.get('latency_action', default=None, type=str)
-    error_model = request.args.get('error_model', default=False, type=conform_request_bool)
-    error_db = request.args.get('error_db', default=False, type=conform_request_bool)
-    error_db_service = request.args.get('error_db_service', default=None, type=str)
+    latency_amount = params.get('latency_amount', 0)
+    latency_action = params.get('latency_action', None)
+    error_model = params.get('error_model', False)
+    error_db = params.get('error_db', False)
+    error_db_service = params.get('error_db_service', None)
 
-    skew_market_factor = request.args.get('skew_market_factor', default=0, type=int)
+    skew_market_factor = params.get('skew_market_factor', 0)
 
     return trade_id, customer_id, day_of_week, region, symbol, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, data_source, classification
 
 def trade(*, region, trade_id, customer_id, symbol, day_of_week, shares, share_price, canary, action, error_db, data_source, classification, error_db_service=None):
-
     app.logger.info(f"trade requested for {symbol} on day {day_of_week}")
 
     response = {}
     response['id'] = trade_id
     response['symbol']= symbol
     
-    params={'canary': canary, 'customer_id': customer_id, 'trade_id': trade_id, 'symbol': symbol, 'shares': shares, 'share_price': share_price, 'action': action}
+    params={'canary': "true" if canary else "false", 'customer_id': customer_id, 'trade_id': trade_id, 'symbol': symbol, 'shares': shares, 'share_price': share_price, 'action': action}
+    print(params)
     if error_db is True:
         params['share_price'] = -share_price
         params['shares'] = -shares
@@ -93,19 +97,20 @@ def trade(*, region, trade_id, customer_id, symbol, day_of_week, shares, share_p
 def trade_force():
     trade_id, customer_id, day_of_week, region, symbol, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, data_source, classification = decode_common_args()
 
-    action = request.args.get('action', type=str)
-    shares = request.args.get('shares', type=int)
-    share_price = request.args.get('share_price', type=float)
+    params = request.get_json()
+    action = params.get('action')
+    shares = params.get('shares')
+    share_price = params.get('share_price')
 
     return trade (region=region, data_source=data_source, classification=classification, trade_id=trade_id, symbol=symbol, customer_id=customer_id, day_of_week=day_of_week, shares=shares, share_price=share_price, canary=canary, action=action, error_db=False)
 
 @app.post('/trade/request')
 def trade_request():
     trade_id, customer_id, day_of_week, region, symbol, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, data_source, classification = decode_common_args()
-
+    
     action, shares, share_price = run_model(trade_id=trade_id, customer_id=customer_id, day_of_week=day_of_week, symbol=symbol, region=region,
                                                    error=error_model, latency_amount=latency_amount, latency_action=latency_action, skew_market_factor=skew_market_factor)
-
+    
     return trade (region=region, data_source=data_source, classification=classification, trade_id=trade_id, symbol=symbol, customer_id=customer_id, day_of_week=day_of_week, shares=shares, share_price=share_price, canary=canary, action=action, error_db=error_db, error_db_service=error_db_service)
 
 def run_model(*, trade_id, customer_id, day_of_week, region, symbol, error=False, latency_amount=0.0, latency_action=None, skew_market_factor=0):

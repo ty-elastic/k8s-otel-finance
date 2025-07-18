@@ -7,6 +7,7 @@ import os
 from threading import Thread
 import concurrent.futures
 import ipaddress
+import hashlib
 
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
@@ -26,16 +27,17 @@ ACTIONS = ['buy', 'sell', 'hold']
 
 CUSTOMERS_PER_REGION = {
     'NA': ['b.smith', 'l.johnson'],
-    'LATAM': ['j.casey', 'l.hall'],
+    'LATAM': ['j.casey', 'l.hall', 'p.corn'],
     'EU': ['q.bert', 'carol.halley'],
     'EMEA': ['mr.t', 'u.hoo']
 }
 
 USERAGENTS_PER_USER = {
+    'p.corn': "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1",
     'b.smith': "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1",
     'l.johnson': "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/138.0.7204.119 Mobile/15E148 Safari/604.1",
-    'j.casey': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
-    'l.hall': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    'j.casey': "Mozilla/5.0 (Linux; Android 14; Pixel 9 Pro Build/AD1A.240418.003; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/124.0.6367.54 Mobile Safari/537.36",
+    'l.hall': "Mozila/5.0 (Linux; Android 14; SM-S928B/DS) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.230 Mobile Safari/537.36",
     'carol.halley': "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15",
     'q.bert': "Mozilla/5.0 (iPad; CPU OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1",
     'mr.t': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
@@ -60,6 +62,7 @@ canary_per_region = {}
 high_tput_per_customer = {}
 high_tput_per_symbol = {}
 high_tput_per_region = {}
+request_error_per_customer = {}
 db_error_per_region = {}
 db_error_per_customer = {}
 model_error_per_region = {}
@@ -73,7 +76,7 @@ def get_customers():
 def conform_request_bool(value):
     return value.lower() == 'true'
 
-def generate_trade_request(*, customer_id, symbol, day_of_week, region, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, classification=None, data_source):
+def generate_trade_request(*, customer_id, symbol, day_of_week, region, latency_amount, latency_action, error_model, error_db, error_db_service, error_request, skew_market_factor, canary, classification=None, data_source):
     try:
         params={'symbol': symbol, 
                 'day_of_week': day_of_week, 
@@ -84,6 +87,7 @@ def generate_trade_request(*, customer_id, symbol, day_of_week, region, latency_
                 'error_model': error_model,
                 'error_db': error_db,
                 'error_db_service': error_db_service,
+                'error_request': error_request,
                 'skew_market_factor': skew_market_factor,
                 'canary': canary,
                 'data_source': data_source}
@@ -97,9 +101,13 @@ def generate_trade_request(*, customer_id, symbol, day_of_week, region, latency_
             headers["X-Forwarded-For"]= random.choice(ip_list)
         if customer_id is not None and customer_id in USERAGENTS_PER_USER:
             headers['User-Agent']= USERAGENTS_PER_USER[customer_id]
+
+        if error_request is True:
+            del params['customer_id']
+            params['customerid'] = customer_id
             
         trade_response = requests.post(f"http://{os.environ['TRADER_SERVICE']}/trade/request", 
-                                       params=params,
+                                       json=params,
                                        headers=headers,
                                        timeout=TRADE_TIMEOUT)
         trade_response.raise_for_status()
@@ -138,15 +146,23 @@ def generate_trade_requests():
                 latency_action = None
 
             if region in model_error_per_region:
-                error_model = "true" if random.randint(0, 100) > (100-model_error_per_region[region]['amount']) else "false"
+                error_model = True if random.randint(0, 100) > (100-model_error_per_region[region]['amount']) else False
                 if time.time() - model_error_per_region[region]['start'] >= ERROR_TIMEOUT_S:
                     app.logger.info(f"db_error_per_region[{region}] timeout")
                     err_model_region_delete(region)
             else:
-                error_model = "false"
+                error_model = False
+
+            if customer_id in request_error_per_customer:
+                error_request = True if random.randint(0, 100) > (100-request_error_per_customer[customer_id]['amount']) else False
+                if time.time() - request_error_per_customer[customer_id]['start'] >= ERROR_TIMEOUT_S:
+                    app.logger.info(f"request_error_per_customer[{customer_id}] timeout")
+                    err_request_customer_delete(customer_id)
+            else:
+                error_request = False
 
             if customer_id in db_error_per_customer:
-                error_db = "true" if random.randint(0, 100) > (100-db_error_per_customer[customer_id]['amount']) else "false"
+                error_db = True if random.randint(0, 100) > (100-db_error_per_customer[customer_id]['amount']) else False
                 if 'service' in db_error_per_customer[customer_id]:
                     error_db_service = db_error_per_customer[customer_id]['service']
                 else:
@@ -155,7 +171,7 @@ def generate_trade_requests():
                     app.logger.info(f"db_error_per_customer[{customer_id}] timeout")
                     err_db_customer_delete(region)
             elif region in db_error_per_region:
-                error_db = "true" if random.randint(0, 100) > (100-db_error_per_region[region]['amount']) else "false"
+                error_db = True if random.randint(0, 100) > (100-db_error_per_region[region]['amount']) else False
                 if 'service' in db_error_per_region[region]:
                     error_db_service = db_error_per_region[region]['service']
                 else:
@@ -164,7 +180,7 @@ def generate_trade_requests():
                     app.logger.info(f"db_error_per_region[{region}] timeout")
                     err_db_region_delete(region)
             else:
-                error_db = "false"
+                error_db = False
                 error_db_service = None
 
             if symbol in skew_market_factor_per_symbol:
@@ -173,16 +189,16 @@ def generate_trade_requests():
                 skew_market_factor = 0
 
             if region in canary_per_region:
-                canary = "true"
+                canary = True
             else:
-                canary = "false"
+                canary = False
 
-            app.logger.info(f"trading {symbol} for {customer_id} on {DAYS_OF_WEEK[idx_of_week]} from {region} with latency {latency_amount}, error_model={error_model}, error_db={error_db}, skew_market_factor={skew_market_factor}, canary={canary}")
+            app.logger.info(f"trading {symbol} for {customer_id} on {DAYS_OF_WEEK[idx_of_week]} from {region} with latency {latency_amount}, error_model={error_model}, error_request={error_request}, error_db={error_db}, skew_market_factor={skew_market_factor}, canary={canary}")
 
             executor.submit(generate_trade_request, customer_id=customer_id, symbol=symbol, day_of_week=DAYS_OF_WEEK[idx_of_week], region=region,
                         latency_amount=latency_amount, latency_action=latency_action, 
                         error_model=error_model, 
-                        error_db=error_db, error_db_service=error_db_service,
+                        error_db=error_db, error_db_service=error_db_service, error_request=error_request,
                         skew_market_factor=skew_market_factor, canary=canary,
                         data_source='monkey')
 
@@ -358,6 +374,21 @@ def err_db_customer_delete(customer):
         del high_tput_per_customer[customer]
     return db_error_per_customer
 
+@app.post('/err/request/customer/<customer>/<amount>')
+def err_request_customer(customer, amount):
+    global request_error_per_customer
+    request_error_per_customer[customer] = {'amount': int(amount), 'start': time.time()}
+    high_tput_per_customer[customer] = HIGH_TPUT_PCT
+    return request_error_per_customer
+@app.delete('/err/request/customer/<customer>')
+def err_request_customer_delete(customer):
+    global request_error_per_customer
+    if customer in request_error_per_customer:
+        del request_error_per_customer[customer]
+    if customer in high_tput_per_customer:
+        del high_tput_per_customer[customer]
+    return request_error_per_customer
+
 @app.post('/err/model/region/<region>/<amount>')
 def err_model_region(region, amount):
     global model_error_per_region
@@ -410,7 +441,7 @@ def generate_trade_force(*, customer_id, day_of_week, region, symbol, action, sh
 
         trade_response = requests.post(f"http://{os.environ['TRADER_SERVICE']}/trade/force", 
                                        headers=headers,
-                                       params={'symbol': symbol,
+                                       json={'symbol': symbol,
                                                'day_of_week': day_of_week, 
                                                'shares': shares, 
                                                'action': action,

@@ -24,6 +24,87 @@ difficulty: ""
 timelimit: 600
 enhanced_loading: null
 ---
+We've gotten word from our support team that some users are complaining that they are receiving an error message when they try to complete a trade transaction.
+
+We might start our investigation at the proxy entry point into our services:
+
+1. Open the [button label="Elasticsearch"](tab-0) tab
+2. Copy
+    ```kql
+    service.name : "proxy"
+    ```
+    into the `Filter your data using KQL syntax` search bar toward the top of the Kibana window
+3. Click on the refresh icon at the right of the time picker
+
+These are currently unparsed logs coming from nginx. Let's apply some parsing so we can look for non-200 responses:
+
+1. Click `Try ES|QL`
+2. Set time range to `Last 1 Hour` 
+2. Copy
+  ```
+  FROM logs-generic.otel-default
+  | WHERE service.name == "proxy" 
+  | GROK message "%{IPV4:remote_ip} - %{DATA:user_name} \\[%{HTTPDATE:time}\\] \"%{WORD:method} %{DATA:url} HTTP/%{NUMBER:http_version}\" %{NUMBER:response_code:int} %{NUMBER:body_sent_bytes} \"%{DATA:referrer}\" \"%{DATA:agent}\""
+  | WHERE response_code is NOT NULL
+  | LIMIT 10000
+  | STATS COUNT() BY response_code
+  ```
+  into the ES|QL command window
+3. Click `Refresh`
+
+Let's make this more meaningful:
+1. Click on the Pencil icon
+2. From the visualization drop-down, select `Pie`
+
+ok, so we can see that a percentage (but not all) of requests are resulting in 500 error codes. That's interesting.
+
+We can see the value here of parsing out that nginx log statement. Let's do that in a way that is performant, and that allows us to do some analytics on the results.
+
+1. Click 'Streams' from the sidebar
+2. Click `logs-generic.otel-default`
+3. Click `Processing`
+4. Click `Add a processor`
+5. Select `Grok`
+6. Parse on `body.text`
+7. On the right click the controls next to `Random samples `
+8. Unckeck `Random samples from stream`
+9. Click `Add data source` and select `Add KQL search samples`
+10. Name it `proxy`
+11. In the `Filter your data using KQL syntax` enter:
+  ```
+  service.name : "proxy" and POST
+  ```
+12. Click the refresh icon
+13. Close the flyout
+13. Click `Generate pattern`
+14. Click `Accept`
+15. 
+
+
+`Exception on trade request POST` looks interesting.
+
+5. Click on the `+` in the `Actions` column
+6. Expand the first log entry (double-arrows)
+7. Click on the `Log overview` tab 
+8. Open the `Stacktrace`
+
+So it appears that our `trader` service is throwing Exceptions for at least some requests.
+
+Let's dig into why. We know that we have a nginx proxy that sits in front of our trader service. Let's have a look at those logs.
+
+9. Close the flyout
+10. Remove the `Patterns - message` filter
+11. Copy
+    ```kql
+    service.name : "proxy"
+    ```
+    into the `Filter your data using KQL syntax` search bar toward the top of the Kibana window
+12. Click `Update`
+
+
+# ES|QL
+
+Let's use ES|QL 
 
 In this model, we will be sending logs directly from a service to an OpenTelemetry [Collector](https://opentelemetry.io/docs/collector/) over the network using the [OTLP](https://opentelemetry.io/docs/specs/otel/protocol/) protocol. This is the default mechanism the OpenTelemetry SDKs use for exporting logs from a service.
 

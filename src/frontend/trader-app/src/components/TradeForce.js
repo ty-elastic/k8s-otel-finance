@@ -45,8 +45,7 @@ class TradeForce extends React.Component {
         event.preventDefault();
 
         try {
-            await axios.post("/trader/trade/force", null, {
-                params: {
+            await axios.post("/trader/trade/force", {
                     'symbol': this.state.symbol,
                     'day_of_week': this.state.day_of_week,
                     'customer_id': this.state.customer_id,
@@ -55,8 +54,7 @@ class TradeForce extends React.Component {
                     'shares': this.state.shares,
                     'share_price': this.state.share_price,
                     'data_source': 'customer'
-                }
-            });
+                });
         } catch (err) {
             console.log(err.message)
         }

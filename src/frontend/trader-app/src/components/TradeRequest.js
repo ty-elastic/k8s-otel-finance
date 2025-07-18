@@ -42,15 +42,13 @@ class TradeRequest extends React.Component {
         event.preventDefault();
         
         try {
-            await axios.post("/trader/trade/request", null, {
-                params: {
+            await axios.post("/trader/trade/request", {
                     'symbol': this.state.symbol,
                     'day_of_week': this.state.day_of_week,
                     'customer_id': this.state.customer_id,
                     'region': this.state.region,
                     'data_source': 'customer'
-                }
-            });
+                });
         } catch (err) {
             console.log(err.message)
         }
