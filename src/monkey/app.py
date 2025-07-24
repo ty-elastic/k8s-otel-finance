@@ -7,55 +7,78 @@ import os
 from threading import Thread
 import concurrent.futures
 import ipaddress
-import hashlib
+
+import ua_generator
+from ua_generator.options import Options
+from ua_generator.data.version import VersionRange
+from faker import Faker
 
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
 TRADE_TIMEOUT = 5
 S_PER_DAY = 60
-
 HIGH_TPUT_PCT = 95
 LATENCY_SWING_MS = 10
 HIGH_TPUT_SLEEP_MS = [2,3]
 NORMAL_TPUT_SLEEP_MS = [200,300]
 ERROR_TIMEOUT_S = 60
 CONCURRENT_TRADE_REQUESTS = 20
+NUM_CUSTOMERS_PER_REGION = 10
+
+UNCLASSIFIED_LABEL = "unclassified"
+TRAINING_TRADE_COUNT = 7500
+TRAINING_PERCENT_LABELED = 75
+
+MIN_CHROME_VERSION = 125
+MAX_CHROME_VERSION = 135
 
 DAYS_OF_WEEK = ['M', 'Tu', 'W', 'Th', 'F']
 ACTIONS = ['buy', 'sell', 'hold']
-
-CUSTOMERS_PER_REGION = {
-    'NA': ['b.smith', 'l.johnson'],
-    'LATAM': ['j.casey', 'l.hall', 'p.corn'],
-    'EU': ['q.bert', 'carol.halley'],
-    'EMEA': ['mr.t', 'u.hoo']
-}
-
-USERAGENTS_PER_USER = {
-    'p.corn': "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1",
-    'b.smith': "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1",
-    'l.johnson': "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/138.0.7204.119 Mobile/15E148 Safari/604.1",
-    'j.casey': "Mozilla/5.0 (Linux; Android 14; Pixel 9 Pro Build/AD1A.240418.003; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/124.0.6367.54 Mobile Safari/537.36",
-    'l.hall': "Mozila/5.0 (Linux; Android 14; SM-S928B/DS) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.230 Mobile Safari/537.36",
-    'carol.halley': "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15",
-    'q.bert': "Mozilla/5.0 (iPad; CPU OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1",
-    'mr.t': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
-    'u.hoo': "Mozilla/5.0 (Macintosh; Intel Mac OS X 15.5; rv:140.0) Gecko/20100101 Firefox/140.0"
-}
+REGIONS = ['NA', 'LATAM', 'EU', 'EMEA', 'APAC']
+SYMBOLS = ['ZVZZT', 'ZALM', 'ZYX', 'CBAZ', 'BAA', 'OELK']
 
 CLIENTIPS_PER_REGION = {
     'NA': '107.80.0.0/16',
     'LATAM': '186.189.224.0/20',
     'EU': '149.254.212.0/24',
-    'EMEA': '95.85.100.0/24'
+    'EMEA': '102.65.16.0/20',
+    'APAC': '101.136.0.0/14'
 }
 
-SYMBOLS = ['ZVZZT', 'ZALM', 'ZYX', 'CBAZ', 'BAA', 'OELK']
+CUSTOMERS_PER_REGION = {}
+def generate_customers_per_region():
+    fake = Faker()
+    for region in REGIONS:
+        CUSTOMERS_PER_REGION[region] = []
+        for i in range(NUM_CUSTOMERS_PER_REGION):
+            name = fake.unique.first_name().lower() + "." + fake.unique.last_name().lower()
+            CUSTOMERS_PER_REGION[region].append(name)
+    #print(CUSTOMERS_PER_REGION)
+generate_customers_per_region()
 
-UNCLASSIFIED_LABEL = "unclassified"
-TRAINING_TRADE_COUNT = 7500
-TRAINING_PERCENT_LABELED = 75
+USERAGENTS_PER_USER = {}
+def generate_useragent_per_user():
+    # Choosing only versions within specified ranges
+    options = Options()
+    options.version_ranges = {
+        'chrome': VersionRange(MIN_CHROME_VERSION, MAX_CHROME_VERSION),
+    }
+
+    for region in CUSTOMERS_PER_REGION.keys():
+        for customer in CUSTOMERS_PER_REGION[region]:
+            USERAGENTS_PER_USER[customer] = ua_generator.generate(options=options)
+    print(USERAGENTS_PER_USER)
+generate_useragent_per_user()
+
+IP_ADDRESS_PER_USER = {}
+def generate_ipaddress_per_user():
+    for region in CUSTOMERS_PER_REGION.keys():
+        for customer in CUSTOMERS_PER_REGION[region]:
+            network = ipaddress.ip_network(CLIENTIPS_PER_REGION[region])
+            ip_list = [str(ip) for ip in network]
+            IP_ADDRESS_PER_USER[customer] = random.choice(ip_list)
+generate_ipaddress_per_user()
 
 latency_per_action_per_region = {}
 canary_per_region = {}
@@ -67,6 +90,17 @@ db_error_per_region = {}
 db_error_per_customer = {}
 model_error_per_region = {}
 skew_market_factor_per_symbol = {}
+
+def bump_os_version_up_per_region(*, region):
+    options = Options()
+    options.version_ranges = {
+        'chrome': VersionRange(MAX_CHROME_VERSION+1, MAX_CHROME_VERSION+1)
+    }
+
+    for customer in CUSTOMERS_PER_REGION[region]:
+        if USERAGENTS_PER_USER[customer].browser == 'chrome':
+            new_ua = ua_generator.generate(browser='chrome', options=options)
+            USERAGENTS_PER_USER[customer] = new_ua
 
 def get_customers():
     customers = []
@@ -95,12 +129,9 @@ def generate_trade_request(*, customer_id, symbol, day_of_week, region, latency_
             params['classification'] = classification
 
         headers = {}
-        if region is not None and region in CLIENTIPS_PER_REGION:
-            network = ipaddress.ip_network(CLIENTIPS_PER_REGION[region])
-            ip_list = [str(ip) for ip in network]
-            headers["X-Forwarded-For"]= random.choice(ip_list)
+        headers["X-Forwarded-For"] = IP_ADDRESS_PER_USER[customer_id]
         if customer_id is not None and customer_id in USERAGENTS_PER_USER:
-            headers['User-Agent']= USERAGENTS_PER_USER[customer_id]
+            headers['User-Agent']= USERAGENTS_PER_USER[customer_id].text
 
         if error_request is True:
             del params['customer_id']
@@ -155,7 +186,7 @@ def generate_trade_requests():
 
             if customer_id in request_error_per_customer:
                 error_request = True if random.randint(0, 100) > (100-request_error_per_customer[customer_id]['amount']) else False
-                if time.time() - request_error_per_customer[customer_id]['start'] >= ERROR_TIMEOUT_S:
+                if request_error_per_customer[customer_id]['oneshot'] and time.time() - request_error_per_customer[customer_id]['start'] >= ERROR_TIMEOUT_S:
                     app.logger.info(f"request_error_per_customer[{customer_id}] timeout")
                     err_request_customer_delete(customer_id)
             else:
@@ -283,6 +314,7 @@ def get_state():
         'high_tput_per_region': high_tput_per_region,
         'db_error_per_region': db_error_per_region,
         'db_error_per_customer': db_error_per_customer,
+        'request_error_per_customer': request_error_per_customer,
         'model_error_per_region': model_error_per_region,
         'skew_market_factor_per_symbol': skew_market_factor_per_symbol
     }
@@ -374,19 +406,26 @@ def err_db_customer_delete(customer):
         del high_tput_per_customer[customer]
     return db_error_per_customer
 
-@app.post('/err/request/customer/<customer>/<amount>')
-def err_request_customer(customer, amount):
+@app.post('/err/ua/region/<region>')
+def err_request_ua(region):
     global request_error_per_customer
-    request_error_per_customer[customer] = {'amount': int(amount), 'start': time.time()}
-    high_tput_per_customer[customer] = HIGH_TPUT_PCT
+    bump_os_version_up_per_region(region=region)
+    err_request_oneshot = request.args.get('err_request_oneshot', default=False, type=conform_request_bool)
+    for customer in CUSTOMERS_PER_REGION[region]:
+        print(f"start request error for customer {customer}")
+        request_error_per_customer[customer] = {'amount': 100, 'start': time.time(), 'oneshot': err_request_oneshot}
+        if err_request_oneshot:
+            high_tput_per_customer[customer] = HIGH_TPUT_PCT
     return request_error_per_customer
-@app.delete('/err/request/customer/<customer>')
-def err_request_customer_delete(customer):
+@app.delete('/err/ua/region/<region>')
+def err_request_customer_delete(region):
     global request_error_per_customer
-    if customer in request_error_per_customer:
-        del request_error_per_customer[customer]
-    if customer in high_tput_per_customer:
-        del high_tput_per_customer[customer]
+    for customer in CUSTOMERS_PER_REGION[region]:
+        print(f"stop request error for customer {customer}")
+        if customer in request_error_per_customer:
+            del request_error_per_customer[customer]
+        if customer in high_tput_per_customer:
+            del high_tput_per_customer[customer]
     return request_error_per_customer
 
 @app.post('/err/model/region/<region>/<amount>')
@@ -432,12 +471,9 @@ def generate_trade_force(*, customer_id, day_of_week, region, symbol, action, sh
     try:
 
         headers = {}
-        if region is not None and region in CLIENTIPS_PER_REGION:
-            network = ipaddress.ip_network(CLIENTIPS_PER_REGION[region])
-            ip_list = [str(ip) for ip in network]
-            headers["X-Forwarded-For"]= random.choice(ip_list)
+        headers["X-Forwarded-For"] = IP_ADDRESS_PER_USER[customer_id]
         if customer_id is not None and customer_id in USERAGENTS_PER_USER:
-            headers['User-Agent']= USERAGENTS_PER_USER[customer_id]
+            headers['User-Agent']= USERAGENTS_PER_USER[customer_id].text
 
         trade_response = requests.post(f"http://{os.environ['TRADER_SERVICE']}/trade/force", 
                                        headers=headers,
