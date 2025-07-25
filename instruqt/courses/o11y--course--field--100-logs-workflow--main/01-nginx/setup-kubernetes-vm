@@ -1,0 +1,180 @@
+source /opt/workshops/elastic-retry.sh
+export $(curl http://kubernetes-vm:9000/env | xargs)
+
+/opt/workshops/elastic-view.sh -v oblt
+
+/opt/workshops/elastic-llm.sh -m gpt-4o-westus -k false -p false
+
+# ------------- CUSTOM
+
+echo "Enable streams"
+enable_streams() {
+    local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$KIBANA_URL/internal/kibana/settings" \
+    --header 'Content-Type: application/json' \
+    --header "kbn-xsrf: true" \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    --header 'x-elastic-internal-origin: Kibana' \
+    -d '{"changes":{"observability:enableStreamsUI":true}}')
+
+    if echo $http_status | grep -q '^2'; then
+        echo "Enabled Streams: $http_status"
+        return 0
+    else
+        echo "Failed to enable streams. HTTP status: $http_status"
+        return 1
+    fi
+}
+retry_command_lin enable_streams
+
+
+output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_security/api_key" -d '
+{
+    "name": "kubernetes_otel_onboarding",
+    "metadata": {
+        "application": "logs",
+        "managed": true
+    },
+    "role_descriptors": {
+        "standalone_agent": {
+            "cluster": [
+            "monitor"
+            ],
+            "indices": [
+            {
+                "names": [
+                "logs-*-*",
+                "metrics-*-*",
+                "traces-*-*"
+                ],
+                "privileges": [
+                "auto_configure",
+                "create_doc"
+                ],
+                "allow_restricted_indices": false
+            }
+            ],
+            "applications": [],
+            "run_as": [],
+            "metadata": {},
+            "transient_metadata": {
+            "enabled": true
+            }
+        }
+    }
+}
+')
+
+ELASTICSEARCH_APIKEY=$(echo $output | jq -r '.encoded')
+
+kubectl create namespace trading
+kubectl create secret generic elastic-secret-otel \
+  --namespace trading \
+  --from-literal=elastic_endpoint=$ELASTICSEARCH_URL \
+  --from-literal=elastic_api_key=$ELASTICSEARCH_APIKEY
+
+echo "Adding custom mappings"
+custom_mappings() {
+    local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$ELASTICSEARCH_URL/_component_template/logs-otel@custom" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+     -d'
+    {
+        "template": {
+            "mappings": {
+                "properties": {
+                    "parsed": {
+                        "dynamic": true,
+                        "type": "object"
+                    }
+                }
+            }
+        }
+    }')
+
+    if echo $http_status | grep -q '^2'; then
+        echo "Set custom mappings: $http_status"
+        return 0
+    else
+        echo "Failed to set custom mappings. HTTP status: $http_status"
+        return 1
+    fi
+}
+retry_command_lin custom_mappings
+
+echo "Adding completion connector"
+add_connector() {
+    local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$ELASTICSEARCH_URL/_inference/completion/openai_completion" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" -d'
+    {
+        "service": "openai",
+        "service_settings": {
+            "model_id": "gpt-4.1",
+            "api_key": "'"$LLM_APIKEY"'",
+            "url": "https://'"$LLM_PROXY_URL"'/v1/chat/completions"
+        }
+    }')
+
+    if echo $http_status | grep -q '^2'; then
+        echo "Connector added successfully with HTTP status: $http_status"
+        return 0
+    else
+        echo "Failed to add connector. HTTP status: $http_status"
+        return 1
+    fi
+}
+retry_command_lin add_connector
+
+mkdir -p /workspace/workshop
+git clone https://github.com/ty-elastic/k8s-otel-finance.git /workspace/workshop
+cd /workspace/workshop
+git checkout $INSTRUQT_TRACK_SLUG
+
+curl -X PUT "$ELASTICSEARCH_URL/networks" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    -d'
+    {
+        "mappings": {
+            "properties": {
+                "range": { "type": "ip_range" },
+                "isp": { "type": "keyword" }
+            }
+        }
+    }'
+
+curl -X PUT "$ELASTICSEARCH_URL/_enrich/policy/networks-policy" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    -d'
+    {
+        "range": {
+            "indices": "networks",
+            "match_field": "range",
+            "enrich_fields": ["isp"]
+        }
+    }'
+
+echo '
+{"index":{}}
+{"range":"107.80.0.0/16","isp":"AT&T Enterprises, LLC"}
+{"index":{}}
+{"range":"186.189.224.0/20","isp":"NSS S.A."}
+{"index":{}}
+{"range":"149.254.212.0/24","isp":"T-Mobile(UK) Internet"}
+{"index":{}}
+{"range":"95.85.100.0/24","isp":"Turkmentelecom"}
+{"index":{}}
+{"range":"101.136.0.0/14","isp":"Asia Pacific Telecom"}
+' > networks.ndjson
+
+curl -X POST "$ELASTICSEARCH_URL/networks/_bulk" \
+    --header 'Content-Type: application/x-ndjson' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    --data-binary @networks.ndjson
+
+curl -X POST "$ELASTICSEARCH_URL/_enrich/policy/networks-policy/_execute?wait_for_completion=true" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"
+
+./deploy.sh -s trading-logen -o false -c $INSTRUQT_TRACK_SLUG -v $INSTRUQT_TRACK_SLUG
