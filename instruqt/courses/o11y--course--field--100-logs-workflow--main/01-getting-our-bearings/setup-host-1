@@ -1,6 +1,78 @@
 source /opt/workshops/elastic-retry.sh
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
-/opt/workshops/clone-code.sh -r ty-elastic/k8s-otel-finance -b $INSTRUQT_TRACK_SLUG -d false
+echo "Enable streams"
+enable_streams() {
+    local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$KIBANA_URL/internal/kibana/settings" \
+    -H 'Content-Type: application/json'\
+    --header "kbn-xsrf: true" --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    -d '{"changes":{"observability:enableStreamsUI":true}}')
 
-source /workspace/workshop/instruqt/tools/setup.sh
+    if echo $http_status | grep -q '^2'; then
+        echo "Enabled Streams: $http_status"
+        return 0
+    else
+        echo "Failed to enable streams. HTTP status: $http_status"
+        return 1
+    fi
+}
+retry_command_lin enable_streams
+
+kubectl create namespace trading
+kubectl create secret generic elastic-secret-otel \
+  --namespace trading \
+  --from-literal=elastic_endpoint=$ELASTICSEARCH_URL \
+  --from-literal=elastic_api_key=$ELASTICSEARCH_APIKEY
+
+echo "Adding custom mappings"
+custom_mappings() {
+    local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$ELASTICSEARCH_URL/_component_template/logs-otel@custom" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+     -d'
+    {
+        "template": {
+            "mappings": {
+                "properties": {
+                    "parsed": {
+                        "dynamic": true,
+                        "type": "object"
+                    }
+                }
+            }
+        }
+    }')
+
+    if echo $http_status | grep -q '^2'; then
+        echo "Set custom mappings: $http_status"
+        return 0
+    else
+        echo "Failed to set custom mappings. HTTP status: $http_status"
+        return 1
+    fi
+}
+retry_command_lin custom_mappings
+
+echo "Adding completion connector"
+add_connector() {
+    local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$ELASTICSEARCH_URL/completion/openai_completion" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" -d'
+    {
+        "service": "openai",
+        "service_settings": {
+            "model_id": "gpt-4.1",
+            "api_key": "'"$LLM_APIKEY"'",
+            "url": "https://'"$LLM_PROXY_URL"'/v1/chat/completions"
+        }
+    }')
+
+    if echo $http_status | grep -q '^2'; then
+        echo "Connector added successfully with HTTP status: $http_status"
+        return 0
+    else
+        echo "Failed to add connector. HTTP status: $http_status"
+        return 1
+    fi
+}
+retry_command_lin add_connector

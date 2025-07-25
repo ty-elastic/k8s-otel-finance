@@ -39,11 +39,11 @@ We might start our investigation at the proxy entry point into our services:
 These are currently unparsed logs coming from nginx. Let's apply some parsing so we can look for non-200 responses:
 
 1. Click `Try ES|QL`
-2. Set time range to `Last 1 Hour` 
+2. Set time range to `Last 1 Hour`
 2. Copy
   ```
   FROM logs-generic.otel-default
-  | WHERE service.name == "proxy" 
+  | WHERE service.name == "proxy"
   | GROK message "%{IPV4:remote_ip} - %{DATA:user_name} \\[%{HTTPDATE:time}\\] \"%{WORD:method} %{DATA:url} HTTP/%{NUMBER:http_version}\" %{NUMBER:response_code:int} %{NUMBER:body_sent_bytes} \"%{DATA:referrer}\" \"%{DATA:agent}\""
   | WHERE response_code is NOT NULL
   | LIMIT 10000
@@ -78,14 +78,14 @@ We can see the value here of parsing out that nginx log statement. Let's do that
 13. Close the flyout
 13. Click `Generate pattern`
 14. Click `Accept`
-15. 
+15.
 
 
 `Exception on trade request POST` looks interesting.
 
 5. Click on the `+` in the `Actions` column
 6. Expand the first log entry (double-arrows)
-7. Click on the `Log overview` tab 
+7. Click on the `Log overview` tab
 8. Open the `Stacktrace`
 
 So it appears that our `trader` service is throwing Exceptions for at least some requests.
@@ -104,7 +104,7 @@ Let's dig into why. We know that we have a nginx proxy that sits in front of our
 
 # ES|QL
 
-Let's use ES|QL 
+Let's use ES|QL
 
 In this model, we will be sending logs directly from a service to an OpenTelemetry [Collector](https://opentelemetry.io/docs/collector/) over the network using the [OTLP](https://opentelemetry.io/docs/specs/otel/protocol/) protocol. This is the default mechanism the OpenTelemetry SDKs use for exporting logs from a service.
 

@@ -7,6 +7,7 @@ import logging
 from threading import Thread
 import yaml
 import sys
+import os
 
 import ua_generator
 from ua_generator.options import Options
@@ -35,7 +36,11 @@ def make_logger(service_name, max_logs_per_second):
             }
         ),
     )
-    otlp_exporter = OTLPLogExporter(endpoint="http://127.0.0.1:4317", insecure=True)
+    if 'COLLECTOR_ADDRESS' in os.environ:
+        address = os.environ['COLLECTOR_ADDRESS']
+    else:
+        address = "collector"
+    otlp_exporter = OTLPLogExporter(endpoint=f"http://{address}:4317", insecure=True)
     processor = BatchLogRecordProcessor(
         otlp_exporter,
         schedule_delay_millis=BACKLOG_Q_TIMEOUT_MS,

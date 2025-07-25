@@ -63,10 +63,9 @@ if [ "$service" != "none" ]; then
         echo $service
         if [[ "$service" == "all" || "$service" == "$current_service" ]]; then
             echo "deploying..."
-            echo "k8s/_courses/$variant.yaml"
-            if [ -f "k8s/_courses/$variant.yaml" ]; then
+            if [ -f "k8s/_courses/$variant/$current_service.yaml" ]; then
                 echo "applying variant"
-                envsubst < k8s/_courses/$variant.yaml | kubectl apply -f -
+                envsubst < k8s/_courses/$variant/$current_service.yaml | kubectl apply -f -
             else
                 envsubst < k8s/$current_service.yaml | kubectl apply -f -
             fi
