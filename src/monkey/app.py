@@ -30,8 +30,11 @@ UNCLASSIFIED_LABEL = "unclassified"
 TRAINING_TRADE_COUNT = 7500
 TRAINING_PERCENT_LABELED = 75
 
-MIN_CHROME_VERSION = 125
-MAX_CHROME_VERSION = 135
+CHROME_VERSIONS = (125, 135)
+ua_generator_options = Options()
+ua_generator_options.version_ranges = {
+    'chrome': VersionRange(CHROME_VERSIONS[0], CHROME_VERSIONS[1]),
+}
 
 DAYS_OF_WEEK = ['M', 'Tu', 'W', 'Th', 'F']
 ACTIONS = ['buy', 'sell', 'hold']
@@ -59,16 +62,10 @@ generate_customers_per_region()
 
 USERAGENTS_PER_USER = {}
 def generate_useragent_per_user():
-    # Choosing only versions within specified ranges
-    options = Options()
-    options.version_ranges = {
-        'chrome': VersionRange(MIN_CHROME_VERSION, MAX_CHROME_VERSION),
-    }
-
     for region in CUSTOMERS_PER_REGION.keys():
         for customer in CUSTOMERS_PER_REGION[region]:
-            USERAGENTS_PER_USER[customer] = ua_generator.generate(options=options)
-    print(USERAGENTS_PER_USER)
+            USERAGENTS_PER_USER[customer] = ua_generator.generate(options=ua_generator_options)
+    #print(USERAGENTS_PER_USER)
 generate_useragent_per_user()
 
 IP_ADDRESS_PER_USER = {}
@@ -91,21 +88,30 @@ db_error_per_customer = {}
 model_error_per_region = {}
 skew_market_factor_per_symbol = {}
 
-def bump_os_version_up_per_region(*, region):
-    options = Options()
-    options.version_ranges = {
-        'chrome': VersionRange(MAX_CHROME_VERSION+1, MAX_CHROME_VERSION+1)
-    }
-
-    for customer in CUSTOMERS_PER_REGION[region]:
-        if USERAGENTS_PER_USER[customer].browser == 'chrome':
-            new_ua = ua_generator.generate(browser='chrome', options=options)
-            USERAGENTS_PER_USER[customer] = new_ua
-
 def get_customers():
     customers = []
     for region in CUSTOMERS_PER_REGION:
-        customers.append(region)
+        for customer in CUSTOMERS_PER_REGION[region]:
+            customers.append(customer)
+    return customers
+
+def bump_version_up_per_browser(*, browser, region):
+    for browser_version_range in ua_generator_options.version_ranges.keys():
+        if browser_version_range == browser:
+            last_max = ua_generator_options.version_ranges[browser].max_version.major
+            ua_generator_options.version_ranges = {
+                browser: VersionRange(last_max+1, last_max+1)
+            }
+
+    if region is not None:
+        customers = CUSTOMERS_PER_REGION[region]
+    else:
+        customers = get_customers()
+    for customer in customers:
+        if USERAGENTS_PER_USER[customer].browser == browser:
+            print(f'new ua for {browser}')
+            new_ua = ua_generator.generate(browser=browser, options=ua_generator_options)
+            USERAGENTS_PER_USER[customer] = new_ua
 
 def conform_request_bool(value):
     return value.lower() == 'true'
@@ -281,11 +287,13 @@ def reset_error():
     global db_error_per_region
     global model_error_per_region
     global db_error_per_customer
+    global request_error_per_customer
     
     latency_per_action_per_region = {}
     db_error_per_region = {}
     model_error_per_region = {}
     db_error_per_customer = {}
+    request_error_per_customer = {}
 
     app.logger.info(f"error reset")
     return "OK"
@@ -406,26 +414,33 @@ def err_db_customer_delete(customer):
         del high_tput_per_customer[customer]
     return db_error_per_customer
 
-@app.post('/err/ua/region/<region>')
-def err_request_ua(region):
+@app.post('/err/browser/<browser>')
+def err_request_ua(browser):
     global request_error_per_customer
-    bump_os_version_up_per_region(region=region)
     err_request_oneshot = request.args.get('err_request_oneshot', default=False, type=conform_request_bool)
-    for customer in CUSTOMERS_PER_REGION[region]:
-        print(f"start request error for customer {customer}")
-        request_error_per_customer[customer] = {'amount': 100, 'start': time.time(), 'oneshot': err_request_oneshot}
-        if err_request_oneshot:
-            high_tput_per_customer[customer] = HIGH_TPUT_PCT
+    region = request.args.get('region', default=None, type=str)
+
+    bump_version_up_per_browser(browser=browser, region=region)
+    if region is not None:
+        customers = CUSTOMERS_PER_REGION[region]
+    else:
+        customers = get_customers()
+    for customer in customers:
+        if USERAGENTS_PER_USER[customer].browser == browser:
+            print(f"start request error for customer {customer}")
+            request_error_per_customer[customer] = {'amount': 100, 'start': time.time(), 'oneshot': err_request_oneshot}
+            if err_request_oneshot:
+                high_tput_per_customer[customer] = HIGH_TPUT_PCT
     return request_error_per_customer
 @app.delete('/err/ua/region/<region>')
-def err_request_customer_delete(region):
+def err_request_customer_delete(browser):
     global request_error_per_customer
-    for customer in CUSTOMERS_PER_REGION[region]:
-        print(f"stop request error for customer {customer}")
-        if customer in request_error_per_customer:
+    for customer in request_error_per_customer:
+        if USERAGENTS_PER_USER[customer].browser == browser:
+            print(f"stop request error for customer {customer}")
             del request_error_per_customer[customer]
-        if customer in high_tput_per_customer:
-            del high_tput_per_customer[customer]
+            if customer in high_tput_per_customer:
+                del high_tput_per_customer[customer]
     return request_error_per_customer
 
 @app.post('/err/model/region/<region>/<amount>')

@@ -120,9 +120,16 @@ FROM logs-*
 | GROK message "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
 | WHERE status_code IS NOT NULL
 | EVAL timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp)
-| STATS success = COUNT() BY status_code, minute = BUCKET(timestamp, "1 min")
+| STATS status = COUNT() BY status_code, minute = BUCKET(timestamp, "1 min")
 
 this graph is useful. add to dashboard
+
+## Alerts
+
+FROM logs-*
+| WHERE service.name == "proxy"
+| GROK message "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
+| WHERE status_code != "200"
 
 # Streams
 
@@ -192,16 +199,14 @@ this graph is useful. add to dashboard
 
 # by user agent
 
+FROM logs-*
+| WHERE parsed.user_agent.original IS NOT NULL AND parsed.http.response.status_code IS NOT NULL
+| STATS good = COUNT(parsed.http.response.status_code == 200 OR NULL), bad=COUNT(parsed.http.response.status_code == 500 OR NULL) BY parsed.user_agent.original
+
 
 FROM logs-*
-| WHERE parsed.user_agent.original IS NOT NULL
-| GROK parsed.user_agent.original "%{DATA:browser_family}/%{NUMBER:browser_version} \\(%{DATA:os_details}\\)"
-| STATS count = COUNT() BY TO_STRING(parsed.http.response.status_code), browser_version
-
-FROM logs-*
-| WHERE parsed.user_agent.original IS NOT NULL
-| GROK parsed.user_agent.original "%{DATA:browser_family}/%{NUMBER:browser_version} \\(%{DATA:os_details}\\)"
-| STATS count = COUNT() BY TO_STRING(parsed.http.response.status_code), browser_version, parsed.geo.country_iso_code
+| WHERE parsed.user_agent.original IS NOT NULL AND parsed.http.response.status_code IS NOT NULL
+| STATS good = COUNT(parsed.http.response.status_code == 200 OR NULL), bad=COUNT(parsed.http.response.status_code == 500 OR NULL) BY parsed.user_agent.original, parsed.geo.country_iso_code
 
 
 ## USER_AGENT
