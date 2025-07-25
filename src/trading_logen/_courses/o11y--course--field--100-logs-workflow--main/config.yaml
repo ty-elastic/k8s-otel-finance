@@ -2,30 +2,27 @@ threads:
   - name: proxy
     schedule:
       - type: nginx
-        backfill_start_minutes: 720
-        backfill_stop_minutes: 360
-        logs_per_second: 1000
+        backfill_start_minutes: 60
+        backfill_stop_minutes: 30
+        logs_per_second: 100
         name: proxy
       - type: request_errors
         browser: chrome
         region: APAC
       - type: nginx
-        backfill_start_minutes: 360
         backfill_stop_minutes: 0
-        logs_per_second: 1000
+        logs_per_second: 100
         name: proxy
       - type: nginx
-        backfill_start_minutes: 0
-        logs_per_second: 1000
+        logs_per_second: 100
         name: proxy
   - name: trader
     schedule:
       - type: trader
-        backfill_start_minutes: 720
+        backfill_start_minutes: 60
         backfill_stop_minutes: 0
-        logs_per_second: 100
+        logs_per_second: 50
         name: trader
       - type: trader
-        backfill_start_minutes: 0
-        logs_per_second: 100
+        logs_per_second: 50
         name: trader

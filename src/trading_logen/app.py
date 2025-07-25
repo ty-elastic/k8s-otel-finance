@@ -6,6 +6,7 @@ import time
 import logging
 from threading import Thread
 import yaml
+import sys
 
 import ua_generator
 from ua_generator.options import Options
@@ -15,37 +16,38 @@ from faker import Faker
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
-from opentelemetry._logs import LogRecord
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
-from opentelemetry.sdk._logs.export import ConsoleLogExporter
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.sdk.resources import Resource
 
-MAX_PROXY_LOGS_PER_SECOND = 1000
-BACKLOG_SEND_DELAY = 0.00001
+BACKLOG_Q_SEND_DELAY = 0.01
+BACKLOG_Q_TIME_S = 60 * 60
+BACKLOG_Q_BATCH_S = 60 * 2
+BACKLOG_Q_TIMEOUT_MS = 10
 
 def make_logger(service_name, max_logs_per_second):
     logger_provider = LoggerProvider(
         resource=Resource.create(
             {
-                "service.name": service_name
+                "service.name": service_name,
+                "data_stream.dataset": service_name
             }
         ),
     )
     otlp_exporter = OTLPLogExporter(endpoint="http://127.0.0.1:4317", insecure=True)
     processor = BatchLogRecordProcessor(
         otlp_exporter,
-        schedule_delay_millis=1000,  # Export every 1 seconds
-        max_queue_size=max_logs_per_second*3,
-        max_export_batch_size=max_logs_per_second,
+        schedule_delay_millis=BACKLOG_Q_TIMEOUT_MS,
+        max_queue_size=BACKLOG_Q_TIME_S * max_logs_per_second,
+        max_export_batch_size=BACKLOG_Q_BATCH_S * max_logs_per_second,
     )
     logger_provider.add_log_record_processor(processor)
     handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
     logger = logging.getLogger(service_name)
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
-    return logger
+    return logger, processor
 
 request_error_per_customer = {}
 stock_price = {}
@@ -116,38 +118,51 @@ def generate_trader_line(*, symbol, price):
     line = f"current market share price for {symbol}: ${price}"
     return line
 
+def log_backoff(logger_tuple):
+    processor = logger_tuple[1]
+    while len(processor._batch_processor._queue) == processor._batch_processor._max_queue_size:
+        time.sleep(BACKLOG_Q_SEND_DELAY)
+        #print('blocked')
+
+LOG_LEVEL_LOOKUP = {
+    'DEBUG': 10,
+    'INFO': 20,
+    'WARNING': 30,
+    'ERROR': 40,
+    'CRITICAL': 50
+}
 start_times = {}
-def log(logger, name, timestamp, level, body):
+def log(logger_tuple, name, timestamp, level, body):
+    logger = logger_tuple[0]
+
+    level_num = LOG_LEVEL_LOOKUP[level]
+
     ct = timestamp.timestamp()
     if name not in start_times:
         start_times[name] = ct
-    record = logger.makeRecord(name, 20, __file__, 0, body, None, None)
+    record = logger.makeRecord(name, level_num, f'{name}.py', 0, body, None, None)
     record.created = ct
     record.msecs = ct * 1000
     record.relativeCreated = (record.created - start_times[name]) * 1000
+
+    log_backoff(logger_tuple)
     logger.handle(record)
 
 def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, interval_s, sleep_s):
     timestamp = start_timestamp
     while timestamp < end_timestamp if end_timestamp is not None else True:
-        region = random.choice(REGIONS)
-        customer_id = random.choice(CUSTOMERS_PER_REGION[region])
-        url=random.choice(URLS)
-        timestamp_str = timestamp.strftime("%d/%b/%Y:%H:%M:%S %z")
-        symbol = random.choice(SYMBOLS)
-        if symbol not in stock_price:
-            stock_price[symbol] = random.randrange(10,200)
-        stock_price[symbol] = stock_price[symbol] + random.randrange(-10,10)
-        if stock_price[symbol] <= 10:
-            stock_price[symbol] = 10
-
-        if customer_id in request_error_per_customer:
-            error_request = True if random.randint(0, 100) > (100-request_error_per_customer[customer_id]['amount']) else False
-        else:
-            error_request = False
-
-        line = ""
+        line = None
         if generator_type == 'nginx':
+            region = random.choice(REGIONS)
+            customer_id = random.choice(CUSTOMERS_PER_REGION[region])
+            url=random.choice(URLS)
+            timestamp_str = timestamp.strftime("%d/%b/%Y:%H:%M:%S %z")
+
+            if customer_id in request_error_per_customer:
+                error_request = True if random.randint(0, 100) > (100-request_error_per_customer[customer_id]['amount']) else False
+            else:
+                error_request = False
+
             line = generate_nginx_line(ip=IP_ADDRESS_PER_USER[customer_id],
                                 timestamp=timestamp_str,
                                 method='POST',
@@ -158,8 +173,17 @@ def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, in
                                 ref_url='-',
                                 user_agent=USERAGENTS_PER_USER[customer_id])
         elif generator_type == 'trader':
+            symbol = random.choice(SYMBOLS)
+            if symbol not in stock_price:
+                stock_price[symbol] = random.randrange(10,200)
+            stock_price[symbol] = stock_price[symbol] + random.randrange(-10,10)
+            if stock_price[symbol] <= 10:
+                stock_price[symbol] = 10
+
             line = generate_trader_line(symbol=symbol, price=stock_price[symbol])
-        log(logger, name, timestamp, 'INFO', line)
+
+        if line is not None:
+            log(logger, name, timestamp, 'INFO', line)
         if sleep_s > 0:
             time.sleep(sleep_s)
         timestamp = timestamp + timedelta(seconds=interval_s)
@@ -194,9 +218,42 @@ def err_request_ua(browser):
     bump_version_up_per_browser(browser=browser, region=region)
     return request_error_per_customer
 
+def run_schedule(schedule):
+    last_ts = None
+    loggers = {}
+
+    max_lps = 0
+    for item in schedule:
+        print(f'{item}')
+        if 'logs_per_second' in item:
+            max_lps = max(max_lps, item['logs_per_second'])
+        if 'name' in item and item['name'] not in loggers:
+            loggers[item['name']] = make_logger(item['name'], max_lps)
+
+    schedule_start = datetime.now(tz=timezone.utc)
+    print(f'start @ {schedule_start}')
+    for item in schedule:
+        if item['type'] == 'nginx' or item['type'] == 'trader':
+            if 'backfill_start_minutes' not in item:
+                start = last_ts
+            else:
+                start = schedule_start - timedelta(minutes=item['backfill_start_minutes'])
+            if 'backfill_stop_minutes' in item:
+                stop = schedule_start - timedelta(minutes=item['backfill_stop_minutes'])
+                send_delay = 0
+            else:
+                stop = None
+                send_delay = 1/item['logs_per_second']
+            print(f'type={item['type']}, start={start}, stop={stop}, interval_s={1/item['logs_per_second']}, send_delay={send_delay}')
+            last_ts = generate(name=item['name'], generator_type=item['type'], logger=loggers[item['name']], start_timestamp=start, 
+                               end_timestamp=stop, interval_s=1/item['logs_per_second'], sleep_s=send_delay)
+
+        elif item['type'] == 'request_errors':
+            bump_version_up_per_browser(browser=item['browser'], region=item['region'])
+
 def load_config():
     try:
-        with open('config/o11y--course--field--100-logs-workflow--main.yaml', 'r') as file:
+        with open('config.yaml', 'r') as file:
             data = yaml.safe_load(file)
             return data
     except FileNotFoundError:
@@ -204,34 +261,6 @@ def load_config():
     except yaml.YAMLError as e:
         print(f"Error parsing YAML: {e}")
 config = load_config()
-
-def run_schedule(schedule):
-    last_ts = None
-    loggers = {}
-
-    for item in schedule:
-        print(f'{item}')
-        if item['name'] not in loggers:
-            loggers[item['name']] = make_logger(item['name'], item['logs_per_second'])
-
-        if item['type'] == 'nginx' or item['type'] == 'trader':
-            now = datetime.now(tz=timezone.utc)
-            if item['backfill_start_minutes'] == 0:
-                start = last_ts
-            else:
-                start = now - timedelta(minutes=item['backfill_start_minutes'])
-            if 'backfill_stop_minutes' in item:
-                stop = now - timedelta(minutes=item['backfill_stop_minutes'])
-                send_delay = BACKLOG_SEND_DELAY
-            else:
-                stop = None
-                send_delay = 1/item['logs_per_second']
-            print(f'start={start},stop={stop},send_delay={send_delay}')
-            last_ts = generate(name=item['name'], generator_type=item['type'], logger=loggers[item['name']], start_timestamp=start, 
-                               end_timestamp=stop, interval_s=1/item['logs_per_second'], sleep_s=send_delay)
-
-        elif item['type'] == 'request_errors':
-            bump_version_up_per_browser(browser=item['browser'], region=item['region'])
 
 def run_threads():
     for thread in config['threads']:
