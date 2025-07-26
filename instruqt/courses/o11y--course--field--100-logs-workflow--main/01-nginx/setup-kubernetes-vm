@@ -5,7 +5,7 @@ export $(curl http://kubernetes-vm:9000/env | xargs)
 
 /opt/workshops/elastic-llm.sh -m gpt-4o-westus -k false -p false
 
-# ------------- CUSTOM
+# ------------- STREAMS
 
 echo "Enable streams"
 enable_streams() {
@@ -26,6 +26,7 @@ enable_streams() {
 }
 retry_command_lin enable_streams
 
+# ------------- OTEL
 
 output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_security/api_key" -d '
 {
@@ -72,6 +73,8 @@ kubectl create secret generic elastic-secret-otel \
   --from-literal=elastic_endpoint=$ELASTICSEARCH_URL \
   --from-literal=elastic_api_key=$ELASTICSEARCH_APIKEY
 
+# ------------- MAPPING
+
 echo "Adding custom mappings"
 custom_mappings() {
     local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$ELASTICSEARCH_URL/_component_template/logs-otel@custom" \
@@ -101,6 +104,8 @@ custom_mappings() {
 }
 retry_command_lin custom_mappings
 
+# ------------- OPENAI FOR ESQL
+
 echo "Adding completion connector"
 add_connector() {
     local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$ELASTICSEARCH_URL/_inference/completion/openai_completion" \
@@ -125,10 +130,7 @@ add_connector() {
 }
 retry_command_lin add_connector
 
-mkdir -p /workspace/workshop
-git clone https://github.com/ty-elastic/k8s-otel-finance.git /workspace/workshop
-cd /workspace/workshop
-git checkout $INSTRUQT_TRACK_SLUG
+# ------------- NETWORKS ENRICHMENT
 
 curl -X PUT "$ELASTICSEARCH_URL/networks" \
     --header 'Content-Type: application/json' \
@@ -176,5 +178,14 @@ curl -X POST "$ELASTICSEARCH_URL/networks/_bulk" \
 curl -X POST "$ELASTICSEARCH_URL/_enrich/policy/networks-policy/_execute?wait_for_completion=true" \
     --header 'Content-Type: application/json' \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"
+
+# ------------- CODE
+
+mkdir -p /workspace/workshop
+git clone https://github.com/ty-elastic/k8s-otel-finance.git /workspace/workshop
+cd /workspace/workshop
+git checkout $INSTRUQT_TRACK_SLUG
+
+# ------------- DEPLOY
 
 ./deploy.sh -s trading-logen -o false -c $INSTRUQT_TRACK_SLUG -v $INSTRUQT_TRACK_SLUG

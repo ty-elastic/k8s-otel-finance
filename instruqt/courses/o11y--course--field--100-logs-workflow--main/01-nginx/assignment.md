@@ -299,35 +299,21 @@ distinct_count("parsed.user_agent.version")
   "settings": {}
 }
 
+alert on new docs
+
+then table
+then add completion!
+
 ### Dashboards
 
 - show scheduled export in PDF
 
 ### show redaction
 
+RBAC
 - custom role
 
 
 
 -----------------------------------
 
-
-
-
-##### CUSTOM LOGS
-
-FROM logs-* | WHERE service.name == "trader" | GROK message "current market share price for %{WORD:stock}: \\$%{NUMBER:price}" | WHERE stock IS NOT NULL | STATS AVG(TO_INT(price)) BY stock, minute = BUCKET(@timestamp, "1 min")
-
-## Streams
-
-current market share price for %{WORD:parsed.stock_symbol}: \$%{NUMBER:parsed.stock_price:float}
-
-cond:
-body.text contains current market share price
-
-## Lens
-Lens
-
-## ML from Lens
-
-# show redaction of fields

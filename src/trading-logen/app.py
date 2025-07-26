@@ -153,7 +153,7 @@ def log(logger_tuple, name, timestamp, level, body):
     log_backoff(logger_tuple)
     logger.handle(record)
 
-def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, interval_s, sleep_s):
+def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, logs_per_second, throttled):
     timestamp = start_timestamp
     while timestamp < end_timestamp if end_timestamp is not None else True:
         line = None
@@ -189,9 +189,16 @@ def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, in
 
         if line is not None:
             log(logger, name, timestamp, 'INFO', line)
-        if sleep_s > 0:
-            time.sleep(sleep_s)
-        timestamp = timestamp + timedelta(seconds=interval_s)
+
+        if throttled:
+            wallclock = datetime.now(tz=timezone.utc)
+            print(f"wall={wallclock.timestamp()},time={timestamp.timestamp()}")
+            delta = wallclock.timestamp() - timestamp.timestamp()
+            #print(abs(delta))
+            # leading
+            if delta < 0:
+                time.sleep(abs(delta))
+        timestamp = timestamp + timedelta(seconds=1/logs_per_second)
     return timestamp
 
 def bump_version_up_per_browser(*, browser, region):
@@ -246,12 +253,14 @@ def run_schedule(schedule):
             if 'backfill_stop_minutes' in item:
                 stop = schedule_start - timedelta(minutes=item['backfill_stop_minutes'])
                 send_delay = 0
+                throttled = False
+            # real time
             else:
                 stop = None
-                send_delay = 1/item['logs_per_second']
+                throttled = True
             print(f'type={item['type']}, start={start}, stop={stop}, interval_s={1/item['logs_per_second']}, send_delay={send_delay}')
             last_ts = generate(name=item['name'], generator_type=item['type'], logger=loggers[item['name']], start_timestamp=start, 
-                               end_timestamp=stop, interval_s=1/item['logs_per_second'], sleep_s=send_delay)
+                               end_timestamp=stop, logs_per_second=item['logs_per_second'], throttled=throttled)
 
         elif item['type'] == 'request_errors':
             bump_version_up_per_browser(browser=item['browser'], region=item['region'])
@@ -268,7 +277,15 @@ def load_config():
 config = load_config()
 
 def run_threads():
+    threads = []
     for thread in config['threads']:
-        Thread(target=run_schedule, args=[thread['schedule']], daemon=False).start()
+        t = Thread(target=run_schedule, args=[thread['schedule']], daemon=False)
+        t.start()
+        threads.append(t)
+    for t in threads:
+        t.join()
 
-Thread(target=run_threads, daemon=False).start()
+t = Thread(target=run_threads, daemon=False)
+t.start()
+if __name__ == "__main__":
+    t.join()
