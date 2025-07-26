@@ -236,9 +236,68 @@ Create New ALert Rule
 
 # Create Ml to look for new UAs
 
+FROM user_agents
+| SORT @timestamp.min DESC
+| LIMIT 10
+| EVAL prompt = CONCAT(
+   "when did this version of this browser come out? output only a version of the format mm/dd/yyyy",
+   "browser: ", parsed.user_agent.full
+  ) | COMPLETION release_date = prompt WITH openai_completion 
+  | KEEP release_date, parsed.user_agent.full, @timestamp.min, @timestamp.max
+
 multi-metric
 
 distinct_count("parsed.user_agent.version")
+
+{
+  "id": "user_agents",
+  "authorization": {
+    "roles": [
+      "superuser"
+    ]
+  },
+  "version": "10.0.0",
+  "create_time": 1753492082711,
+  "source": {
+    "index": [
+      "logs-proxy.otel-default"
+    ],
+    "query": {
+      "match_all": {}
+    }
+  },
+  "dest": {
+    "index": "user_agents"
+  },
+  "sync": {
+    "time": {
+      "field": "@timestamp",
+      "delay": "60s"
+    }
+  },
+  "pivot": {
+    "group_by": {
+      "parsed.user_agent.full": {
+        "terms": {
+          "field": "parsed.user_agent.full"
+        }
+      }
+    },
+    "aggregations": {
+      "@timestamp.max": {
+        "max": {
+          "field": "@timestamp"
+        }
+      },
+      "@timestamp.min": {
+        "min": {
+          "field": "@timestamp"
+        }
+      }
+    }
+  },
+  "settings": {}
+}
 
 ### Dashboards
 

@@ -1,8 +1,7 @@
 slug: o11y--course--field--100-logs-workflow--main
 id: izyk1qycsp0i
-title: 'Observability 100: Logging Workflow'
-description: In this track, we explore best practices to use OpenTelemetry to collect
-  and parse logs
+title: 'Observability 100: A Modern Logging Workflow'
+description: RCA with only logs and Elastic
 icon: ""
 tags:
 - otel-200
@@ -22,5 +21,5 @@ lab_config:
     name: modern-dark
   override_challenge_layout: false
   hideStopButton: false
-checksum: "17098136369425310339"
+checksum: "14728224647363619106"
 enhanced_loading: false
