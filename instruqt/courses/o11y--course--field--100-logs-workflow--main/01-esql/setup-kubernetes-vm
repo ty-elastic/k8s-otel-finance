@@ -310,6 +310,93 @@ curl -X POST "$ELASTICSEARCH_URL/_enrich/policy/networks-policy/_execute?wait_fo
     --header 'Content-Type: application/json' \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"
 
+
+# ------------- RBAC
+
+cat <<EOF >> rbac.json
+{
+  "cluster": [],
+  "indices": [
+    {
+      "names": [
+        "/~(([.]|ilm-history-).*)/"
+      ],
+      "privileges": [
+        "read",
+        "view_index_metadata"
+      ],
+      "allow_restricted_indices": false
+    },
+    {
+      "names": [
+        ".slo-observability.*"
+      ],
+      "privileges": [
+        "read",
+        "view_index_metadata"
+      ],
+      "allow_restricted_indices": false
+    },
+    {
+      "names": [
+        ".siem-signals*",
+        ".lists-*",
+        ".items-*",
+        ".reindexed-v8-siem-signals*",
+        ".reindexed-v8-lists-*",
+        ".reindexed-v8-items-*"
+      ],
+      "privileges": [
+        "read",
+        "view_index_metadata"
+      ],
+      "allow_restricted_indices": false
+    },
+    {
+      "names": [
+        ".alerts*",
+        ".preview.alerts*",
+        ".adhoc.alerts*"
+      ],
+      "privileges": [
+        "read",
+        "view_index_metadata"
+      ],
+      "allow_restricted_indices": false
+    },
+    {
+      "names": [
+        "profiling-*",
+        ".profiling-*"
+      ],
+      "privileges": [
+        "read",
+        "view_index_metadata"
+      ],
+      "allow_restricted_indices": false
+    }
+  ],
+  "applications": [
+    {
+      "application": "kibana-.kibana",
+      "privileges": [
+        "read"
+      ],
+      "resources": [
+        "*"
+      ]
+    }
+  ],
+  "run_as": [],
+  "description": "Grants read-only access to all features in Kibana (including Solutions) and to data indices."
+}
+EOF
+
+curl -X POST "$ELASTICSEARCH_URL/_security/role/limited_viewer" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    -d @rbac.json
+
 # ------------- CODE
 
 mkdir -p /workspace/workshop
