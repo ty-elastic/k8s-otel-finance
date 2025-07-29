@@ -1,9 +1,125 @@
 source /opt/workshops/elastic-retry.sh
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
+# ------------- KIBANA
+cat <<EOF >> kibana.yaml
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: kibana
+  namespace: default
+spec:
+  version: $ELASTICSEARCH_VERSION
+  podTemplate:
+    spec:
+      containers:
+      - name: kibana
+        imagePullPolicy: Always
+        env:
+          - name: NODE_OPTIONS
+            value: "--max-old-space-size=2048"
+        resources:
+          requests:
+            memory: 0.5Gi
+            cpu: 0.5
+          limits:
+            memory: 2.0Gi
+            cpu: 1
+  count: 1
+  elasticsearchRef:
+    name: elasticsearch
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  config:
+    # hide popup
+    uiSettings.overrides.showSpaceSolutionTour: false
+
+    # to support embedded tab browsing from instruqt
+    csp.strict: false
+    csp.warnLegacyBrowsers: false
+    # required to allow symbol upload from APM javascript
+    server.maxPayload: 4194304
+    server.publicBaseUrl: http://localhost:30002
+    telemetry.optIn: false
+    telemetry.allowChangingOptInStatus: false
+    xpack.fleet.agents.elasticsearch.hosts: ["http://elasticsearch-es-http.default.svc:9200"]
+    xpack.fleet.agents.fleet_server.hosts: ["https://fleet-server-agent-http.default.svc:8220"]
+    xpack.fleet.packages:
+    - name: system
+      version: latest
+    - name: elastic_agent
+      version: latest
+    - name: fleet_server
+      version: latest
+    - name: apm
+      version: latest
+    xpack.fleet.agentPolicies:
+    - name: Fleet Server on ECK policy
+      id: eck-fleet-server
+      namespace: default
+      #monitoring_enabled:
+      #- logs
+      #- metrics
+      unenroll_timeout: 900
+      package_policies:
+      - name: fleet_server-1
+        id: fleet_server-1
+        package:
+          name: fleet_server
+    - name: Elastic Agent on ECK policy
+      id: policy-elastic-agent-on-cloud
+      namespace: default
+      #monitoring_enabled:
+      #- logs
+      #- metrics
+      unenroll_timeout: 900
+      package_policies:
+      - name: system-1
+        id: system-1
+        package:
+          name: system
+      - package:
+          name: apm
+        name: apm-1
+        inputs:
+        - type: apm
+          enabled: true
+          vars:
+          - name: host
+            value: 0.0.0.0:8200 
+          - name: url
+            value: "https://apm.default.svc:8200" 
+          - name: secret_token
+            value: $ELASTIC_APM_SERVER_SECRET
+EOF
+envsubst < kibana.yaml | kubectl apply -f -
+
 /opt/workshops/elastic-view.sh -v oblt
 
+# ------------- AI ASSISTANT
+
 /opt/workshops/elastic-llm.sh -m gpt-4o-westus -k false -p false
+
+echo "Initializing AI Assistant Everywhere"
+init_ai_everywhere() {
+    local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$KIBANA_URL/internal/kibana/settings" \
+    --header 'Content-Type: application/json' \
+    --header "kbn-xsrf: true" \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    --header 'x-elastic-internal-origin: Kibana' \
+    -d '{"changes":{"aiAssistant:preferredAIAssistantType":"observability"}}')
+
+    if echo $http_status | grep -q '^2'; then
+        echo "Elastic AI Assistant Everywhere successfully initialized: $http_status"
+        return 0
+    else
+        echo "Failed to initialize Elastic AI Assistant Everywhere. HTTP status: $http_status"
+        return 1
+    fi
+}
+retry_command_lin init_ai_everywhere
 
 # ------------- STREAMS
 
@@ -75,34 +191,49 @@ kubectl create secret generic elastic-secret-otel \
 
 # ------------- MAPPING
 
-echo "Adding custom mappings"
-custom_mappings() {
-    local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$ELASTICSEARCH_URL/_component_template/logs-otel@custom" \
+map_orig=$(curl -s -X GET "$ELASTICSEARCH_URL/_component_template/otel@mappings?flat_settings=true" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64")
+
+map_orig_strip=$(echo $map_orig | jq --compact-output -r '.component_templates[0].component_template')
+
+echo $map_orig_strip | sed 's|{"template":{"mappings":{"dynamic":false|{"template":{"mappings":{"dynamic":true|' > map_new.json
+
+map_new_put=$(curl -s -X PUT "$ELASTICSEARCH_URL/_component_template/otel@mappings" \
     --header 'Content-Type: application/json' \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
-     -d'
-    {
-        "template": {
-            "mappings": {
-                "properties": {
-                    "parsed": {
-                        "dynamic": true,
-                        "type": "object"
-                    }
-                }
-            }
-        }
-    }')
+    -d @map_new.json)
 
-    if echo $http_status | grep -q '^2'; then
-        echo "Set custom mappings: $http_status"
-        return 0
-    else
-        echo "Failed to set custom mappings. HTTP status: $http_status"
-        return 1
-    fi
-}
-retry_command_lin custom_mappings
+echo $map_new_put
+
+# echo "Adding custom mappings"
+# custom_mappings() {
+#     local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$ELASTICSEARCH_URL/_component_template/logs-otel@custom" \
+#     --header 'Content-Type: application/json' \
+#     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+#      -d'
+#     {
+#         "template": {
+#             "mappings": {
+#                 "properties": {
+#                     "parsed": {
+#                         "dynamic": true,
+#                         "type": "object"
+#                     }
+#                 }
+#             }
+#         }
+#     }')
+
+#     if echo $http_status | grep -q '^2'; then
+#         echo "Set custom mappings: $http_status"
+#         return 0
+#     else
+#         echo "Failed to set custom mappings. HTTP status: $http_status"
+#         return 1
+#     fi
+# }
+# retry_command_lin custom_mappings
 
 # ------------- OPENAI FOR ESQL
 
@@ -145,18 +276,6 @@ curl -X PUT "$ELASTICSEARCH_URL/networks" \
         }
     }'
 
-curl -X PUT "$ELASTICSEARCH_URL/_enrich/policy/networks-policy" \
-    --header 'Content-Type: application/json' \
-    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
-    -d'
-    {
-        "range": {
-            "indices": "networks",
-            "match_field": "range",
-            "enrich_fields": ["isp"]
-        }
-    }'
-
 echo '
 {"index":{}}
 {"range":"107.80.0.0/16","isp":"AT&T Enterprises, LLC"}
@@ -169,6 +288,18 @@ echo '
 {"index":{}}
 {"range":"101.136.0.0/14","isp":"Asia Pacific Telecom"}
 ' > networks.ndjson
+
+curl -X PUT "$ELASTICSEARCH_URL/_enrich/policy/networks-policy" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    -d'
+    {
+        "range": {
+            "indices": "networks",
+            "match_field": "range",
+            "enrich_fields": ["isp"]
+        }
+    }'
 
 curl -X POST "$ELASTICSEARCH_URL/networks/_bulk" \
     --header 'Content-Type: application/x-ndjson' \
@@ -189,3 +320,12 @@ git checkout $INSTRUQT_TRACK_SLUG
 # ------------- DEPLOY
 
 ./deploy.sh -s trading-logen -o false -c $INSTRUQT_TRACK_SLUG -v $INSTRUQT_TRACK_SLUG
+
+# ------------- WAIT
+
+retry_command_lin curl --silent --fail --output /dev/null --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" "$ELASTICSEARCH_URL/_cat/indices/logs-proxy.otel-default?allow_no_indices=false"
+
+curl -s -X POST "$ELASTICSEARCH_URL/logs-proxy.otel-default/_rollover" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"
+

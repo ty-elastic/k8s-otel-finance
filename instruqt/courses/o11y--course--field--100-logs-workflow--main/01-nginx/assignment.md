@@ -1,64 +1,104 @@
 ---
 slug: nginx
-id: bghh0aks5bvy
+id: 5jclgckaczpm
 type: challenge
 title: Making sense of nginx logs
+notes:
+- type: text
+  contents: |-
+    You are an on-call SRE for a company which operates an online stock trading service. You were just notified that some users are experiencing issues when trying to perform stock trades.
+
+    In the lab, we will leverage Elastic's comprehensive suite of modern log analytic tools to unlock the hidden information in your logs that will enable you to quickly perform Root Cause Analysis (RCA) of the problem. We will also create alerts to ensure this problem doesn't happen again.
 tabs:
-- id: yofmaqrbv6qc
+- id: sw6mcyxmqgcv
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm
   path: /app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:now-1h,to:now))&_a=(breakdownField:log.level,columns:!(),dataSource:(type:esql),filters:!(),hideChart:!f,interval:auto,query:(esql:'FROM%20logs-proxy.otel-default'),sort:!(!('@timestamp',desc)))
   port: 30001
-- id: lc4tpizxrz5g
+- id: 2vem8q5ukov7
   title: Terminal
   type: terminal
   hostname: kubernetes-vm
 difficulty: basic
 timelimit: 600
-enhanced_loading: null
+enhanced_loading: false
 ---
-In this lab, we will work through a practical log workflow with modern Elasticsearch.
 
-Getting Our Bearings
-===
+We've gotten word from our customer service department that some users are unable to complete stock trades. We know that all of the API calls from our front-end web application flow through a nginx reverse proxy, so that seems like a good place to start our investigation.
 
-In this lab, we will be working with an exemplary stock trading system, instrumented using [OpenTelemetry](https://opentelemetry.io). The "front door" to our backend services is a nginx reverse proxy.
+If you are generally familiar with SQL or other piped query languages, you will be right at home with ES|QL, Elastic's modern take on a piped query language.
 
-We've gotten word from our customer service department that some users are getting errors when trying to access our website. Since we know that all requests go through our nginx reverse proxy, that's a good place to start our investigation.
+You can enter your queries in the pane at the top of the window on the left. Select an appropriate time frame (currently the last hour), then click "Refresh" to load the results.
 
-ES|QL
-===
-
-1. Open the [button label="Elasticsearch"](tab-0) tab
-
-Here we have the most basic of ES|QL queries looking at our proxy logs:
+Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
 ```
 
-Let's first check for errors:
+We can see that there are still transactions happening, but we don't know if they are successful or failing. Before we spend time parsing our logs, let's just quickly check for common "500" errors in our nginx logs.
+
+Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
-| WHERE service.name == "proxy" AND MATCH(body.text, "500")
+| WHERE MATCH(body.text, "500")
 ```
 
-Yup! there are some 500 errors... but what percentage is failing?
+Yup! We are clearly returning 500 errors for some users. Are all transactions failing?
 
+Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
-| FORK (WHERE MATCH(body.text, "500") | STATS bad=COUNT()) (WHERE MATCH(body.text, "200") | STATS good=COUNT())
-| KEEP bad, good
+| STATS bad=COUNT() WHERE MATCH(body.text, "500"), good=COUNT() WHERE MATCH(body.text, "200") BY minute = BUCKET(@timestamp, "1 min")
 ```
 
-and when did they start failing?
+That's good. Clearly this is affecting only some users. Let's see if we can find when the errors started occurring. Let's zoom out the time picker to, say, the last 24 hours.
 
+Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
-| MATCH(body.text, "500")
-| KEEP body.text, @timestamp
-| STATS COUNT() BY minute = BUCKET(@timestamp, "1 min")
+| STATS bad=COUNT() WHERE MATCH(body.text, "500"), good=COUNT() WHERE MATCH(body.text, "200") BY minute = BUCKET(@timestamp, "1 min")
 ```
+
+Ok, it looks like this started happening around 6 hours ago. We can use `CHANGE_POINT` to narrow it down to a specific minute:
+
+Execute the following query:
+```esql
+FROM logs-proxy.otel-default
+| STATS bad=COUNT() WHERE MATCH(body.text, "500"), good=COUNT() WHERE MATCH(body.text, "200") BY minute = BUCKET(@timestamp, "1 min")
+| EVAL bad = COALESCE(TO_INT(bad), 0)
+| SORT minute ASC
+| CHANGE_POINT bad ON minute
+| WHERE type IS NOT NULL
+| KEEP type, minute, bad
+```
+
+# Parsing with ES|QL
+
+As you can see, simply searching for known error codes in our log lines will only get us so far. Maybe the error codes vary, or aren't "500", but rather something in the 400 range.
+
+Fortunately, nginx logs are semi-structured log lines which makes them (relatively) easy to parse.
+
+Some of you may be familiar with GROK which provides a higher-level interface on top of regex; namely, it allows you define patterns. If you are well versed in GROK, you may be able to write a parsing pattern yourself for nginx logs, possibly using https://grokdebugger.com to help.
+
+If you aren't so well versed, or you don't want to spend the time, you can leverage our AI Assistant to help. Click on the AI Assistant button in the upper-right and enter the following prompt:
+
+```
+can you help me generate ESQL to parse this nginx access log?
+```
+
+now we can copy the GROK expression and add some useful directives to reproduce the graph we made above, but better:
+```esql
+FROM logs-proxy.otel-default
+| GROK message "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
+| WHERE status_code IS NOT NULL
+| EVAL @timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp)
+| SORT @timestamp ASC
+| KEEP @timestamp, request_path, status_code
+```
+
+This is nice, since we don't have to know the error codes we are looking for. We can also start to split our data around, say, request_path to understand if this problem is perhaps related
+
 
 
 Let's parse
@@ -70,28 +110,32 @@ Let's parse
 ```
 FROM logs-proxy.otel-default
 | GROK message "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
-| EVAL timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp)
 | WHERE status_code IS NOT NULL
-| SORT @timestamp DESC
+| EVAL @timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp)
+| SORT @timestamp ASC
 | KEEP @timestamp, request_path, status_code
 ```
 
 and then graph over time!
 
+```esql
 FROM logs-proxy.otel-default
 | GROK message "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
 | WHERE status_code IS NOT NULL
 | EVAL timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp)
 | STATS status = COUNT() BY status_code, minute = BUCKET(timestamp, "1 min")
+```
 
 - this graph is useful. add to dashboard
 - save this query
 
 ## Create a simple alert
 
+```esql
 FROM logs-proxy.otel-default
 | GROK message "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
 | WHERE status_code != "200"
+```
 
 - alerts
 - create search theshold rule
@@ -242,7 +286,7 @@ FROM user_agents
 | EVAL prompt = CONCAT(
    "when did this version of this browser come out? output only a version of the format mm/dd/yyyy",
    "browser: ", parsed.user_agent.full
-  ) | COMPLETION release_date = prompt WITH openai_completion 
+  ) | COMPLETION release_date = prompt WITH openai_completion
   | KEEP release_date, parsed.user_agent.full, @timestamp.min, @timestamp.max
 
 multi-metric

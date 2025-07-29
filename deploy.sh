@@ -69,7 +69,7 @@ if [ "$service" != "none" ]; then
             else
                 envsubst < k8s/$current_service.yaml | kubectl apply -f -
             fi
-            kubectl -n trading rollout restart deployment/$current_service
+            #kubectl -n trading rollout restart deployment/$current_service
         fi
     done
 fi

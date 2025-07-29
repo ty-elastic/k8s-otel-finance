@@ -16,10 +16,11 @@ lab_config:
   sidebar_enabled: true
   feedback_recap_enabled: true
   feedback_tab_enabled: false
-  loadingMessages: true
+  loadingMessages:
+  - Setting up your Elastic experience...
   theme:
     name: modern-dark
   override_challenge_layout: false
   hideStopButton: false
-checksum: "14728224647363619106"
+checksum: "7062690427252343451"
 enhanced_loading: false
