@@ -2,8 +2,8 @@ threads:
   - name: proxy
     schedule:
       - type: nginx
-        backfill_start_minutes: 60
-        backfill_stop_minutes: 30
+        backfill_start_minutes: 180
+        backfill_stop_minutes: 100
         logs_per_second: 100
         name: proxy
       - type: request_errors
@@ -19,7 +19,7 @@ threads:
   - name: trader
     schedule:
       - type: trader
-        backfill_start_minutes: 60
+        backfill_start_minutes: 180
         backfill_stop_minutes: 0
         logs_per_second: 50
         name: trader

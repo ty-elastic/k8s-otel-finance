@@ -189,6 +189,23 @@ kubectl create secret generic elastic-secret-otel \
   --from-literal=elastic_endpoint=$ELASTICSEARCH_URL \
   --from-literal=elastic_api_key=$ELASTICSEARCH_APIKEY
 
+# ------------- INDEX
+
+index_orig=$(curl -s -X GET "$ELASTICSEARCH_URL/_component_template/logs@settings?flat_settings=true" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64")
+
+index_orig_strip=$(echo $index_orig | jq --compact-output -r '.component_templates[0].component_template')
+
+echo $index_orig_strip | jq --compact-output -r '.template.settings["index.refresh_interval"]="1s"' > index_new.json
+
+index_new_put=$(curl -s -X PUT "$ELASTICSEARCH_URL/_component_template/logs@settings" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    -d @index_new.json)
+
+echo $index_new_put
+
 # ------------- MAPPING
 
 map_orig=$(curl -s -X GET "$ELASTICSEARCH_URL/_component_template/otel@mappings?flat_settings=true" \
@@ -205,6 +222,7 @@ map_new_put=$(curl -s -X PUT "$ELASTICSEARCH_URL/_component_template/otel@mappin
     -d @map_new.json)
 
 echo $map_new_put
+
 
 # echo "Adding custom mappings"
 # custom_mappings() {
@@ -261,13 +279,42 @@ add_connector() {
 }
 retry_command_lin add_connector
 
+# ------------- UA_LOOKUP ENRICHMENT
+
+curl -X PUT "$ELASTICSEARCH_URL/ua_lookup" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    -d'
+    {
+        "settings": {"index": {"mode": "lookup"}},
+        "mappings": {
+            "properties": {
+                "user_agent.full": { "type": "keyword" },
+                "release_date": { "type": "date",
+                "format": "MM/dd/YYYY"}
+            }
+        }
+    }'
+
+echo '
+{"index":{}}
+{"user_agent.full":"Chrome Mobile 126.0.6478.62","release_date": "03/18/2022"}
+' > ua_lookup.ndjson
+
+curl -X POST "$ELASTICSEARCH_URL/ua_lookup/_bulk" \
+    --header 'Content-Type: application/x-ndjson' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    --data-binary @ua_lookup
+
 # ------------- NETWORKS ENRICHMENT
+
 
 curl -X PUT "$ELASTICSEARCH_URL/networks" \
     --header 'Content-Type: application/json' \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
     -d'
     {
+        "index": {"mode_settings": ""}
         "mappings": {
             "properties": {
                 "range": { "type": "ip_range" },
@@ -397,6 +444,21 @@ curl -X POST "$ELASTICSEARCH_URL/_security/role/limited_viewer" \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
     -d @rbac.json
 
+curl -X PUT "$ELASTICSEARCH_URL/_security/user/limited_user" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    -d'
+    {
+        "password": "elastic",
+        "roles": [
+          "limited_viewer"
+        ],
+        "full_name": "",
+        "email": "",
+        "metadata": {},
+        "enabled": true
+    }'
+
 # ------------- CODE
 
 mkdir -p /workspace/workshop
@@ -412,7 +474,21 @@ git checkout $INSTRUQT_TRACK_SLUG
 
 retry_command_lin curl --silent --fail --output /dev/null --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" "$ELASTICSEARCH_URL/_cat/indices/logs-proxy.otel-default?allow_no_indices=false"
 
-curl -s -X POST "$ELASTICSEARCH_URL/logs-proxy.otel-default/_rollover" \
+curl -X POST "$ELASTICSEARCH_URL/logs-proxy.otel-default/_rollover" \
     --header 'Content-Type: application/json' \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"
 
+curl -X POST "$KIBANA_URL/api/data_views/data_view" \
+    --header 'Content-Type: application/json' \
+    --header "kbn-xsrf: true" \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    -d'
+    {
+      "data_view": {
+        "namespaces": [
+          "default"
+        ],
+        "title": "logs-proxy.otel-default",
+        "name": "logs-proxy.otel-default"
+      }
+    }'

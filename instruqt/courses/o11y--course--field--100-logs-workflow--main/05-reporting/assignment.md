@@ -36,10 +36,11 @@ Create transform:
 3. Select `logs-proxy.otel-default`
 4. Select `Pivot`
 5. Set `Search filter` to `user_agent.full :*`
-5. Set `Group by` to `user_agent.full`
+5. Set `Group by` to `terms(user_agent.full)`
 6. Add an aggregation for `@timestamp.max`
 7. Add an aggregation for `@timestamp.min`
-8. Name the transform `user_agents`
+8. Set the `Transform ID` to `user_agents`
+9. Set `Continuous mode`
 9. Click `Next`
 10. Click `Create and start`
 
@@ -52,22 +53,50 @@ FROM user_agents
 
 Lookup for user_agent release date.
 
+```
+FROM user_agents
+| SORT @timestamp.max DESC
+| LIMIT 10
+| LOOKUP JOIN ua_lookup ON user_agent.full
+| KEEP release_date, user_agent.full, @timestamp.min, @timestamp.max
+```
+
 But this would take too long. use completion!
 
 ```
 FROM user_agents
-| SORT @timestamp.min DESC
+| SORT @timestamp.max DESC
 | LIMIT 10
 | EVAL prompt = CONCAT(
    "when did this version of this browser come out? output only a version of the format mm/dd/yyyy",
-   "browser: ", parsed.user_agent.full
+   "browser: ", user_agent.full
   ) | COMPLETION release_date = prompt WITH openai_completion
-  | KEEP release_date, parsed.user_agent.full, @timestamp.min, @timestamp.max
+  | KEEP release_date, user_agent.full, @timestamp.min, @timestamp.max
 ```
 
 add this table to dashboard.
 
-Neat! Add export schedule.
+1. Dashboards
+2. Click `Add Panel`
+3. Select `ES|QL`
+4. Enter:
+```
+FROM user_agents
+| SORT @timestamp.max DESC
+| LIMIT 10
+| EVAL prompt = CONCAT(
+   "when did this version of this browser come out? output only a version of the format mm/dd/yyyy",
+   "browser: ", user_agent.full
+  ) | COMPLETION release_date = prompt WITH openai_completion
+  | KEEP release_date, user_agent.full, @timestamp.min, @timestamp.max
+```
+5. Click `Run query`
+6. Click `Apply and close`
+
+Now let's setup a schedule to automatically export our dashboard as a PDF every night for the exec office.
+
+1. Click `Download` icon
+2. Click `Schedule export`
 
 # Alert
 

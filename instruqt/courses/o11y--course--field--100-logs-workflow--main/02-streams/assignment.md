@@ -18,18 +18,22 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-So far, we've been parsing our nginx logs at query time with ES|QL. While incredibly powerful for quick analysis, we can do even more with our logs if we parse them at ingest-time. This is a typical workflow: start with query-time parsing with ES|QL, and if you find a useful pattern, move it ingest-time parsing with Streams.
+So far, we've been using ES|QL to parse our proxy logs at query time. While incredibly powerful for quick analysis, we can do even more with our logs if we parse them at ingest-time. Notably, this is a pretty typical workflow with Elastic: start parsing your logs on-deman with ES|QL, and when you find a consistent pattern which you believe will be of greater value if always parsed, move to ingest-time parsing.
 
-1. Select `logs-proxy.otel-default` from the list of Streams.
+Elastic makes it easy to setup ingest-time parsing with Streams!
+
+1. Select `logs-proxy.otel-default` from the list of Streams
 2. Select the `Processing` tab
 3. Click `Add a processor`
 4. Select `Grok` for the `Processor` if not already selected
 5. Set the `Field` to `body.text` if not already filled in
 6. Click `Generate pattern`
 
-The generated pattern should look very similar to the following:
+Elastic will analyze your log lines and try to recognize a pattern.
+
+The generated pattern should look similar to the following. To ensure a consistent lab experience, please copy the following GROK expression and paste it into `Grok patterns`:
 ```
-%{IPV4:client.ip} %{NOTSPACE:http.auth} %{NOTSPACE:http.auth2} \[%{HTTPDATE:timestamp}\] "%{WORD:http.request.method} %{URIPATH:url.path} HTTP/%{NUMBER:http.version}" %{NUMBER:http.response.status_code:int} %{NUMBER:http.response.body.bytes:int} "%{DATA:http.request.referrer}" "%{GREEDYDATA:user_agent.original}"
+%{IPV4:client.ip} - %{NOTSPACE:client.user} \[%{HTTPDATE:timestamp}\] "%{WORD:http.request.method} %{URIPATH:http.request.url.path} HTTP/%{NUMBER:http.version}" %{NUMBER:http.response.status_code:int} %{NUMBER:http.response.body.bytes:int} "%{DATA:http.request.referrer}" "%{GREEDYDATA:user_agent.original}"
 ```
 
 7. Click `Accept`
@@ -43,12 +47,14 @@ The nginx log line includes a timestamp; let's use that as our record timestamp.
 4. Elastic should auto-recognize the format: `dd/MMM/yyyy:HH:mm:ss XX`
 5. Click `Add processor`
 
+Now save the Processing by clicking `Save changes`.
+
 Now let's jump back to Discover by clicking Discover in the left-hand navigation pane.
 
 Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
-| KEEP @timestamp, client.ip, http.request.method, url.path, http.response.status_code, user_agent.original
+| KEEP @timestamp, client.ip, http.request.method, http.request.url.path, http.response.status_code, user_agent.original
 ```
 
 Let's redraw our status code graph using our newly parsed field:
@@ -56,32 +62,38 @@ Let's redraw our status code graph using our newly parsed field:
 Execute the following query:
 ```
 FROM logs-proxy.otel-default
+| WHERE http.response.status_code IS NOT NULL
 | STATS COUNT() BY TO_STRING(http.response.status_code), minute = BUCKET(@timestamp, "1 min")
 ```
+
+Note that this graph, unlike the one we drew before, only has a few minutes of data. That is because it relies upon the fields we parsed in the Processing we just setup. Prior to that time, those fields didn't exist.
 
 This is a useful graph! Let's save it to a Dashboard for future use.
 
 1. Click on the Disk icon in the upper-left of the resulting graph
 2. Add to a existing dashboard "Ingress Proxy"
+3. Click `Save and go to dashboard`
+4. Click `Save` in the upper-right
 
 # Create SLO
 
-Remember that alert we created. Now that we are parsing these fields at ingest-time, we can create a proper SLO which allows for a small amount of errors:
+Remember that alert we created? Now that we are parsing these fields at ingest-time, we can create a proper SLO which allows for a small amount of errors before we get someone out of bed:
 
 1. Click `SLOs` in the left-hand navigation
 2. Click `Create SLO`
 3. Select `Custom Query`
 4. Set `Data view` to `logs-proxy.otel-default`
-5. Set `Query filter` to `http.response.status_code >= 400`
-6. Set `Good query` to `http.response.status_code : 200`
-7. Set `Total query` to `http.response.status_code :*`
-8. Set `Group by` to `url.path`
-9. Set `SLO Name` to `Ingress Status`
-10. Click `Create SLO`
-11. Click on your newly created SLO `Ingress Status`
-12. Under the `Actions` menu in the upper-right, select `Create new alert rule`
+5. Set `Timestamp field` to `@timestamp`
+6. Set `Query filter` to `http.response.status_code >= 400`
+8. Set `Good query` to `http.response.status_code : 200`
+8. Set `Total query` to `http.response.status_code :*`
+9. Set `Group by` to `http.request.url.path`
+10. Set `SLO Name` to `Ingress Status`
+11. Click `Create SLO`
+12. Click on your newly created SLO `Ingress Status`
+13. Under the `Actions` menu in the upper-right, select `Create new alert rule`
 
-Note the flexibility in burn rates.
+With burn rates, we can have Elastic dynamically adjust the escalation of a potential issue depending on how quickly it appears we will breach our SLO.
 
 13. Click `Next`
 14. (could add an action)

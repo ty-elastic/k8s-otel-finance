@@ -53,7 +53,7 @@ FROM logs-proxy.otel-default
 | STATS bad=COUNT() WHERE MATCH(body.text, "500"), good=COUNT() WHERE MATCH(body.text, "200") BY minute = BUCKET(@timestamp, "1 min")
 ```
 
-That's good. Clearly this issue is affecting only some users. Let's see if we can find when the errors started occurring. Adjust the time picker to show the last 12 hours of data.
+That's good. Clearly this issue is affecting only some users. Let's see if we can find when the errors started occurring. Adjust the time picker to show the last 2 hours of data.
 
 Execute the following query:
 ```esql
@@ -97,6 +97,7 @@ copy the output from the AI assistant flyout by clicking on the clipboard icon i
 ```esql
 FROM logs-proxy.otel-default
 | GROK message "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
+| KEEP timestamp, client_ip, http_method, request_path, status_code, user_agent
 ```
 
 Now close the flyout and execute the generated ES|QL. If you don't see the parsed fields in the result, use the exemplary ES|QL shown above and re-run the query.
@@ -112,17 +113,19 @@ FROM logs-proxy.otel-default
 | STATS COUNT() BY status_code, request_path
 ```
 
-Ok, it seems these errors are affecting all of our APIs. Ideally, we could also cross-reference against the `user_agent` field. We could try, but in reality, the raw `user_agent` field contains too much multiplexed data to effectively group around it.
-
+Ok, it seems these errors are affecting all of our APIs. Ideally, we could also cross-reference against the `user_agent` field.
 
 Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
-| WHERE parsed.http.response.status_code == 500
-| STATS bad = COUNT() BY parsed.user_agent.original
+| GROK message "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
+| WHERE status_code IS NOT NULL
+| EVAL @timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp)
+| WHERE TO_INT(status_code) == 500
+| STATS bad = COUNT() BY user_agent
 ```
 
- We could try to write a GROK expression to parse `user_agent`, but in practice, it is too complicated (it requires translation in addition to parsing). Let's put a pin in this topic and revisit it in a bit.
+Unfortunately, the unparsed user_agent field is too noisy to really be useful for this kind of analysis. We could try to write a GROK expression to parse `user_agent`, but in practice, it is too complicated (it requires translation in addition to parsing). Let's put a pin in this topic and revisit it in a bit.
 
 Let's redraw the time graph we drew before, but this time using status_code instead of looking for specific error codes.
 
@@ -141,7 +144,7 @@ This is a useful graph! Let's save it to a Dashboard for future use.
 
 1. Click on the Disk icon in the upper-left of the resulting graph
 2. Add to a new dashboard
-3. Name the dashboard "Ingress Proxy"
+3. Save the new dashboard as `Ingress Proxy`
 
 Let's take stock of what we know:
 * a small percentage of users are experiencing 500 errors
