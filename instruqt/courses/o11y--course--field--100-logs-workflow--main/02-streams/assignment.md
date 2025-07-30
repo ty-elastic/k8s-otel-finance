@@ -18,9 +18,9 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-So far, we've been using ES|QL to parse our proxy logs at query time. While incredibly powerful for quick analysis, we can do even more with our logs if we parse them at ingest-time. Notably, this is a pretty typical workflow with Elastic: start parsing your logs on-deman with ES|QL, and when you find a consistent pattern which you believe will be of greater value if always parsed, move to ingest-time parsing.
+So far, we've been using ES|QL to parse our proxy logs at query time. While incredibly powerful for quick analysis, we can do even more with our logs if we parse them at ingest-time. Notably, this is a pretty typical workflow with Elastic: start parsing your logs on-demand with ES|QL and when you find a consistent pattern which you believe will be of greater value if always parsed, move to ingest-time parsing. This, as you will see, unlocks another set of power Elastic log analytics.
 
-Elastic makes it easy to setup ingest-time parsing with Streams!
+We will be working with the Elastic Streams interface which makes it easy to setup log parsing pipelines.
 
 1. Select `logs-proxy.otel-default` from the list of Streams
 2. Select the `Processing` tab
@@ -31,7 +31,7 @@ Elastic makes it easy to setup ingest-time parsing with Streams!
 
 Elastic will analyze your log lines and try to recognize a pattern.
 
-The generated pattern should look similar to the following. To ensure a consistent lab experience, please copy the following GROK expression and paste it into `Grok patterns`:
+The generated pattern should look similar to the following. *To ensure a consistent lab experience, please copy the following GROK expression and paste it into `Grok patterns`*:
 ```
 %{IPV4:client.ip} - %{NOTSPACE:client.user} \[%{HTTPDATE:timestamp}\] "%{WORD:http.request.method} %{URIPATH:http.request.url.path} HTTP/%{NUMBER:http.version}" %{NUMBER:http.response.status_code:int} %{NUMBER:http.response.body.bytes:int} "%{DATA:http.request.referrer}" "%{GREEDYDATA:user_agent.original}"
 ```
@@ -115,5 +115,3 @@ And what we've done:
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs for quicker and more powerful analysis
 * Create a SLO to let us know if we ever return non-200 error codes over time
-
-In the next challenge, we will leverage Elastic Streams to correlate our clients with geographic regions to see if there is any correlation with the errors we are seeing.

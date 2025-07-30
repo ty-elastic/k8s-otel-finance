@@ -27,22 +27,33 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
+Sometimes our data contains PII information which needs to be kept to a need-to-know basis. With Elastic's in-built support for RBAC, this is easy.
+
+We've created a limited_user with a limited_role which restricts access to the `client.ip` and `body.text` fields (to avoid leaking the `client.ip`).
+
+In the Elasticsearch tab, we are logged in as a user with full privileges. Let's check our access.
+1. Open the [button label="Elasticsearch"](tab-0) tab
+2. Open a log record
+3. Note access to the `client.ip` and `body.text` fields
+
+In the Elasticsearch (Limited) tab, we are logged in as a user with full privileges. Let's check our access.
 
 1. Open the [button label="Elasticsearch (Limited)"](tab-1) tab
-2. Note access to the `client.ip` and `body.text` fields
+2. Open a log record
+3. Note that `client.ip` and `body.text` fields don't exist
 
-Remove these:
+Let's change permissions and see what happens:
 
-1. Navigate to `Management` > `Stack Management` > `Security` > `Roles`
-2. Select `limited_viewer`
-3. For Indices `/logs-proxy\.otel-default.*/` click `Grant access to specific fields`
-4. Under `Denied fields` set `client.ip,body.text`
-5. Click `Update role`
+1. Open the [button label="Elasticsearch"](tab-0) tab
+2. Navigate to `Management` > `Stack Management` > `Security` > `Roles`
+3. Select `limited_viewer`
+4. For Indices `logs-proxy.otel-default` click `Grant access to specific fields`
+5. Update `Denied fields` to be only `client.ip`, but remove `body.text`
+6. Click `Update role`
 
-Reload Elasticsearch limited
+1. Open the [button label="Elasticsearch (Limited)"](tab-1) tab
+2. Close the open log record flyout
+3. Run the search query again
+4. Open a log record
+5. Note that `client.ip` doesn't exist, but `body.text` now does!
 
-Note client.ip and body.text are gone!
-
-Click on Elasticsearch (limited). Note new user.
-
-Open stuff.

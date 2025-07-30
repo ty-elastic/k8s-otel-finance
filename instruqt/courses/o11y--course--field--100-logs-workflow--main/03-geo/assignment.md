@@ -18,20 +18,25 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-
-Now that we are parsing our logs at ingest, let's see if we can do some analysis around the geography of our clients.
+We still don't know why some requests are failing. Now that we are parsing the logs, however, we have access to a lot more information. Let's analyze our clients by `client.ip` to look for possibly geographic patterns. We can easily do that with the Elastic `GeoIP` processor.
 
 1. Select `logs-proxy.otel-default` from the list of Streams.
 2. Select the `Processing` tab
 3. Click `Add a processor`
 4. Select `GeoIP`
-5. Set the `Field` to `client.ip`
-6. Open `Optional fields` and set `Target field` to `client.geo`
+5. Set the `Field` to
+  ```
+  client.ip
+  ```
+6. Open `Optional fields` and set `Target field` to
+  ```
+  client.geo
+  ```
 7. Set `Ignore missing` to true
 8. Click `Add processor`
 9. Click `Save changes`
 
-Let's jump back to Discover by clicking Discover in the left-hand navigation pane. It will take a minute for the new processing chain to take effect.
+Let's jump back to Discover by clicking Discover in the left-hand navigation pane.
 
 Execute the following query:
 ```esql
@@ -45,9 +50,9 @@ Let's make this a pie chart to allow for more intuitive visualization.
 1. Click the pencil icon to the right of the graph
 2. Select `Pie` from the dropdown menu
 
-So it looks like all of our 500 errors are contained in the `TW` region. Interesting!
+So it looks like all of our 500 errors are contained in the `TW` (Taiwon) region. That is interesting, and without more information, we might be tempted to stop our RCA analysis here. There is always more to the story, as you will see.
 
-This is a useful graph! Let's save it to a Dashboard for future use.
+In the meantime, this is a useful graph! Let's save it to a Dashboard for future use.
 
 1. Click on the Disk icon in the upper-left of the resulting graph
 2. Add to a existing dashboard "Ingress Proxy"
@@ -92,5 +97,3 @@ And what we've done:
 * Parsed the logs for quicker and more powerful analysis
 * Create a SLO to let us know if we ever return non-200 error codes over time
 * Created a Map to help us visually geo-locate the errors
-
-In the next challenge, we will leverage Elastic Streams to correlate our clients with browser and device types to see if there is any correlation with the errors we are seeing.

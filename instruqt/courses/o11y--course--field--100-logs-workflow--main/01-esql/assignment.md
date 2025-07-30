@@ -184,5 +184,3 @@ And what we've done:
 * Created a Dashboard showing status code over time
 * Created a simple alert to let us know if we ever return non-200 error codes
 
-In the next challenge, we will leverage Elastic Streams to parse our data on ingest, allowing us to do more with the data.
-

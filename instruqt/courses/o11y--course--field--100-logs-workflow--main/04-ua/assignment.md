@@ -18,7 +18,7 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-Now that we are parsing our logs at ingest, let's see if we can do some analysis around the User Agent of our clients to see if something changed.
+We know that errors appear to be localized to a specific region. But maybe there is more to the story? Let's parse that User Agent string to look for correlation. We can easily do that with the Elastic `User agent` processor.
 
 1. Select `logs-proxy.otel-default` from the list of Streams.
 2. Select the `Processing` tab
@@ -32,8 +32,14 @@ In addition to the fields produced by the User Agent processor, we also want a s
 
 1. Click `Add a processor`
 2. Click `Set`
-3. Set `Field` to `user_agent.full`
-4. Set `Value` to `{{user_agent.name}} {{user_agent.version}}`
+3. Set `Field` to
+  ```
+  user_agent.full
+  ```
+4. Set `Value` to
+  ```
+  {{user_agent.name}} {{user_agent.version}}
+  ```
 5. Click `Ignore failures for this processor`
 6. Click `Add processor`
 7. Click `Save changes`
@@ -48,7 +54,7 @@ FROM logs-proxy.otel-default
 | SORT bad DESC
 ```
 
-Ah-ha, this seems to be related to the Browser version!
+Ah-ha, there is more to the story! It appears our errors may be isolated to a specific browser version. Let's break this down by `user_agent.version`.
 
 ```esql
 FROM logs-proxy.otel-default
@@ -56,6 +62,8 @@ FROM logs-proxy.otel-default
 | STATS good = COUNT(http.response.status_code == 200 OR NULL), bad = COUNT(http.response.status_code == 500 OR NULL) BY user_agent.version
 | SORT bad DESC
 ```
+
+Indeed, it appears we might have a problem with version 136 of the Chrome browser. So what's the correlation with the geographic area we previously saw?
 
 Execute the following query:
 ```esql
@@ -66,7 +74,9 @@ FROM logs-proxy.otel-default
 | STATS COUNT() BY client.geo.country_iso_code
 ```
 
-Congrats! we found our problem! Let's find a way to make this easier to catch in the future.
+Ah! It appears that this specific version of the Chrome browser has only been seen in the `TW` region! That makes sense!
+
+Congratulations! We found our problem! Now let's find a way to make this easier to catch in the future.
 
 # Summary
 
@@ -84,5 +94,3 @@ And what we've done:
 * Parsed the logs for quicker and more powerful analysis
 * Create a SLO to let us know if we ever return non-200 error codes over time
 * Created a Map to help us visually geo-locate the errors
-
-In the next challenge, we will create an alert to watch for new User Agents.
