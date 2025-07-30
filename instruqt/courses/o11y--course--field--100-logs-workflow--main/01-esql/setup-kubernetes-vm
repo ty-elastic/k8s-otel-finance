@@ -1,100 +1,23 @@
 source /opt/workshops/elastic-retry.sh
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
-# ------------- KIBANA
-cat <<EOF >> kibana.yaml
-apiVersion: kibana.k8s.elastic.co/v1
-kind: Kibana
-metadata:
-  name: kibana
-  namespace: default
-spec:
-  version: $ELASTICSEARCH_VERSION
-  podTemplate:
-    spec:
-      containers:
-      - name: kibana
-        imagePullPolicy: Always
-        env:
-          - name: NODE_OPTIONS
-            value: "--max-old-space-size=2048"
-        resources:
-          requests:
-            memory: 0.5Gi
-            cpu: 0.5
-          limits:
-            memory: 2.0Gi
-            cpu: 1
-  count: 1
-  elasticsearchRef:
-    name: elasticsearch
-  http:
-    tls:
-      selfSignedCertificate:
-        disabled: true
-  config:
-    # hide popup
-    uiSettings.overrides.showSpaceSolutionTour: false
+# ------------- UPGRADE
+kubectl delete Agent elastic-agent
+kubectl delete Agent fleet-server
 
-    # to support embedded tab browsing from instruqt
-    csp.strict: false
-    csp.warnLegacyBrowsers: false
-    # required to allow symbol upload from APM javascript
-    server.maxPayload: 4194304
-    server.publicBaseUrl: http://localhost:30002
-    telemetry.optIn: false
-    telemetry.allowChangingOptInStatus: false
-    xpack.fleet.agents.elasticsearch.hosts: ["http://elasticsearch-es-http.default.svc:9200"]
-    xpack.fleet.agents.fleet_server.hosts: ["https://fleet-server-agent-http.default.svc:8220"]
-    xpack.fleet.packages:
-    - name: system
-      version: latest
-    - name: elastic_agent
-      version: latest
-    - name: fleet_server
-      version: latest
-    - name: apm
-      version: latest
-    xpack.fleet.agentPolicies:
-    - name: Fleet Server on ECK policy
-      id: eck-fleet-server
-      namespace: default
-      #monitoring_enabled:
-      #- logs
-      #- metrics
-      unenroll_timeout: 900
-      package_policies:
-      - name: fleet_server-1
-        id: fleet_server-1
-        package:
-          name: fleet_server
-    - name: Elastic Agent on ECK policy
-      id: policy-elastic-agent-on-cloud
-      namespace: default
-      #monitoring_enabled:
-      #- logs
-      #- metrics
-      unenroll_timeout: 900
-      package_policies:
-      - name: system-1
-        id: system-1
-        package:
-          name: system
-      - package:
-          name: apm
-        name: apm-1
-        inputs:
-        - type: apm
-          enabled: true
-          vars:
-          - name: host
-            value: 0.0.0.0:8200 
-          - name: url
-            value: "https://apm.default.svc:8200" 
-          - name: secret_token
-            value: $ELASTIC_APM_SERVER_SECRET
-EOF
-envsubst < kibana.yaml | kubectl apply -f -
+kubectl get Kibana -o yaml > kibana.yaml
+cat kibana.yaml | sed 's|version: 9.1.0-SNAPSHOT|version: 9.1.0|' > kibana.new.yaml
+kubectl apply -f kibana.new.yaml
+
+kubectl get Elasticsearch -o yaml > elasticsearch.yaml
+cat elasticsearch.yaml | sed 's|version: 9.1.0-SNAPSHOT|version: 9.1.0|' > elasticsearch.new.yaml
+kubectl apply -f elasticsearch.new.yaml
+
+# Wait for Elasticsearch to be created and ready
+retry_command_lin check_es_health
+retry_command_lin curl --silent --fail --output /dev/null -X GET -H "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" -H 'Content-Type: application/json' $ELASTICSEARCH_URL
+
+# ------------- VIEW
 
 /opt/workshops/elastic-view.sh -v oblt
 
@@ -371,6 +294,14 @@ cat <<EOF >> rbac.json
         "read",
         "view_index_metadata"
       ],
+      "field_security": {
+        "grant": [
+          "*"
+        ],
+        "except": [
+          "client.ip","body.text"
+        ]
+      },
       "allow_restricted_indices": false
     },
     {
@@ -501,3 +432,6 @@ curl -X POST "$KIBANA_URL/api/data_views/data_view" \
         "name": "logs-proxy.otel-default"
       }
     }'
+
+echo "Wait for realtime"
+retry_command_lin curl --silent --fail --output /dev/null http://kubernetes-vm:32003/status/realtime

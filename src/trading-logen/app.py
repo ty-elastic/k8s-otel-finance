@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, abort
 from datetime import datetime, timezone, timedelta
 import random
 import ipaddress
@@ -192,7 +192,7 @@ def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, lo
 
         if throttled:
             wallclock = datetime.now(tz=timezone.utc)
-            print(f"wall={wallclock.timestamp()},time={timestamp.timestamp()}")
+            #print(f"wall={wallclock.timestamp()},time={timestamp.timestamp()}")
             delta = wallclock.timestamp() - timestamp.timestamp()
             #print(abs(delta))
             # leading
@@ -222,6 +222,20 @@ def bump_version_up_per_browser(*, browser, region):
             print(f"start request error for customer {customer}")
             request_error_per_customer[customer] = {'amount': 100}
 
+realtime = {}
+@app.get('/status/realtime')
+def get_realtime():
+    global realtime
+    retval = True
+    for thread_name in realtime.keys():
+        if realtime[thread_name] is False:
+            retval = False
+
+    if retval:
+        return {"realtime": True}
+    else:
+        abort(404, description="not realtime")
+
 @app.post('/err/browser/<browser>')
 def err_request_ua(browser):
     global request_error_per_customer
@@ -230,7 +244,10 @@ def err_request_ua(browser):
     bump_version_up_per_browser(browser=browser, region=region)
     return request_error_per_customer
 
-def run_schedule(schedule):
+def run_schedule(thread_name, schedule):
+    global realtime
+    realtime[thread_name] = False
+
     last_ts = None
     loggers = {}
 
@@ -256,6 +273,7 @@ def run_schedule(schedule):
                 throttled = False
             # real time
             else:
+                realtime[thread_name] = True
                 stop = None
                 throttled = True
             print(f'type={item['type']}, start={start}, stop={stop}, interval_s={1/item['logs_per_second']}, send_delay={send_delay}')
@@ -279,7 +297,7 @@ config = load_config()
 def run_threads():
     threads = []
     for thread in config['threads']:
-        t = Thread(target=run_schedule, args=[thread['schedule']], daemon=False)
+        t = Thread(target=run_schedule, args=[thread['name'], thread['schedule']], daemon=False)
         t.start()
         threads.append(t)
     for t in threads:

@@ -8,13 +8,13 @@ tabs:
   title: Elasticsearch
   type: service
   hostname: kubernetes-vm
-  path: /app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:now-1h,to:now))&_a=(breakdownField:log.level,columns:!(),dataSource:(type:esql),filters:!(),hideChart:!f,interval:auto,query:(esql:'FROM%20logs-proxy.otel-default'),sort:!(!('@timestamp',desc)))
+  path: /app/discover#/?_g=(filters:!(),query:(language:kuery,query:''),refreshInterval:(pause:!t,value:60000),time:(from:now-1h,to:now))&_a=(breakdownField:log.level,columns:!(),dataSource:(type:esql),filters:!(),hideChart:!f,interval:auto,query:(esql:'FROM%20logs-proxy.otel-default'),sort:!(!('@timestamp',desc)))
   port: 30001
 - id: qxodixi0jlll
   title: Elasticsearch (Limited)
   type: service
   hostname: kubernetes-vm
-  path: /app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:now-1h,to:now))&_a=(breakdownField:log.level,columns:!(),dataSource:(type:esql),filters:!(),hideChart:!f,interval:auto,query:(esql:'FROM%20logs-proxy.otel-default'),sort:!(!('@timestamp',desc)))
+  path: /app/discover#/?_g=(filters:!(),query:(language:kuery,query:''),refreshInterval:(pause:!t,value:60000),time:(from:now-1h,to:now))&_a=(breakdownField:log.level,columns:!(),dataSource:(type:esql),filters:!(),hideChart:!f,interval:auto,query:(esql:'FROM%20logs-proxy.otel-default'),sort:!(!('@timestamp',desc)))
   port: 30002
   custom_request_headers:
   - key: Authorization
@@ -28,13 +28,20 @@ timelimit: 600
 enhanced_loading: false
 ---
 
+1. Open the [button label="Elasticsearch (Limited)"](tab-1) tab
+2. Note access to the `client.ip` and `body.text` fields
+
+Remove these:
+
 1. Navigate to `Management` > `Stack Management` > `Security` > `Roles`
 2. Select `limited_viewer`
-3. For Indices `/~(([.]|ilm-history-).*)/` click `Grant access to specific fields`
+3. For Indices `/logs-proxy\.otel-default.*/` click `Grant access to specific fields`
 4. Under `Denied fields` set `client.ip,body.text`
 5. Click `Update role`
 
-1. Open the [button label="Elasticsearch"](tab-1) tab
+Reload Elasticsearch limited
+
+Note client.ip and body.text are gone!
 
 Click on Elasticsearch (limited). Note new user.
 
