@@ -197,7 +197,7 @@ index_orig=$(curl -s -X GET "$ELASTICSEARCH_URL/_component_template/logs@setting
 
 index_orig_strip=$(echo $index_orig | jq --compact-output -r '.component_templates[0].component_template')
 
-echo $index_orig_strip | jq --compact-output -r '.template.settings["index.refresh_interval"]="1s"' > index_new.json
+echo $index_orig_strip | jq --compact-output -r '.template.settings["index.refresh_interval"]="5s"' > index_new.json
 
 index_new_put=$(curl -s -X PUT "$ELASTICSEARCH_URL/_component_template/logs@settings" \
     --header 'Content-Type: application/json' \
@@ -363,6 +363,16 @@ cat <<EOF >> rbac.json
 {
   "cluster": [],
   "indices": [
+    {
+      "names": [
+        "logs-proxy.otel-default"
+      ],
+      "privileges": [
+        "read",
+        "view_index_metadata"
+      ],
+      "allow_restricted_indices": false
+    },
     {
       "names": [
         "/~(([.]|ilm-history-).*)/"

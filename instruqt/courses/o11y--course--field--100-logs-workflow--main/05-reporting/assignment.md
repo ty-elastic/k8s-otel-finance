@@ -112,5 +112,10 @@ Now, let's test it!
 
 1. Navigate to the Terminal tab
 2. Run the following command:
-```bash
-curl -X POST http://trading-logen.trading.svc:9003/err/browser/chrome
+```bash,run
+curl -X POST http://kubernetes-vm:32003/err/browser/chrome
+```
+
+Let's see if we fired an alert:
+
+1. Navigate to `Management` > `Stack Management` > `Alerts and Insights` > `Rules`

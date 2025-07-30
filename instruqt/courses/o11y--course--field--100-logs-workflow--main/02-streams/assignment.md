@@ -54,6 +54,7 @@ Now let's jump back to Discover by clicking Discover in the left-hand navigation
 Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
+| WHERE status_code is NOT NULL
 | KEEP @timestamp, client.ip, http.request.method, http.request.url.path, http.response.status_code, user_agent.original
 ```
 
@@ -84,14 +85,15 @@ Remember that alert we created? Now that we are parsing these fields at ingest-t
 3. Select `Custom Query`
 4. Set `Data view` to `logs-proxy.otel-default`
 5. Set `Timestamp field` to `@timestamp`
-6. Set `Query filter` to `http.response.status_code >= 400`
-8. Set `Good query` to `http.response.status_code : 200`
-8. Set `Total query` to `http.response.status_code :*`
-9. Set `Group by` to `http.request.url.path`
-10. Set `SLO Name` to `Ingress Status`
-11. Click `Create SLO`
-12. Click on your newly created SLO `Ingress Status`
-13. Under the `Actions` menu in the upper-right, select `Create new alert rule`
+6. Set `Good query` to `http.response.status_code : 200`
+7. Set `Total query` to `http.response.status_code :*`
+8. Set `Group by` to `http.request.url.path`
+9. Set `Duration` to `7 days`
+10. Set `Target / SLO (%)` to `99.999`
+11. Set `SLO Name` to `Ingress Status`
+12. Click `Create SLO`
+13. Click on your newly created SLO `Ingress Status`
+14. Under the `Actions` menu in the upper-right, select `Create new alert rule`
 
 With burn rates, we can have Elastic dynamically adjust the escalation of a potential issue depending on how quickly it appears we will breach our SLO.
 
