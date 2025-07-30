@@ -170,9 +170,10 @@ metadata:
   namespace: trading
 spec:
   ports:
-    - name: trading-logen
+    - protocol: TCP
+      nodePort: 9003
       port: 9003
-      targetPort: 9003
+  type: NodePort
   selector:
     app: trading
     service: trading-logen

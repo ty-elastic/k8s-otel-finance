@@ -304,7 +304,7 @@ echo '
 curl -X POST "$ELASTICSEARCH_URL/ua_lookup/_bulk" \
     --header 'Content-Type: application/x-ndjson' \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
-    --data-binary @ua_lookup
+    --data-binary @ua_lookup.ndjson
 
 # ------------- NETWORKS ENRICHMENT
 
@@ -314,7 +314,6 @@ curl -X PUT "$ELASTICSEARCH_URL/networks" \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
     -d'
     {
-        "index": {"mode_settings": ""}
         "mappings": {
             "properties": {
                 "range": { "type": "ip_range" },

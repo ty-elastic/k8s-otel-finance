@@ -39,10 +39,11 @@ Create transform:
 5. Set `Group by` to `terms(user_agent.full)`
 6. Add an aggregation for `@timestamp.max`
 7. Add an aggregation for `@timestamp.min`
-8. Set the `Transform ID` to `user_agents`
-9. Set `Continuous mode`
-9. Click `Next`
-10. Click `Create and start`
+8. Add an aggregation for `top_metrics(user_agent.original)`
+9. Set the `Transform ID` to `user_agents`
+10. Set `Continuous mode`
+11. Click `Next`
+12. Click `Create and start`
 
 
 Go to Discover.
@@ -71,32 +72,26 @@ FROM user_agents
    "when did this version of this browser come out? output only a version of the format mm/dd/yyyy",
    "browser: ", user_agent.full
   ) | COMPLETION release_date = prompt WITH openai_completion
-  | KEEP release_date, user_agent.full, @timestamp.min, @timestamp.max
+  | KEEP release_date, user_agent.full, @timestamp.min, @timestamp.max, top_metrics.user_agent.original
 ```
 
-Save search
+Let's save this search for future reference:
 
-1. Dashboards
-2. Click `Add Panel`
-3. Select `ES|QL` (saved search?)
-4. Enter:
-```
-FROM user_agents
-| SORT @timestamp.max DESC
-| LIMIT 10
-| EVAL prompt = CONCAT(
-   "when did this version of this browser come out? output only a version of the format mm/dd/yyyy",
-   "browser: ", user_agent.full
-  ) | COMPLETION release_date = prompt WITH openai_completion
-  | KEEP release_date, user_agent.full, @timestamp.min, @timestamp.max
-```
-5. Click `Run query`
-6. Click `Apply and close`
+1. Click `Save`
+2. Set `Title` to `ua_release_dates`
+
+Now let's add this as a table to our dashboard
+
+1. Navigate to Dashboards and open `Ingress Status`
+2. Click `Add from library`
+3. Find `ua_release_dates`
+4. Click `Save`
 
 Now let's setup a schedule to automatically export our dashboard as a PDF every night for the exec office.
 
 1. Click `Download` icon
-2. Click `Schedule export`
+2. Click `Schedule exports`
+3. Click `Schedule export`
 
 # Alert
 
@@ -105,9 +100,17 @@ Let's create a new alert!
 1. Navigate to `Management` > `Stack Management` > `Alerts and Insights` > `Rules`
 2. Click `Create rule`
 4. Select `Index threshold`
-5. Set `INDEX` to `user_agents` and `Time field` to `@timestamp_max`
+5. Click `INDEX`
+6. Set `Indices to query` to `user_agents` and `Time field` to `@timestamp_max`
 6. Set `IS ABOVE` to `1`
 7. Set `FOR THE LAST` to `5 minutes`
 8. Set `Rule name` to `New UA Detected`
 9. Set `Related dashboards` to `Ingress Proxy`
 10. Click `Create rule`
+
+Now, let's test it!
+
+1. Navigate to the Terminal tab
+2. Run the following command:
+```bash
+curl -X POST http://trading-logen.trading.svc:9003/err/browser/chrome
