@@ -1,21 +1,10 @@
 source /opt/workshops/elastic-retry.sh
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
-# ------------- UPGRADE
-# kubectl delete Agent elastic-agent
-# kubectl delete Agent fleet-server
+# ------------- FIX KB
 
-# kubectl get Kibana -o yaml > kibana.yaml
-# cat kibana.yaml | sed 's|version: 9.1.0-SNAPSHOT|version: 9.1.0|' > kibana.new.yaml
-# kubectl apply -f kibana.new.yaml
-
-# kubectl get Elasticsearch -o yaml > elasticsearch.yaml
-# cat elasticsearch.yaml | sed 's|version: 9.1.0-SNAPSHOT|version: 9.1.0|' > elasticsearch.new.yaml
-# kubectl apply -f elasticsearch.new.yaml
-
-# # Wait for Elasticsearch to be created and ready
-# retry_command_lin check_es_health
-# retry_command_lin curl --silent --fail --output /dev/null -X GET -H "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" -H 'Content-Type: application/json' $ELASTICSEARCH_URL
+kubectl rollout restart deployment/kibana-kb
+retry_command_lin check_es_health
 
 # ------------- VIEW
 
@@ -212,7 +201,7 @@ curl -X PUT "$ELASTICSEARCH_URL/ua_lookup" \
         "settings": {"index": {"mode": "lookup"}},
         "mappings": {
             "properties": {
-                "user_agent.full": { "type": "keyword" },
+                "user_agent.name_and_vmajor": { "type": "keyword" },
                 "release_date": { "type": "date",
                 "format": "MM/dd/YYYY"}
             }
@@ -221,7 +210,25 @@ curl -X PUT "$ELASTICSEARCH_URL/ua_lookup" \
 
 echo '
 {"index":{}}
-{"user_agent.full":"Chrome Mobile 126.0.6478.62","release_date": "03/18/2022"}
+{"user_agent.name_and_vmajor":"Chrome 127","release_date": "06/11/2024"}
+{"index":{}}
+{"user_agent.name_and_vmajor":"Chrome 129","release_date": "06/13/2024"}
+{"index":{}}
+{"user_agent.name_and_vmajor":"Chrome 130","release_date": "04/30/2024"}
+{"index":{}}
+{"user_agent.name_and_vmajor":"Chrome 133","release_date": "05/29/2024"}
+{"index":{}}
+{"user_agent.name_and_vmajor":"Chrome 136","release_date": "06/04/2024"}
+{"index":{}}
+{"user_agent.name_and_vmajor":"Chrome Mobile 128","release_date": "06/13/2024"}
+{"index":{}}
+{"user_agent.name_and_vmajor":"Chrome Mobile 130","release_date": "06/11/2024"}
+{"index":{}}
+{"user_agent.name_and_vmajor":"Chrome Mobile 131","release_date": "06/25/2024"}
+{"index":{}}
+{"user_agent.name_and_vmajor":"Chrome Mobile 132","release_date": "06/20/2024"}
+{"index":{}}
+{"user_agent.name_and_vmajor":"Chrome 126","release_date": "06/18/2024"}
 ' > ua_lookup.ndjson
 
 curl -X POST "$ELASTICSEARCH_URL/ua_lookup/_bulk" \
@@ -302,16 +309,6 @@ cat <<EOF >> rbac.json
           "client.ip","body.text"
         ]
       },
-      "allow_restricted_indices": false
-    },
-    {
-      "names": [
-        "/~(([.]|ilm-history-).*)/"
-      ],
-      "privileges": [
-        "read",
-        "view_index_metadata"
-      ],
       "allow_restricted_indices": false
     },
     {
@@ -418,7 +415,11 @@ curl -X POST "$ELASTICSEARCH_URL/logs-proxy.otel-default/_rollover" \
     --header 'Content-Type: application/json' \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"
 
-dv=$(curl -X POST "$KIBANA_URL/api/data_views/data_view" \
+echo "Wait for realtime"
+retry_command_lin curl --silent --fail --output /dev/null http://kubernetes-vm:32003/status/realtime
+echo "realtime reached"
+
+curl -X POST "$KIBANA_URL/api/data_views/data_view" \
     --header 'Content-Type: application/json' \
     --header "kbn-xsrf: true" \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
@@ -429,20 +430,21 @@ dv=$(curl -X POST "$KIBANA_URL/api/data_views/data_view" \
           "default"
         ],
         "title": "logs-proxy.otel-default",
-        "name": "logs-proxy.otel-default"
+        "name": "logs-proxy.otel-default",
+        "timeFieldName": "@timestamp"
       }
     }'
-    )
 
-dv_id=$(echo $dv | jq --compact-output -r '.component_templates[0].component_template')
-
-curl -X POST "$ELASTICSEARCH_URL/api/data_views/data_view/$dv_id" \
-    --header 'Content-Type: application/json' \
-    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
-    -d'
-    {
-      "refresh_fields": true
-    }'
-
-echo "Wait for realtime"
-retry_command_lin curl --silent --fail --output /dev/null http://kubernetes-vm:32003/status/realtime
+echo "Setup DV refresh"
+cat <<EOF >> dataview.sh
+while /bin/true; do
+  curl --silent --fail --output /dev/null -X GET "$KIBANA_URL/internal/data_views/fields?pattern=logs-proxy.otel-default" \
+    --header "kbn-xsrf: true" \
+    --header 'x-elastic-internal-origin: Kibana' \    
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"
+  sleep 1;
+done
+EOF
+chmod a+x dataview.sh
+nohup ./dataview.sh > dataview.log 2>&1 &
+echo "Setup DV refresh...done"

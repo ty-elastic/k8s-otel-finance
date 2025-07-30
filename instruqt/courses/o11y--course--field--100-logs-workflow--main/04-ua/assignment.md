@@ -18,7 +18,7 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-Now that we are parsing our logs at ingest, let's see if we can do some analysis around the user_agent of our clients.
+Now that we are parsing our logs at ingest, let's see if we can do some analysis around the User Agent of our clients to see if something changed.
 
 1. Select `logs-proxy.otel-default` from the list of Streams.
 2. Select the `Processing` tab
@@ -67,3 +67,22 @@ FROM logs-proxy.otel-default
 ```
 
 Congrats! we found our problem! Let's find a way to make this easier to catch in the future.
+
+# Summary
+
+Let's take stock of what we know:
+* a small percentage of users are experiencing 500 errors
+* the errors started occurring around 80 minutes ago
+* the only error type seen is 500
+* the errors occur over all APIs
+* the errors occur only in the `TW` region
+* the errors occur only with browsers based on Chrome v136
+
+And what we've done:
+* Created a Dashboard showing status code over time
+* Created a simple alert to let us know if we ever return non-200 error codes
+* Parsed the logs for quicker and more powerful analysis
+* Create a SLO to let us know if we ever return non-200 error codes over time
+* Created a Map to help us visually geo-locate the errors
+
+In the next challenge, we will create an alert to watch for new User Agents.

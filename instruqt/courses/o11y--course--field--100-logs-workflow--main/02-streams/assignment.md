@@ -54,7 +54,7 @@ Now let's jump back to Discover by clicking Discover in the left-hand navigation
 Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
-| WHERE status_code is NOT NULL
+| WHERE http.response.status_code IS NOT NULL
 | KEEP @timestamp, client.ip, http.request.method, http.request.url.path, http.response.status_code, user_agent.original
 ```
 
@@ -102,3 +102,18 @@ With burn rates, we can have Elastic dynamically adjust the escalation of a pote
 15. Click `Next`
 16. Click `Create rule`
 
+# Summary
+
+Let's take stock of what we know:
+* a small percentage of users are experiencing 500 errors
+* the errors started occurring around 80 minutes ago
+* the only error type seen is 500
+* the errors occur over all APIs
+
+And what we've done:
+* Created a Dashboard showing status code over time
+* Created a simple alert to let us know if we ever return non-200 error codes
+* Parsed the logs for quicker and more powerful analysis
+* Create a SLO to let us know if we ever return non-200 error codes over time
+
+In the next challenge, we will leverage Elastic Streams to correlate our clients with geographic regions to see if there is any correlation with the errors we are seeing.

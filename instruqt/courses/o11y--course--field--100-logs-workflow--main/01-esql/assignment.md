@@ -61,7 +61,7 @@ FROM logs-proxy.otel-default
 | STATS bad=COUNT() WHERE MATCH(body.text, "500"), good=COUNT() WHERE MATCH(body.text, "200") BY minute = BUCKET(@timestamp, "1 min")
 ```
 
-Ok, it looks like this issue first started happening around 6 hours ago. We can use `CHANGE_POINT` to narrow it down to a specific minute:
+Ok, it looks like this issue first started happening around 80 minutes ago. We can use `CHANGE_POINT` to narrow it down to a specific minute:
 
 Execute the following query:
 ```esql
@@ -76,7 +76,7 @@ FROM logs-proxy.otel-default
 
 Let's take stock of what we know:
 * a small percentage of users are experiencing 500 errors
-* the errors started occurring around 6 hours ago
+* the errors started occurring around 80 minutes ago
 
 # Parsing with ES|QL
 
@@ -148,7 +148,7 @@ This is a useful graph! Let's save it to a Dashboard for future use.
 
 Let's take stock of what we know:
 * a small percentage of users are experiencing 500 errors
-* the errors started occurring around 6 hours ago
+* the errors started occurring around 80 minutes ago
 * the only error type seen is 500
 * the errors occur over all APIs
 
@@ -176,7 +176,7 @@ In practice, this alert is too simple. We probably are okay with a small percent
 
 Let's take stock of what we know:
 * a small percentage of users are experiencing 500 errors
-* the errors started occurring around 6 hours ago
+* the errors started occurring around 80 minutes ago
 * the only error type seen is 500
 * the errors occur over all APIs
 
