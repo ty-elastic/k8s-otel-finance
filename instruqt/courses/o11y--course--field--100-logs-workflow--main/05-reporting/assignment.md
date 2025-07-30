@@ -74,11 +74,11 @@ FROM user_agents
   | KEEP release_date, user_agent.full, @timestamp.min, @timestamp.max
 ```
 
-add this table to dashboard.
+Save search
 
 1. Dashboards
 2. Click `Add Panel`
-3. Select `ES|QL`
+3. Select `ES|QL` (saved search?)
 4. Enter:
 ```
 FROM user_agents
