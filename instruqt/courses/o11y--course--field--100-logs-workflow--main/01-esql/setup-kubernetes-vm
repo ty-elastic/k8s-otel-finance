@@ -2,20 +2,20 @@ source /opt/workshops/elastic-retry.sh
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
 # ------------- UPGRADE
-kubectl delete Agent elastic-agent
-kubectl delete Agent fleet-server
+# kubectl delete Agent elastic-agent
+# kubectl delete Agent fleet-server
 
-kubectl get Kibana -o yaml > kibana.yaml
-cat kibana.yaml | sed 's|version: 9.1.0-SNAPSHOT|version: 9.1.0|' > kibana.new.yaml
-kubectl apply -f kibana.new.yaml
+# kubectl get Kibana -o yaml > kibana.yaml
+# cat kibana.yaml | sed 's|version: 9.1.0-SNAPSHOT|version: 9.1.0|' > kibana.new.yaml
+# kubectl apply -f kibana.new.yaml
 
-kubectl get Elasticsearch -o yaml > elasticsearch.yaml
-cat elasticsearch.yaml | sed 's|version: 9.1.0-SNAPSHOT|version: 9.1.0|' > elasticsearch.new.yaml
-kubectl apply -f elasticsearch.new.yaml
+# kubectl get Elasticsearch -o yaml > elasticsearch.yaml
+# cat elasticsearch.yaml | sed 's|version: 9.1.0-SNAPSHOT|version: 9.1.0|' > elasticsearch.new.yaml
+# kubectl apply -f elasticsearch.new.yaml
 
-# Wait for Elasticsearch to be created and ready
-retry_command_lin check_es_health
-retry_command_lin curl --silent --fail --output /dev/null -X GET -H "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" -H 'Content-Type: application/json' $ELASTICSEARCH_URL
+# # Wait for Elasticsearch to be created and ready
+# retry_command_lin check_es_health
+# retry_command_lin curl --silent --fail --output /dev/null -X GET -H "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" -H 'Content-Type: application/json' $ELASTICSEARCH_URL
 
 # ------------- VIEW
 
@@ -418,7 +418,7 @@ curl -X POST "$ELASTICSEARCH_URL/logs-proxy.otel-default/_rollover" \
     --header 'Content-Type: application/json' \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"
 
-curl -X POST "$KIBANA_URL/api/data_views/data_view" \
+dv=$(curl -X POST "$KIBANA_URL/api/data_views/data_view" \
     --header 'Content-Type: application/json' \
     --header "kbn-xsrf: true" \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
@@ -431,6 +431,17 @@ curl -X POST "$KIBANA_URL/api/data_views/data_view" \
         "title": "logs-proxy.otel-default",
         "name": "logs-proxy.otel-default"
       }
+    }'
+    )
+
+dv_id=$(echo $dv | jq --compact-output -r '.component_templates[0].component_template')
+
+curl -X POST "$ELASTICSEARCH_URL/api/data_views/data_view/$dv_id" \
+    --header 'Content-Type: application/json' \
+    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
+    -d'
+    {
+      "refresh_fields": true
     }'
 
 echo "Wait for realtime"
