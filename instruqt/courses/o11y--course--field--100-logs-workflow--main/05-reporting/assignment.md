@@ -46,7 +46,9 @@ FROM logs-proxy.otel-default
 | KEEP client.geo.country_iso_code, user_agent.full, @timestamp.min, @timestamp.max
 ```
 
-Fabulous! Say you also wanted to know when a given User Agent was released?
+Fabulous! Now we can see every User Agent we encounter, when we first encountered it, and in what region it was first seen.
+
+Say you also wanted to know when a given User Agent was released by the developer?
 
 We could try to maintain our own User Agent lookup table and use ES|QL `LOOKUP JOIN`s to match browser versions to release dates:
 
@@ -55,7 +57,7 @@ Execute the following query:
 FROM ua_lookup
 ```
 
-Now let's use `LOOKUP JOIN` to do a real-time lookup for each row:
+We built this table by hand; it is far from comprehensive. Now let's use `LOOKUP JOIN` to do a real-time lookup for each row:
 
 Execute the following query:
 ```
@@ -66,7 +68,6 @@ FROM logs-proxy.otel-default
 | EVAL first_ts = LEAST(@timestamp.min)
 | STATS client.geo.country_iso_code = TOP(client.geo.country_iso_code, 1, "desc"), user_agent.name_and_vmajor = TOP(user_agent.name_and_vmajor, 1, "desc") WHERE @timestamp.min == first_ts BY @timestamp.min, @timestamp.max
 | SORT @timestamp.min DESC
-| LIMIT 25
 | LOOKUP JOIN ua_lookup ON user_agent.name_and_vmajor
 | WHERE release_date IS NOT NULL
 | KEEP release_date, user_agent.name_and_vmajor, client.geo.country_iso_code, @timestamp.min, @timestamp.max
@@ -90,6 +91,9 @@ FROM logs-proxy.otel-default
 | EVAL release_date = DATE_PARSE("MM/dd/YYYY", release_date)
 | KEEP release_date, client.geo.country_iso_code, user_agent.full, @timestamp.min, @timestamp.max
 ```
+
+> [!NOTE]
+> If this encounters a timeout, try running the query again.
 
 Yes! Let's save this search for future reference:
 
@@ -161,3 +165,24 @@ Let's see if we fired an alert:
 
 1. Navigate to `Alerts`
 2. Note the active alert
+
+# Summary
+
+Let's take stock of what we know:
+* a small percentage of users are experiencing 500 errors
+* the errors started occurring around 80 minutes ago
+* the only error type seen is 500
+* the errors occur over all APIs
+* the errors occur only in the `TW` region
+* the errors occur only with browsers based on Chrome v136
+
+And what we've done:
+* Created a Dashboard showing status code over time
+* Created a simple alert to let us know if we ever return non-200 error codes
+* Parsed the logs for quicker and more powerful analysis
+* Create a SLO to let us know if we ever return non-200 error codes over time
+* Created a Pie Graph showing errors by region
+* Created a Map to help us visually geo-locate the errors
+* Created a table in our dashboard iterating seen User Agents
+* Created a nightly report to snapshot our Dashboard
+* Created an alert to let us know when a new User Agent string appears

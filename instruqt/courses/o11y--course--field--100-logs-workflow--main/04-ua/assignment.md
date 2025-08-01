@@ -22,13 +22,16 @@ We know that errors appear to be localized to a specific region. But maybe there
 
 # Is this affecting every browser type?
 
-Let's parse that User Agent string to look for correlation. We can easily do that with the Elastic `User agent` processor.
+Let's parse that User Agent string to look for correlation. While difficult/impossible with a simple GROK expression, you can easily do this with the Elastic `User agent` processor.
 
 1. Select `logs-proxy.otel-default` from the list of Streams.
 2. Select the `Processing` tab
 3. Click `Add a processor`
 4. Select `User agent`
-5. Set the `Field` to `user_agent.original`
+5. Set the `Field` to 
+  ```
+  user_agent.original
+  ```
 6. Set `Ignore missing` to true
 7. Click `Add processor`
 
@@ -82,9 +85,9 @@ FROM logs-proxy.otel-default
 | STATS COUNT() BY client.geo.country_iso_code
 ```
 
-Ah! It appears that this specific version of the Chrome browser has only been seen in the `TW` region! That makes sense!
+Ah! It appears that this specific version of the Chrome browser has only been seen in the `TW` region! Quite possibly, Google has rolled out a specialized or canary version of their browser first in the `TW` region.
 
-Congratulations! We found our problem! Now let's find a way to make this easier to catch in the future.
+Congratulations! We found our problem! In the next challenge, we will setup a way to catch new User Agents in the future.
 
 # Summary
 
