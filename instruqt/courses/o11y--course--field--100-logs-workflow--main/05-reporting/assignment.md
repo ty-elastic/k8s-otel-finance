@@ -142,7 +142,7 @@ Let's create a new alert which will fire when
 9. Set `Related dashboards` to `Ingress Proxy`
 10. Click `Create rule`
 
-Now, let's test it!
+# Let's test it
 
 1. Navigate to the [button label="Terminal"](tab-1) tab
 2. Run the following command:

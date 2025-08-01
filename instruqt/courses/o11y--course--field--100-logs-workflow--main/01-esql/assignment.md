@@ -10,6 +10,12 @@ notes:
 
     In this lab, we will leverage Elastic's comprehensive suite of modern log analytic tools to unlock the hidden information in your logs that will enable you to quickly perform Root Cause Analysis (RCA) of the problem. We will also create dashboards and alerts to ensure this problem doesn't happen again.
 tabs:
+- id: bt0a2nr0ysiz
+  title: Elasticsearch
+  type: service
+  hostname: kubernetes-vm
+  path: /app/discover#/?_g=(filters:!(),query:(language:kuery,query:''),refreshInterval:(pause:!t,value:60000),time:(from:now-1h,to:now))&_a=(breakdownField:log.level,columns:!(),dataSource:(type:esql),filters:!(),hideChart:!f,interval:auto,query:(esql:'FROM%20logs-proxy.otel-default'),sort:!(!('@timestamp',desc)))
+  port: 30001
 - id: 2vem8q5ukov7
   title: Terminal
   type: terminal
