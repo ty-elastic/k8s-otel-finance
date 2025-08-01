@@ -18,7 +18,10 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-We still don't know why some requests are failing. Now that we are parsing the logs, however, we have access to a lot more information. Let's analyze our clients by `client.ip` to look for possibly geographic patterns. We can easily do that with the Elastic `GeoIP` processor.
+We still don't know why some requests are failing. Now that we are parsing the logs, however, we have access to a lot more information.
+
+# Is this affecting every region?
+Let's analyze our clients by `client.ip` to look for possibly geographic patterns. We can easily do that with the Elastic `GeoIP` processor.
 
 1. Select `logs-proxy.otel-default` from the list of Streams.
 2. Select the `Processing` tab
@@ -59,7 +62,7 @@ In the meantime, this is a useful graph! Let's save it to a Dashboard for future
 3. Click `Save and go to dashboard`
 4. Click `Save` in the upper-right
 
-# Maps
+# Visualizing with Maps
 
 Sometimes it is helpful to visualize geography on a map. Fortunately, Elastic has a built-in Map visualization we can readily use!
 
@@ -68,7 +71,7 @@ Sometimes it is helpful to visualize geography on a map. Fortunately, Elastic ha
 3. Select `Elasticsearch`
 4. Select `Documents`
 5. Select `Data view` to `logs-proxy.otel-default`
-6. Set `Geospatial field` to `client.geo.location`
+6. Set `Geospatial field` to `client.geo.location` (if this field isn't available, refresh the Instruqt virtual browser tab)
 7. Click `Add and continue`
 8. Scroll down to `Layer style`
 9. Set `Fill color` to `By value`

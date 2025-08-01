@@ -35,6 +35,13 @@ for dir in ./courses/*/; do
       fi
 
       cd courses/$current_course
+
+      for diag in diagrams/*.mmd; do
+        diag_base=$(basename "$diag")
+        #mmdc -i $diag -o ./assets/$diag_base.svg
+        docker run --rm -u `id -u`:`id -g` -v $PWD/diagrams:/diagrams -v $PWD/assets:/assets minlag/mermaid-cli -i /diagrams/$diag_base -o /assets/$diag_base.svg
+      done
+
       instruqt track push --force
       cd ../..
     fi

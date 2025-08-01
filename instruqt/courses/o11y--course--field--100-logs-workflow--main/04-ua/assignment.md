@@ -18,7 +18,11 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-We know that errors appear to be localized to a specific region. But maybe there is more to the story? Let's parse that User Agent string to look for correlation. We can easily do that with the Elastic `User agent` processor.
+We know that errors appear to be localized to a specific region. But maybe there is more to the story?
+
+# Is this affecting every browser type?
+
+Let's parse that User Agent string to look for correlation. We can easily do that with the Elastic `User agent` processor.
 
 1. Select `logs-proxy.otel-default` from the list of Streams.
 2. Select the `Processing` tab
@@ -63,7 +67,11 @@ FROM logs-proxy.otel-default
 | SORT bad DESC
 ```
 
-Indeed, it appears we might have a problem with version 136 of the Chrome browser. So what's the correlation with the geographic area we previously saw?
+Indeed, it appears we might have a problem with version 136 of the Chrome browser!
+
+# Correlating with region
+
+So what's the correlation with the geographic area we previously saw?
 
 Execute the following query:
 ```esql

@@ -10,25 +10,32 @@ notes:
 
     In this lab, we will leverage Elastic's comprehensive suite of modern log analytic tools to unlock the hidden information in your logs that will enable you to quickly perform Root Cause Analysis (RCA) of the problem. We will also create dashboards and alerts to ensure this problem doesn't happen again.
 tabs:
-- id: sw6mcyxmqgcv
-  title: Elasticsearch
-  type: service
-  hostname: kubernetes-vm
-  path: /app/discover#/?_g=(filters:!(),query:(language:kuery,query:''),refreshInterval:(pause:!t,value:60000),time:(from:now-1h,to:now))&_a=(breakdownField:log.level,columns:!(),dataSource:(type:esql),filters:!(),hideChart:!f,interval:auto,query:(esql:'FROM%20logs-proxy.otel-default'),sort:!(!('@timestamp',desc)))
-  port: 30001
 - id: 2vem8q5ukov7
   title: Terminal
   type: terminal
   hostname: kubernetes-vm
+- id: sw6mcyxmqgcv
+  title: Elasticsearch (breakout)
+  type: service
+  hostname: kubernetes-vm
+  path: /app/discover#/?_g=(filters:!(),query:(language:kuery,query:''),refreshInterval:(pause:!t,value:60000),time:(from:now-1h,to:now))&_a=(breakdownField:log.level,columns:!(),dataSource:(type:esql),filters:!(),hideChart:!f,interval:auto,query:(esql:'FROM%20logs-proxy.otel-default'),sort:!(!('@timestamp',desc)))
+  port: 30001
+  new_window: true
 difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-We've gotten word from our customer service department that some users are unable to complete stock trades. We know that all of the API calls from our front end web application flow through a nginx reverse proxy, so that seems like a good place to start our investigation.
+We've gotten word from our customer service department that some users are unable to complete stock trades. We know that all of the REST API calls from our front end web application flow through a nginx reverse proxy, so that seems like a good place to start our investigation.
 
-If you are generally familiar with SQL or other piped query languages, you will be right at home with ES|QL, Elastic's modern take on a piped query language.
+![proxy_arch.mmd.svg](../assets/proxy_arch.mmd.svg)
 
-You can enter your queries in the pane at the top of the Elasticsearch tab. Set the time range to the last hour, then click "Refresh" to load the results.
+If you are generally familiar with SQL or other piped query languages, you will be right at home with ES|QL, Elastic's modern piped query language.
+
+You can enter your queries in the pane at the top of the Elasticsearch tab. Set the time field to the last hour, then click "Refresh" to load the results.
+
+![discover.svg](../assets/discover.png)
+
+# Finding the errors
 
 Let's have a look at the logs coming from our nginx reverse proxy.
 
@@ -45,7 +52,11 @@ FROM logs-proxy.otel-default
 | WHERE MATCH(body.text, "500")
 ```
 
-A-ha! We are clearly returning 500 errors for some users. The next thing we quickly want to understand is what percentage of users are experiencing 500 errors.
+If we didn't find "500", we could of course add additional MATCH statements, like `OR MATCH(body.text, "404")`. We will do a better job of handling more types of errors once we start parsing our logs. For now, though, we got lucky: indeed, we are clearly returning 500 errors for some users.
+
+# Does it affect everyone?
+
+The next thing we quickly want to understand is what percentage of users are experiencing 500 errors.
 
 Execute the following query:
 ```esql
@@ -53,7 +64,11 @@ FROM logs-proxy.otel-default
 | STATS bad=COUNT() WHERE MATCH(body.text, "500"), good=COUNT() WHERE MATCH(body.text, "200") BY minute = BUCKET(@timestamp, "1 min")
 ```
 
-That's good. Clearly this issue is affecting only some users. Let's see if we can find when the errors started occurring. Adjust the time picker to show the last 2 hours of data.
+That's good: clearly this issue is affecting only some users.
+
+# When did it start?
+
+Let's see if we can find when the errors started occurring. Adjust the time field to show the last 2 hours of data.
 
 Execute the following query:
 ```esql
@@ -67,7 +82,7 @@ Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
 | STATS bad=COUNT() WHERE MATCH(body.text, "500"), good=COUNT() WHERE MATCH(body.text, "200") BY minute = BUCKET(@timestamp, "1 min")
-| EVAL bad = COALESCE(TO_INT(bad), 0)
+| EVAL bad = COALESCE(TO_INT(bad), 0) // set bad=0 for time buckets with no bad entries
 | SORT minute ASC
 | CHANGE_POINT bad ON minute
 | WHERE type IS NOT NULL
@@ -92,7 +107,8 @@ If you aren't well versed, or you don't want to spend the time, you can leverage
 can you write an ES|QL query to parse these nginx log lines?
 ```
 
-copy the output from the AI assistant flyout by clicking on the clipboard icon in the response. The output should look something like the following.
+> [!NOTE]
+> The output should look something like the following. Because the AI Assistant may use slightly different field names, please copy and use the following instead of what was generated to ensure consistency throughout this workshop.
 
 ```esql
 FROM logs-proxy.otel-default
@@ -100,7 +116,9 @@ FROM logs-proxy.otel-default
 | KEEP timestamp, client_ip, http_method, request_path, status_code, user_agent
 ```
 
-Now close the flyout and execute the generated ES|QL. If you don't see the parsed fields in the result, use the exemplary ES|QL shown above and re-run the query.
+Now close the flyout and execute the generated ES|QL.
+
+# Is this affecting all APIs?
 
 Let's make use of these parsed fields to break down status_code by request_path to see if this is affecting only a specific API?
 
@@ -113,7 +131,11 @@ FROM logs-proxy.otel-default
 | STATS COUNT() BY status_code, request_path
 ```
 
-Ok, it seems these errors are affecting all of our APIs. Ideally, we could also cross-reference against the `user_agent` field.
+Ok, it seems these errors are affecting all of our APIs.
+
+# Is this affecting all User Agents?
+
+Ideally, we could also cross-reference against the `user_agent` field.
 
 Execute the following query:
 ```esql
@@ -126,6 +148,8 @@ FROM logs-proxy.otel-default
 ```
 
 Unfortunately, the unparsed user_agent field is too noisy to really be useful for this kind of analysis. We could try to write a GROK expression to parse `user_agent`, but in practice, it is too complicated (it requires translation in addition to parsing). Let's put a pin in this topic and revisit it in a bit.
+
+# A better way to query
 
 Let's redraw the time graph we drew before, but this time using status_code instead of looking for specific error codes.
 
@@ -146,21 +170,15 @@ This is a useful graph! Let's save it to a Dashboard for future use.
 2. Add to a new dashboard
 3. Save the new dashboard as `Ingress Proxy`
 
-Let's take stock of what we know:
-* a small percentage of users are experiencing 500 errors
-* the errors started occurring around 80 minutes ago
-* the only error type seen is 500
-* the errors occur over all APIs
+# Setting up a simple alert
 
-# Create a simple alert
-
-We could at this point create a simple alert to notify us whenever a status_code other than 200 is received.
+We could at this point create a simple alert to notify us whenever a `status_code` >= 400 is received:
 
 Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
-| GROK message "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
-| WHERE status_code != "200"
+| GROK message "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code:int} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
+| WHERE status_code >= 400
 ```
 
 1. Click Alerts in the taskbar

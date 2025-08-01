@@ -18,7 +18,9 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-So far, we've been using ES|QL to parse our proxy logs at query time. While incredibly powerful for quick analysis, we can do even more with our logs if we parse them at ingest-time. Notably, this is a pretty typical workflow with Elastic: start parsing your logs on-demand with ES|QL and when you find a consistent pattern which you believe will be of greater value if always parsed, move to ingest-time parsing. This, as you will see, unlocks another set of power Elastic log analytics.
+So far, we've been using ES|QL to parse our proxy logs at query time. While incredibly powerful for quick analysis, we can do even more with our logs if we parse them at ingest-time. Notably, this is a pretty typical workflow with Elastic: start parsing your logs on-demand with ES|QL and when you find a consistent pattern which you believe will be of greater value if always parsed, move to ingest-time parsing. This, as you will see, unlocks another set of powerful Elastic log analytics.
+
+# Parsing with Streams
 
 We will be working with the Elastic Streams interface which makes it easy to setup log parsing pipelines.
 
@@ -31,7 +33,11 @@ We will be working with the Elastic Streams interface which makes it easy to set
 
 Elastic will analyze your log lines and try to recognize a pattern.
 
-The generated pattern should look similar to the following. *To ensure a consistent lab experience, please copy the following GROK expression and paste it into `Grok patterns`*:
+The generated pattern should look similar to the following.
+
+> [!NOTE]
+> To ensure a consistent lab experience, please copy the following GROK expression and paste it into `Grok patterns`
+
 ```
 %{IPV4:client.ip} - %{NOTSPACE:client.user} \[%{HTTPDATE:timestamp}\] "%{WORD:http.request.method} %{URIPATH:http.request.url.path} HTTP/%{NUMBER:http.version}" %{NUMBER:http.response.status_code:int} %{NUMBER:http.response.body.bytes:int} "%{DATA:http.request.referrer}" "%{GREEDYDATA:user_agent.original}"
 ```
@@ -48,6 +54,8 @@ The nginx log line includes a timestamp; let's use that as our record timestamp.
 5. Click `Add processor`
 
 Now save the Processing by clicking `Save changes`.
+
+# A better way to query
 
 Now let's jump back to Discover by clicking Discover in the left-hand navigation pane.
 
@@ -76,7 +84,7 @@ This is a useful graph! Let's save it to a Dashboard for future use.
 3. Click `Save and go to dashboard`
 4. Click `Save` in the upper-right
 
-# Create SLO
+# Creating a SLO
 
 Remember that alert we created? Now that we are parsing these fields at ingest-time, we can create a proper SLO which allows for a small amount of errors before we get someone out of bed:
 
@@ -85,7 +93,7 @@ Remember that alert we created? Now that we are parsing these fields at ingest-t
 3. Select `Custom Query`
 4. Set `Data view` to `logs-proxy.otel-default`
 5. Set `Timestamp field` to `@timestamp`
-6. Set `Good query` to `http.response.status_code : 200`
+6. Set `Good query` to `http.response.status_code : 200`  (if this field isn't available, refresh the Instruqt virtual browser tab)
 7. Set `Total query` to `http.response.status_code :*`
 8. Set `Group by` to `http.request.url.path`
 9. Set `Duration` to `7 days`

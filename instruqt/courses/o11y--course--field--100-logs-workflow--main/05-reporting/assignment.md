@@ -18,7 +18,11 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-Now that we know what happened, let's try to be sure this never happens again. One thing that would be helpful is to keep track of new User Agents as they appear in the wild.
+Now that we know what happened, let's try to be sure this never happens again.
+
+# Generating a table of user agents
+
+One thing that would be helpful is to keep track of new User Agents as they appear in the wild.
 
 We can accomplish this using our parsed User Agent string and ES|QL:
 
@@ -114,7 +118,7 @@ Create transform:
 2. Click `Create a transform`
 3. Select `logs-proxy.otel-default`
 4. Select `Pivot`
-5. Set `Search filter` to `user_agent.full :*`
+5. Set `Search filter` to `user_agent.full :*`  (if this field isn't available, refresh the Instruqt virtual browser tab)
 5. Set `Group by` to `terms(user_agent.full)`
 6. Add an aggregation for `@timestamp.max`
 7. Add an aggregation for `@timestamp.min`
