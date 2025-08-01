@@ -28,7 +28,7 @@ Let's parse that User Agent string to look for correlation. While difficult/impo
 2. Select the `Processing` tab
 3. Click `Add a processor`
 4. Select `User agent`
-5. Set the `Field` to 
+5. Set the `Field` to
   ```
   user_agent.original
   ```

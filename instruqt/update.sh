@@ -42,6 +42,18 @@ for dir in ./courses/*/; do
         docker run --rm -u `id -u`:`id -g` -v $PWD/diagrams:/diagrams -v $PWD/assets:/assets minlag/mermaid-cli -i /diagrams/$diag_base -o /assets/$diag_base.svg
       done
 
+      cat "" > input.md
+      for challenge in */; do
+        echo $challenge
+        if [ -f "$challenge/assignment.md" ]; then
+          echo "here"
+          cat "$challenge/assignment.md"
+          cat "$challenge/assignment.md" >> input.md
+        fi
+      done
+      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex --resource-path=/assets --output=/assets/script.pdf /data/input.md
+      rm -rf input.md
+
       instruqt track push --force
       cd ../..
     fi
