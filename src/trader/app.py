@@ -44,7 +44,7 @@ def decode_common_args():
     day_of_week = params.get('day_of_week', None)
     if day_of_week is None:
         day_of_week = random.choice(['M', 'Tu', 'W', 'Th', 'F'])
-
+ 
     region = params.get('region', "NA")
 
     symbol = params.get('symbol', 'ESTC')

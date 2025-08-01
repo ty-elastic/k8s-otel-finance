@@ -32,11 +32,17 @@ spec:
           volumeMounts:
             - mountPath: /usr/share/nginx/html
               name: frontend-claim0
+            - mountPath: /conf/htpasswd
+              name: htpasswd
       restartPolicy: Always
       volumes:
         - name: frontend-claim0
           persistentVolumeClaim:
             claimName: frontend-claim0
+        - name: htpasswd
+          secret:
+            secretName: proxy-secret
+            optional: false
 ---
 apiVersion: v1
 kind: Service
@@ -50,6 +56,24 @@ spec:
   ports:
     - name: proxy
       port: 9090
+      targetPort: 80
+  type: LoadBalancer
+  selector:
+    app: trading
+    service: proxy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: trading
+    service: proxy
+  name: proxy-ext
+  namespace: trading
+spec:
+  ports:
+    - name: proxy
+      port: 8080
       targetPort: 80
   type: LoadBalancer
   selector:
