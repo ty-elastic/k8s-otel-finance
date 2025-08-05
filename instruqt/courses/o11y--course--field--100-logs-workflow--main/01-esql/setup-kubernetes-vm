@@ -1,6 +1,8 @@
 source /opt/workshops/elastic-retry.sh
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
+export INSTRUQT_TRACK_SLUG=o11y--course--field--100-logs-workflow--main
+
 # ------------- FIX KB
 
 # kubectl rollout restart deployment/kibana-kb
@@ -419,7 +421,7 @@ echo "Wait for realtime"
 retry_command_lin curl --silent --fail --output /dev/null http://kubernetes-vm:32003/status/realtime
 echo "realtime reached"
 
-curl -X POST "$KIBANA_URL/api/data_views/data_view" \
+dv=$(curl -X POST "$KIBANA_URL/api/data_views/data_view" \
     --header 'Content-Type: application/json' \
     --header "kbn-xsrf: true" \
     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
@@ -433,12 +435,14 @@ curl -X POST "$KIBANA_URL/api/data_views/data_view" \
         "name": "logs-proxy.otel-default",
         "timeFieldName": "@timestamp"
       }
-    }'
+    }')
 
-echo "Setup DV refresh"
+dv_id=$(echo $dv | jq --compact-output -r '.data_view.id')
+
+echo "Setup DV refresh for $dv_id"
 cat <<EOF >> dataview.sh
 while /bin/true; do
-  curl -X GET "$KIBANA_URL/internal/data_views/fields?pattern=logs-proxy.otel-default&meta_fields=_source&meta_fields=_id&meta_fields=_index&meta_fields=_score&meta_fields=_ignored&allow_no_index=true&apiVersion=1" --header "kbn-xsrf: true" --header 'x-elastic-internal-origin: Kibana' --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64";
+  curl -X POST "$KIBANA_URL/api/data_views/data_view/$dv_id" --header "kbn-xsrf: true" --header 'x-elastic-internal-origin: Kibana' --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" --header "Content-Type: application/json" -d '{"data_view": {}, "refresh_fields": true}';
   sleep 1;
 done
 EOF

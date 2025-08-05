@@ -39,6 +39,9 @@ Let's analyze our clients by `client.ip` to look for possibly geographic pattern
 8. Click `Add processor`
 9. Click `Save changes`
 
+![3_geo1.png](../assets/3_geo1.png)
+![3_geo2.png](../assets/3_geo2.png)
+
 Let's jump back to Discover by clicking Discover in the left-hand navigation pane.
 
 Execute the following query:
@@ -58,9 +61,14 @@ So it looks like all of our 500 errors are contained in the `TW` (Taiwon) region
 In the meantime, this is a useful graph! Let's save it to a Dashboard for future use.
 
 1. Click on the Disk icon in the upper-left of the resulting graph
-2. Add to a existing dashboard "Ingress Proxy"
-3. Click `Save and go to dashboard`
-4. Click `Save` in the upper-right
+2. Name the visualization
+  ```
+  Status by Region
+  ```
+3. Select `Existing` under `Add to dashboard`
+4. Select the existing dashboard `Ingress Proxy`
+4. Click `Save and go to Dashboard`
+5. Once the dashboard has loaded, click the `Save` button in the upper-right
 
 # Visualizing with Maps
 
@@ -81,13 +89,18 @@ Sometimes it is helpful to visualize geography on a map. Fortunately, Elastic ha
 12. Set `Select a field` to `http.response.status_code`
 13. Click `Keep changes`
 14. Click `Save`
-15. Name the Map `Status Code by Location`
+15. Name the Map
+  ```
+  Status Code by Location
+  ```
 15. Select existing dashboard `Ingress Status`
 16. Click `Save and go to dashboard`
+17. Once the dashboard has loaded, click the `Save` button in the upper-right
 
 # Summary
 
 Let's take stock of what we know:
+
 * a small percentage of users are experiencing 500 errors
 * the errors started occurring around 80 minutes ago
 * the only error type seen is 500
@@ -95,6 +108,7 @@ Let's take stock of what we know:
 * the errors occur only in the `TW` region
 
 And what we've done:
+
 * Created a Dashboard showing status code over time
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs for quicker and more powerful analysis

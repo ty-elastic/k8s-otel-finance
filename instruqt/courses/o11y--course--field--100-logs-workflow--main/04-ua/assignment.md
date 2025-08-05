@@ -35,6 +35,8 @@ Let's parse that User Agent string to look for correlation. While difficult/impo
 6. Set `Ignore missing` to true
 7. Click `Add processor`
 
+![4_ua1.png](../assets/4_ua1.png)
+
 In addition to the fields produced by the User Agent processor, we also want a simplified combination of browser name and version. We can easily craft one using the Set processor.
 
 1. Click `Add a processor`
@@ -50,6 +52,8 @@ In addition to the fields produced by the User Agent processor, we also want a s
 5. Click `Ignore failures for this processor`
 6. Click `Add processor`
 7. Click `Save changes`
+
+![4_ua2.png](../assets/4_ua2.png)
 
 Now let's jump back to Discover by clicking Discover in the left-hand navigation pane.
 
@@ -92,6 +96,7 @@ Congratulations! We found our problem! In the next challenge, we will setup a wa
 # Summary
 
 Let's take stock of what we know:
+
 * a small percentage of users are experiencing 500 errors
 * the errors started occurring around 80 minutes ago
 * the only error type seen is 500
@@ -100,6 +105,7 @@ Let's take stock of what we know:
 * the errors occur only with browsers based on Chrome v136
 
 And what we've done:
+
 * Created a Dashboard showing status code over time
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs for quicker and more powerful analysis

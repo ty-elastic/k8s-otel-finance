@@ -67,13 +67,15 @@ FROM logs-proxy.otel-default
 | STATS @timestamp.min = MIN(@timestamp), @timestamp.max = MAX(@timestamp) BY user_agent.name_and_vmajor, client.geo.country_iso_code
 | EVAL first_ts = LEAST(@timestamp.min)
 | STATS client.geo.country_iso_code = TOP(client.geo.country_iso_code, 1, "desc"), user_agent.name_and_vmajor = TOP(user_agent.name_and_vmajor, 1, "desc") WHERE @timestamp.min == first_ts BY @timestamp.min, @timestamp.max
-| SORT @timestamp.min DESC
 | LOOKUP JOIN ua_lookup ON user_agent.name_and_vmajor
 | WHERE release_date IS NOT NULL
+| SORT @timestamp.min DESC
 | KEEP release_date, user_agent.name_and_vmajor, client.geo.country_iso_code, @timestamp.min, @timestamp.max
 ```
 
-Wow! This is great! But maintaining that `ua_lookup` index looks like a lot of work. Fortunately, Elastic makes it possible to leverage an external Large Language Model to lookup those browser release dates for us!
+We can quickly see the problem with maintaining our own `ua_lookup` index. It would take a lot of work to truly track the release date of every Browser version in the wild.
+
+Fortunately, Elastic makes it possible to leverage an external Large Language Model to lookup those browser release dates for us!
 
 Execute the following query:
 ```
@@ -83,7 +85,7 @@ FROM logs-proxy.otel-default
 | EVAL first_ts = LEAST(@timestamp.min)
 | STATS client.geo.country_iso_code = TOP(client.geo.country_iso_code, 1, "desc"), user_agent.full = TOP(user_agent.full, 1, "desc") WHERE @timestamp.min == first_ts BY @timestamp.min, @timestamp.max
 | SORT @timestamp.min DESC
-| LIMIT 25
+| LIMIT 10
 | EVAL prompt = CONCAT(
    "when did this version of this browser come out? output only a version of the format mm/dd/yyyy",
    "browser: ", user_agent.full
@@ -93,7 +95,7 @@ FROM logs-proxy.otel-default
 ```
 
 > [!NOTE]
-> If this encounters a timeout, try running the query again.
+> If this encounters a timeout, try executing the query again.
 
 Yes! Let's save this search for future reference:
 
@@ -106,6 +108,8 @@ Now let's add this as a table to our dashboard
 2. Click `Add from library`
 3. Find `ua_release_dates`
 4. Click `Save`
+
+# Scheduling a report
 
 The CIO is concerned about us not testing new browsers sufficiently, and for some time wants a nightly report of our dashboard. No problem!
 
@@ -126,13 +130,14 @@ Create transform:
 5. Set `Group by` to `terms(user_agent.full)`
 6. Add an aggregation for `@timestamp.max`
 7. Add an aggregation for `@timestamp.min`
-8. Set the `Transform ID` to `user_agents`
-9. Set `Time field` to `@timestamp.min`
-10. Set `Continuous mode`
-11. Click `Next`
-12. Click `Create and start`
+8. Click `> Next`
+9. Set the `Transform ID` to `user_agents`
+10. Set `Time field` to `@timestamp.min`
+11. Set `Continuous mode`
+12. Click `Next`
+13. Click `Create and start`
 
-Let's create a new alert which will fire when
+Let's create a new alert which will fire whenever a new User Agent is seen.
 
 1. Navigate to `Alerts`
 2. Click `Manage Rules`
@@ -169,6 +174,7 @@ Let's see if we fired an alert:
 # Summary
 
 Let's take stock of what we know:
+
 * a small percentage of users are experiencing 500 errors
 * the errors started occurring around 80 minutes ago
 * the only error type seen is 500
@@ -177,6 +183,7 @@ Let's take stock of what we know:
 * the errors occur only with browsers based on Chrome v136
 
 And what we've done:
+
 * Created a Dashboard showing status code over time
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs for quicker and more powerful analysis

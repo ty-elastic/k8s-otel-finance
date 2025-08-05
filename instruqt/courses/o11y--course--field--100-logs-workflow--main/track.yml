@@ -13,6 +13,7 @@ idle_timeout: 900
 timelimit: 7200
 sandbox_preset: managed-elastic-9-1-0
 lab_config:
+  extend_ttl: 900
   sidebar_enabled: true
   feedback_recap_enabled: true
   feedback_tab_enabled: false
@@ -22,5 +23,5 @@ lab_config:
     name: modern-dark
   override_challenge_layout: false
   hideStopButton: false
-checksum: "12212792138973357750"
+checksum: "8847060417915411325"
 enhanced_loading: false
