@@ -69,6 +69,9 @@ FROM logs-proxy.otel-default
 | KEEP @timestamp, client.ip, http.request.method, http.request.url.path, http.response.status_code, user_agent.original
 ```
 
+> [!NOTE]
+> If you get back `1,000 results` but the resulting columns are empty, remove the `Selected fields` (by clicking the `X` next to each), and then add each `Available field` (by clicking the `+` next to each).
+
 Let's redraw our status code graph using our newly parsed field:
 
 Execute the following query:
@@ -108,7 +111,10 @@ Remember that simple alert we created? Now that we are parsing these fields at i
 8. Set `Group by` to `http.request.url.path` (if this field isn't available, refresh the Instruqt virtual browser tab)
 9. Set `Duration` to `7 days`
 10. Set `Target / SLO (%)` to `99.999`
-11. Set `SLO Name` to `Ingress Status`
+11. Set `SLO Name` to
+  ```
+  Ingress Status
+  ```
 12. Click `Create SLO`
 13. Click on your newly created SLO `Ingress Status`
 14. Under the `Actions` menu in the upper-right, select `Create new alert rule`
@@ -118,6 +124,10 @@ With burn rates, we can have Elastic dynamically adjust the escalation of a pote
 13. Click `Next`
 14. (here we could create an action to take when our SLO starts to degrade, like posting to a Slack channel, creating a ServiceNow ticket, or connecting to Pager Duty)
 15. Click `Next`
+16. On the `Details` tab, set the `Rule name` to :
+  ```
+  Ingress Status SLO
+  ```
 16. Click `Create rule`
 
 > [!NOTE]

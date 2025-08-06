@@ -40,10 +40,9 @@ Execute the following query:
 FROM logs-proxy.otel-default
 | WHERE user_agent.full IS NOT NULL
 | STATS @timestamp.min = MIN(@timestamp), @timestamp.max = MAX(@timestamp) BY user_agent.full, client.geo.country_iso_code
-| EVAL first_ts = LEAST(@timestamp.min)
-| STATS client.geo.country_iso_code = TOP(client.geo.country_iso_code, 1, "desc"), user_agent.full = TOP(user_agent.full, 1, "desc") WHERE @timestamp.min == first_ts BY @timestamp.min, @timestamp.max
-| SORT @timestamp.min DESC
-| KEEP client.geo.country_iso_code, user_agent.full, @timestamp.min, @timestamp.max
+| SORT @timestamp.min ASC // sort first seen to last seen
+| STATS first_country_iso_code = TOP(client.geo.country_iso_code , 1, "asc"), first_seen = MIN(@timestamp.min), last_seen = MAX(@timestamp.max) BY user_agent.full
+| SORT user_agent.full, first_seen, last_seen, first_country_iso_code
 ```
 
 Fabulous! Now we can see every User Agent we encounter, when we first encountered it, and in what region it was first seen.
@@ -63,44 +62,48 @@ Execute the following query:
 ```
 FROM logs-proxy.otel-default
 | WHERE user_agent.full IS NOT NULL
-| EVAL user_agent.name_and_vmajor = CONCAT(user_agent.name, " ", SUBSTRING(user_agent.version, 0, LOCATE(user_agent.version, ".")-1))
+| EVAL user_agent.name_and_vmajor = SUBSTRING(user_agent.full, 0, LOCATE(user_agent.full, ".")-1)
 | STATS @timestamp.min = MIN(@timestamp), @timestamp.max = MAX(@timestamp) BY user_agent.name_and_vmajor, client.geo.country_iso_code
-| EVAL first_ts = LEAST(@timestamp.min)
-| STATS client.geo.country_iso_code = TOP(client.geo.country_iso_code, 1, "desc"), user_agent.name_and_vmajor = TOP(user_agent.name_and_vmajor, 1, "desc") WHERE @timestamp.min == first_ts BY @timestamp.min, @timestamp.max
+| SORT @timestamp.min ASC // sort first seen to last seen
+| STATS first_country_iso_code = TOP(client.geo.country_iso_code , 1, "asc"), first_seen = MIN(@timestamp.min), last_seen = MAX(@timestamp.max) BY user_agent.name_and_vmajor
+| SORT user_agent.name_and_vmajor, first_seen, last_seen, first_country_iso_code
 | LOOKUP JOIN ua_lookup ON user_agent.name_and_vmajor
-| WHERE release_date IS NOT NULL
-| SORT @timestamp.min DESC
-| KEEP release_date, user_agent.name_and_vmajor, client.geo.country_iso_code, @timestamp.min, @timestamp.max
+| KEEP release_date, user_agent.name_and_vmajor, first_country_iso_code, first_seen, last_seen
 ```
 
 We can quickly see the problem with maintaining our own `ua_lookup` index. It would take a lot of work to truly track the release date of every Browser version in the wild.
 
-Fortunately, Elastic makes it possible to leverage an external Large Language Model to lookup those browser release dates for us!
+Fortunately, Elastic makes it possible to leverage an external Large Language Model (LLM) to lookup those browser release dates for us!
 
 Execute the following query:
 ```
 FROM logs-proxy.otel-default
 | WHERE user_agent.full IS NOT NULL
 | STATS @timestamp.min = MIN(@timestamp), @timestamp.max = MAX(@timestamp) BY user_agent.full, client.geo.country_iso_code
-| EVAL first_ts = LEAST(@timestamp.min)
-| STATS client.geo.country_iso_code = TOP(client.geo.country_iso_code, 1, "desc"), user_agent.full = TOP(user_agent.full, 1, "desc") WHERE @timestamp.min == first_ts BY @timestamp.min, @timestamp.max
-| SORT @timestamp.min DESC
-| LIMIT 10
+| SORT @timestamp.min ASC // sort first seen to last seen
+| STATS first_country_iso_code = TOP(client.geo.country_iso_code , 1, "asc"), first_seen = MIN(@timestamp.min), last_seen = MAX(@timestamp.max) BY user_agent.full
+| SORT first_seen DESC
+| LIMIT 10 // intentionally limit to top 10 first_seen to limit LLM completions
 | EVAL prompt = CONCAT(
    "when did this version of this browser come out? output only a version of the format mm/dd/yyyy",
    "browser: ", user_agent.full
   ) | COMPLETION release_date = prompt WITH openai_completion
 | EVAL release_date = DATE_PARSE("MM/dd/YYYY", release_date)
-| KEEP release_date, client.geo.country_iso_code, user_agent.full, @timestamp.min, @timestamp.max
+| KEEP release_date, first_country_iso_code, user_agent.full, first_seen, last_seen
 ```
 
 > [!NOTE]
 > If this encounters a timeout, try executing the query again.
 
-Yes! Let's save this search for future reference:
+You'll note that we are limiting our results to only the top 10 last seen User Agents. This is intentional to limit the number of `COMPLETION` commands executed, as each one will result in a call to our configured external Large Language Model (LLM). Notably, the use of the `COMPLETION` command is in Tech Preview; future revisions of ES|QL may include a means to more practically scale the use of the `COMPLETION` command.
+
+Let's save this search for future reference:
 
 1. Click `Save`
-2. Set `Title` to `ua_release_dates`
+2. Set `Title` to 
+  ```
+  ua_release_dates
+  ```
 
 Now let's add this as a table to our dashboard
 
@@ -114,8 +117,8 @@ Now let's add this as a table to our dashboard
 The CIO is concerned about us not testing new browsers sufficiently, and for some time wants a nightly report of our dashboard. No problem!
 
 1. Click `Download` icon
-2. Click `Schedule exports`
-3. Click `Schedule export`
+2. Select `Schedule exports`
+3. Click `Schedule exports`
 
 # Alert when a new UA is seen
 
@@ -131,11 +134,18 @@ Create transform:
 6. Add an aggregation for `@timestamp.max`
 7. Add an aggregation for `@timestamp.min`
 8. Click `> Next`
-9. Set the `Transform ID` to `user_agents`
+9. Set the `Transform ID` to 
+  ```
+  user_agents
+  ```
 10. Set `Time field` to `@timestamp.min`
 11. Set `Continuous mode`
-12. Click `Next`
-13. Click `Create and start`
+12. Open `Advanced settings` and set the Frequency to `5s`
+13. Click `Next`
+14. Click `Create and start`
+
+> [!NOTE]
+> Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the Map.
 
 Let's create a new alert which will fire whenever a new User Agent is seen.
 
@@ -169,7 +179,7 @@ This will create a new Chrome UA 137. Let's go to our dashboard and see if we ca
 Let's see if we fired an alert:
 
 1. Navigate to `Alerts`
-2. Note the active alert
+2. Note the active alert `New UA Detected`!
 
 # Summary
 
@@ -179,7 +189,7 @@ Let's take stock of what we know:
 * the errors started occurring around 80 minutes ago
 * the only error type seen is 500
 * the errors occur over all APIs
-* the errors occur only in the `TW` region
+* the errors occur only in the `TH` region
 * the errors occur only with browsers based on Chrome v136
 
 And what we've done:

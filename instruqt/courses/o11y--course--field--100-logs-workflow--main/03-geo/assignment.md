@@ -51,6 +51,7 @@ Execute the following query:
 FROM logs-proxy.otel-default
 | WHERE client.geo.country_iso_code IS NOT NULL AND http.response.status_code IS NOT NULL
 | STATS COUNT() BY http.response.status_code, client.geo.country_iso_code
+| SORT http.response.status_code DESC
 ```
 
 Let's make this a pie chart to allow for more intuitive visualization.
@@ -58,7 +59,7 @@ Let's make this a pie chart to allow for more intuitive visualization.
 1. Click the pencil icon to the right of the graph
 2. Select `Pie` from the dropdown menu
 
-So it looks like all of our 500 errors are contained in the `TW` (Taiwon) region. That is interesting, and without more information, we might be tempted to stop our RCA analysis here. There is always more to the story, as you will see.
+So it looks like all of our 500 errors are contained in the `TH` (Thailand) region. That is interesting, and without more information, we might be tempted to stop our RCA analysis here. There is always more to the story, as you will see.
 
 In the meantime, this is a useful graph! Let's save it to a Dashboard for future use.
 
@@ -99,6 +100,9 @@ Sometimes it is helpful to visualize geography on a map. Fortunately, Elastic ha
 16. Click `Save and go to dashboard`
 17. Once the dashboard has loaded, click the `Save` button in the upper-right
 
+> [!NOTE]
+> Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the Map.
+
 # Summary
 
 Let's take stock of what we know:
@@ -107,7 +111,7 @@ Let's take stock of what we know:
 * the errors started occurring around 80 minutes ago
 * the only error type seen is 500
 * the errors occur over all APIs
-* the errors occur only in the `TW` region
+* the errors occur only in the `TH` (Thailand) region
 
 And what we've done:
 

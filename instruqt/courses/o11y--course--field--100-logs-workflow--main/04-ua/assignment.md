@@ -85,11 +85,12 @@ Execute the following query:
 FROM logs-proxy.otel-default
 | WHERE client.geo.country_iso_code IS NOT NULL AND user_agent.version IS NOT NULL AND http.response.status_code IS NOT NULL
 | EVAL version_major = SUBSTRING(user_agent.version,0,LOCATE(user_agent.version, ".")-1)
+| WHERE user_agent.name == "Chrome"
 | WHERE TO_INT(version_major) == 136
 | STATS COUNT() BY client.geo.country_iso_code
 ```
 
-Ah! It appears that this specific version of the Chrome browser has only been seen in the `TW` region! Quite possibly, Google has rolled out a specialized or canary version of their browser first in the `TW` region.
+Ah! It appears that this specific version of the Chrome browser has only been seen in the `TH` region! Quite possibly, Google has rolled out a specialized or canary version of their browser first in the `TH` region.
 
 Congratulations! We found our problem! In the next challenge, we will setup a way to catch new User Agents in the future.
 
@@ -101,7 +102,7 @@ Let's take stock of what we know:
 * the errors started occurring around 80 minutes ago
 * the only error type seen is 500
 * the errors occur over all APIs
-* the errors occur only in the `TW` region
+* the errors occur only in the `TH` region
 * the errors occur only with browsers based on Chrome v136
 
 And what we've done:

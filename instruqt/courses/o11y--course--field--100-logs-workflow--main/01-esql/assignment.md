@@ -94,8 +94,11 @@ FROM logs-proxy.otel-default
 | STATS COUNT() BY minute = BUCKET(@timestamp, "1 min"), status
 ```
 
-> [!NOTE]
-> If the resulting graph does not default to a bar graph plotted over time, click on the Pencil icon in the upper-right of the graph and change the graph type to `Bar`
+Then change the resulting graph to a bar graph over time:
+
+1. Click on the pencil icon to the right of the existing graph
+2. Select `Bar` from the visualizations drop-down menu
+3. Click `Apply and close`
 
 Indeed, we are still seeing a mix of 500 and 200 errors.
 

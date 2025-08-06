@@ -83,7 +83,7 @@ Let's take stock of what we know:
 * the errors started occurring around 80 minutes ago
 * the only error type seen is 500
 * the errors occur over all APIs
-* the errors occur only in the `TW` region
+* the errors occur only in the `TH` region
 * the errors occur only with browsers based on Chrome v136
 
 And what we've done:

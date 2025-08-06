@@ -89,11 +89,15 @@ generate_customers_per_region()
 CHROME_VERSIONS = (125, 135)
 BROWSER_PREFERENCE = ('chrome')
 BROWSER_PREFERENCE_PERCENTAGE = 30
-ua_generator_options = Options()
-ua_generator_options.weighted_versions = True
-ua_generator_options.version_ranges = {
-    'chrome': VersionRange(CHROME_VERSIONS[0], CHROME_VERSIONS[1]),
-}
+
+def make_ua_generator_options():
+    ua_generator_options = Options()
+    ua_generator_options.weighted_versions = True
+    ua_generator_options.version_ranges = {
+        'chrome': VersionRange(CHROME_VERSIONS[0], CHROME_VERSIONS[1]),
+    }
+    return ua_generator_options
+ua_generator_options = make_ua_generator_options()
 
 USERAGENTS_PER_USER = {}
 def generate_useragent_per_user():
@@ -102,7 +106,7 @@ def generate_useragent_per_user():
             if random.randint(0,100) < BROWSER_PREFERENCE_PERCENTAGE:
                 USERAGENTS_PER_USER[customer] = ua_generator.generate(browser=BROWSER_PREFERENCE, options=ua_generator_options)
             else:
-                USERAGENTS_PER_USER[customer] = ua_generator.generate(options=ua_generator_options)
+                USERAGENTS_PER_USER[customer] = ua_generator.generate(options=ua_generator_options) 
 generate_useragent_per_user()
 
 IP_ADDRESS_PER_USER = {}
@@ -182,7 +186,7 @@ def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, lo
                                 status_code=200 if error_request is False else 500,
                                 size=random.randrange(SIZE[url][0],SIZE[url][1]),
                                 ref_url='-',
-                                user_agent=USERAGENTS_PER_USER[customer_id])
+                                user_agent=USERAGENTS_PER_USER[customer_id].text)
         elif generator_type == 'trader':
             symbol = random.choice(SYMBOLS)
             if symbol not in stock_price:
@@ -209,6 +213,7 @@ def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, lo
 
 def bump_version_up_per_browser(*, browser, region):
     global request_error_per_customer
+
     for browser_version_range in ua_generator_options.version_ranges.keys():
         if browser_version_range == browser:
             last_max = ua_generator_options.version_ranges[browser].max_version.major
@@ -223,8 +228,7 @@ def bump_version_up_per_browser(*, browser, region):
     for customer in customers:
         if USERAGENTS_PER_USER[customer].browser == browser:
             print(f'new ua for {browser}')
-            new_ua = ua_generator.generate(browser=browser, options=ua_generator_options)
-            USERAGENTS_PER_USER[customer] = new_ua
+            USERAGENTS_PER_USER[customer] = ua_generator.generate(browser=browser, options=ua_generator_options)
             print(f"start request error for customer {customer}")
             request_error_per_customer[customer] = {'amount': 100}
 
