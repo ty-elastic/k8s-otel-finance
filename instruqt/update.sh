@@ -47,7 +47,6 @@ for dir in ./courses/*/; do
         echo $challenge
         if [ -f "$challenge/assignment.md" ]; then
           echo "here"
-          cat "$challenge/assignment.md"
           cat "$challenge/assignment.md" >> input.md
         fi
       done
