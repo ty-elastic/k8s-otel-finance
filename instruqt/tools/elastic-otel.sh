@@ -53,5 +53,5 @@ helm repo add open-telemetry 'https://open-telemetry.github.io/opentelemetry-hel
 kubectl create namespace $namespace
 kubectl create secret generic elastic-secret-otel \
   --namespace $namespace \
-  --from-literal=elastic_endpoint='http://elasticsearch-es-http.default.svc:9200' \
+  --from-literal=elastic_endpoint=$ELASTICSEARCH_URL \
   --from-literal=elastic_api_key=$ELASTICSEARCH_APIKEY
