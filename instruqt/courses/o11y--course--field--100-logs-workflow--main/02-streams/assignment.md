@@ -24,7 +24,7 @@ So far, we've been using ES|QL to parse our proxy logs at query time. While incr
 
 We will be working with the Elastic Streams interface which makes it easy to setup log parsing pipelines.
 
-1. Select `logs-proxy.otel-default` from the list of data streams
+1. Select `logs-proxy.otel-default` from the list of data streams (if you start typing, Elasticsearch will help you find it)
 2. Select the `Processing` tab
 3. Click `Add a processor`
 4. Select `Grok` for the `Processor` if not already selected
@@ -42,8 +42,7 @@ The generated pattern should look similar to the following.
 %{IPV4:client.ip} - %{NOTSPACE:client.user} \[%{HTTPDATE:timestamp}\] "%{WORD:http.request.method} %{URIPATH:http.request.url.path} HTTP/%{NUMBER:http.version}" %{NUMBER:http.response.status_code:int} %{NUMBER:http.response.body.bytes:int} "%{DATA:http.request.referrer}" "%{GREEDYDATA:user_agent.original}"
 ```
 
-7. Click `Accept`
-8. Click `Add processor`
+7. Click `Add processor`
 
 ![2_grok.png](../assets/2_grok.png)
 

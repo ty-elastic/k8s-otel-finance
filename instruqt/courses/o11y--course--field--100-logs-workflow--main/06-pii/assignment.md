@@ -70,7 +70,8 @@ Say your records department requires you to keep these logs generally accessible
 3. Select `logs-proxy.otel-default` from the list of Streams
 4. Click on the `Data retention` tab
 5. Click `Edit data retention`
-6. Set to `30` days
+6. Select `Set specific retention days`
+7. Set to `30` days
 
 Elasticsearch will now remove this data from its online indices after 30 days. At that time, it will only be available in backups.
 

@@ -76,12 +76,6 @@ CLIENTIPS_PER_REGION = {
     'APAC': '101.136.0.0/14'
 }
 
-CHROME_VERSIONS = (125, 135)
-ua_generator_options = Options()
-ua_generator_options.version_ranges = {
-    'chrome': VersionRange(CHROME_VERSIONS[0], CHROME_VERSIONS[1]),
-}
-
 CUSTOMERS_PER_REGION = {}
 def generate_customers_per_region():
     fake = Faker()
@@ -92,11 +86,23 @@ def generate_customers_per_region():
             CUSTOMERS_PER_REGION[region].append(name)
 generate_customers_per_region()
 
+CHROME_VERSIONS = (125, 135)
+BROWSER_PREFERENCE = ('chrome')
+BROWSER_PREFERENCE_PERCENTAGE = 30
+ua_generator_options = Options()
+ua_generator_options.weighted_versions = True
+ua_generator_options.version_ranges = {
+    'chrome': VersionRange(CHROME_VERSIONS[0], CHROME_VERSIONS[1]),
+}
+
 USERAGENTS_PER_USER = {}
 def generate_useragent_per_user():
     for region in CUSTOMERS_PER_REGION.keys():
         for customer in CUSTOMERS_PER_REGION[region]:
-            USERAGENTS_PER_USER[customer] = ua_generator.generate(options=ua_generator_options)
+            if random.randint(0,100) < BROWSER_PREFERENCE_PERCENTAGE:
+                USERAGENTS_PER_USER[customer] = ua_generator.generate(browser=BROWSER_PREFERENCE, options=ua_generator_options)
+            else:
+                USERAGENTS_PER_USER[customer] = ua_generator.generate(options=ua_generator_options)
 generate_useragent_per_user()
 
 IP_ADDRESS_PER_USER = {}

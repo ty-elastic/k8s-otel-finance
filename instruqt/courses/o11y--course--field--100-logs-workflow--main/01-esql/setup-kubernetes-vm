@@ -3,10 +3,10 @@ export $(curl http://kubernetes-vm:9000/env | xargs)
 
 export INSTRUQT_TRACK_SLUG=o11y--course--field--100-logs-workflow--main
 
-# ------------- FIX KB
+# ------------- FIX Kibana
 
-# kubectl rollout restart deployment/kibana-kb
-# retry_command_lin check_es_health
+kubectl rollout restart deployment/kibana-kb
+retry_command_lin check_es_health
 
 # ------------- VIEW
 
@@ -14,184 +14,15 @@ export INSTRUQT_TRACK_SLUG=o11y--course--field--100-logs-workflow--main
 
 # ------------- AI ASSISTANT
 
-/opt/workshops/elastic-llm.sh -m gpt-4o-westus -k false -p false
-
-echo "Initializing AI Assistant Everywhere"
-init_ai_everywhere() {
-    local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$KIBANA_URL/internal/kibana/settings" \
-    --header 'Content-Type: application/json' \
-    --header "kbn-xsrf: true" \
-    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
-    --header 'x-elastic-internal-origin: Kibana' \
-    -d '{"changes":{"aiAssistant:preferredAIAssistantType":"observability"}}')
-
-    if echo $http_status | grep -q '^2'; then
-        echo "Elastic AI Assistant Everywhere successfully initialized: $http_status"
-        return 0
-    else
-        echo "Failed to initialize Elastic AI Assistant Everywhere. HTTP status: $http_status"
-        return 1
-    fi
-}
-retry_command_lin init_ai_everywhere
+source /workspace/workshop/instruqt/tools/elastic-completion.sh
 
 # ------------- STREAMS
 
-echo "Enable streams"
-enable_streams() {
-    local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$KIBANA_URL/internal/kibana/settings" \
-    --header 'Content-Type: application/json' \
-    --header "kbn-xsrf: true" \
-    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
-    --header 'x-elastic-internal-origin: Kibana' \
-    -d '{"changes":{"observability:enableStreamsUI":true}}')
-
-    if echo $http_status | grep -q '^2'; then
-        echo "Enabled Streams: $http_status"
-        return 0
-    else
-        echo "Failed to enable streams. HTTP status: $http_status"
-        return 1
-    fi
-}
-retry_command_lin enable_streams
+source /workspace/workshop/instruqt/tools/elastic-streams.sh
 
 # ------------- OTEL
 
-output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_security/api_key" -d '
-{
-    "name": "kubernetes_otel_onboarding",
-    "metadata": {
-        "application": "logs",
-        "managed": true
-    },
-    "role_descriptors": {
-        "standalone_agent": {
-            "cluster": [
-            "monitor"
-            ],
-            "indices": [
-            {
-                "names": [
-                "logs-*-*",
-                "metrics-*-*",
-                "traces-*-*"
-                ],
-                "privileges": [
-                "auto_configure",
-                "create_doc"
-                ],
-                "allow_restricted_indices": false
-            }
-            ],
-            "applications": [],
-            "run_as": [],
-            "metadata": {},
-            "transient_metadata": {
-            "enabled": true
-            }
-        }
-    }
-}
-')
-
-ELASTICSEARCH_APIKEY=$(echo $output | jq -r '.encoded')
-
-kubectl create namespace trading
-kubectl create secret generic elastic-secret-otel \
-  --namespace trading \
-  --from-literal=elastic_endpoint=$ELASTICSEARCH_URL \
-  --from-literal=elastic_api_key=$ELASTICSEARCH_APIKEY
-
-# ------------- INDEX
-
-index_orig=$(curl -s -X GET "$ELASTICSEARCH_URL/_component_template/logs@settings?flat_settings=true" \
-    --header 'Content-Type: application/json' \
-    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64")
-
-index_orig_strip=$(echo $index_orig | jq --compact-output -r '.component_templates[0].component_template')
-
-echo $index_orig_strip | jq --compact-output -r '.template.settings["index.refresh_interval"]="1s"' > index_new.json
-
-index_new_put=$(curl -s -X PUT "$ELASTICSEARCH_URL/_component_template/logs@settings" \
-    --header 'Content-Type: application/json' \
-    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
-    -d @index_new.json)
-
-echo $index_new_put
-
-# ------------- MAPPING
-
-map_orig=$(curl -s -X GET "$ELASTICSEARCH_URL/_component_template/otel@mappings?flat_settings=true" \
-    --header 'Content-Type: application/json' \
-    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64")
-
-map_orig_strip=$(echo $map_orig | jq --compact-output -r '.component_templates[0].component_template')
-
-echo $map_orig_strip | sed 's|{"template":{"mappings":{"dynamic":false|{"template":{"mappings":{"dynamic":true|' > map_new.json
-
-map_new_put=$(curl -s -X PUT "$ELASTICSEARCH_URL/_component_template/otel@mappings" \
-    --header 'Content-Type: application/json' \
-    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
-    -d @map_new.json)
-
-echo $map_new_put
-
-
-# echo "Adding custom mappings"
-# custom_mappings() {
-#     local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$ELASTICSEARCH_URL/_component_template/logs-otel@custom" \
-#     --header 'Content-Type: application/json' \
-#     --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" \
-#      -d'
-#     {
-#         "template": {
-#             "mappings": {
-#                 "properties": {
-#                     "parsed": {
-#                         "dynamic": true,
-#                         "type": "object"
-#                     }
-#                 }
-#             }
-#         }
-#     }')
-
-#     if echo $http_status | grep -q '^2'; then
-#         echo "Set custom mappings: $http_status"
-#         return 0
-#     else
-#         echo "Failed to set custom mappings. HTTP status: $http_status"
-#         return 1
-#     fi
-# }
-# retry_command_lin custom_mappings
-
-# ------------- OPENAI FOR ESQL
-
-echo "Adding completion connector"
-add_connector() {
-    local http_status=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$ELASTICSEARCH_URL/_inference/completion/openai_completion" \
-    --header 'Content-Type: application/json' \
-    --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" -d'
-    {
-        "service": "openai",
-        "service_settings": {
-            "model_id": "gpt-4.1",
-            "api_key": "'"$LLM_APIKEY"'",
-            "url": "https://'"$LLM_PROXY_URL"'/v1/chat/completions"
-        }
-    }')
-
-    if echo $http_status | grep -q '^2'; then
-        echo "Connector added successfully with HTTP status: $http_status"
-        return 0
-    else
-        echo "Failed to add connector. HTTP status: $http_status"
-        return 1
-    fi
-}
-retry_command_lin add_connector
+source /workspace/workshop/instruqt/tools/elastic-otel.sh -n trading
 
 # ------------- UA_LOOKUP ENRICHMENT
 
@@ -239,7 +70,6 @@ curl -X POST "$ELASTICSEARCH_URL/ua_lookup/_bulk" \
     --data-binary @ua_lookup.ndjson
 
 # ------------- NETWORKS ENRICHMENT
-
 
 curl -X PUT "$ELASTICSEARCH_URL/networks" \
     --header 'Content-Type: application/json' \
@@ -442,7 +272,7 @@ dv_id=$(echo $dv | jq --compact-output -r '.data_view.id')
 echo "Setup DV refresh for $dv_id"
 cat <<EOF >> dataview.sh
 while /bin/true; do
-  curl -X POST "$KIBANA_URL/api/data_views/data_view/$dv_id" --header "kbn-xsrf: true" --header 'x-elastic-internal-origin: Kibana' --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" --header "Content-Type: application/json" -d '{"data_view": {}, "refresh_fields": true}';
+  curl -s -o /dev/null -X POST "$KIBANA_URL/api/data_views/data_view/$dv_id" --header "kbn-xsrf: true" --header 'x-elastic-internal-origin: Kibana' --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" --header "Content-Type: application/json" -d '{"data_view": {}, "refresh_fields": true}';
   sleep 1;
 done
 EOF

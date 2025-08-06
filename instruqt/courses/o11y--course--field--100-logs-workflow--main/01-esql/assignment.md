@@ -59,7 +59,7 @@ We can see that there are still transactions occurring, but we don't know if the
 Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
-| WHERE body.text LIKE "* 500 *"
+| WHERE body.text LIKE "* 500 *" // look for messages containing " 500 " in the body
 ```
 
 If we didn't find "500", we could of course add additional `LIKE` criteria to our `WHERE` clause, like `WHERE body.text LIKE "* 500 *" OR body.text LIKE "* 404 *"`. We will do a better job of handling more types of errors once we start parsing our logs. For now, though, we got lucky: indeed, we are clearly returning 500 errors for some users.
@@ -71,8 +71,8 @@ The next thing we quickly want to understand is what percentage of users are exp
 Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
-| EVAL status = CASE(body.text LIKE "* 500 *", "bad", "good")
-| STATS count = COUNT() BY status
+| EVAL status = CASE(body.text LIKE "* 500 *", "bad", "good") // label messages containing " 500 " as "bad", else "good"
+| STATS count = COUNT() BY status // count good and bad
 ```
 
 Let's visualize this as a pie graph to make it a little easier to understand.
@@ -113,7 +113,7 @@ FROM logs-proxy.otel-default
 | STATS bad=COUNT() WHERE body.text LIKE "* 500 *", good=COUNT() WHERE body.text LIKE "* 200 *" BY minute = BUCKET(@timestamp, "1 min")
 | EVAL bad = COALESCE(TO_INT(bad), 0) // set bad=0 for time buckets with no bad entries
 | SORT minute ASC
-| CHANGE_POINT bad ON minute
+| CHANGE_POINT bad ON minute AS type
 | WHERE type IS NOT NULL
 | KEEP type, minute, bad
 ```

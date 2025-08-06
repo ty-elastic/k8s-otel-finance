@@ -1,6 +1,13 @@
 source /opt/workshops/elastic-retry.sh
-
 export $(curl http://kubernetes-vm:9000/env | xargs)
+
+namespace=opentelemetry-operator-system
+while getopts "n:" opt
+do
+   case "$opt" in
+      n ) namespace="$OPTARG" ;;
+   esac
+done
 
 output=$(curl -s -X POST --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64"  -H 'Content-Type: application/json' "$ELASTICSEARCH_URL/_security/api_key" -d '
 {
@@ -43,10 +50,8 @@ ELASTICSEARCH_APIKEY=$(echo $output | jq -r '.encoded')
 
 helm repo add open-telemetry 'https://open-telemetry.github.io/opentelemetry-helm-charts' --force-update
 
-kubectl create namespace opentelemetry-operator-system
+kubectl create namespace $namespace
 kubectl create secret generic elastic-secret-otel \
-  --namespace opentelemetry-operator-system \
+  --namespace $namespace \
   --from-literal=elastic_endpoint='http://elasticsearch-es-http.default.svc:9200' \
   --from-literal=elastic_api_key=$ELASTICSEARCH_APIKEY
-
-

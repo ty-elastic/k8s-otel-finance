@@ -44,6 +44,8 @@ Let's analyze our clients by `client.ip` to look for possibly geographic pattern
 
 Let's jump back to Discover by clicking Discover in the left-hand navigation pane.
 
+Adjust the time field to show the last 2 hours of data.
+
 Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
