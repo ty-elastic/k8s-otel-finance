@@ -1,7 +1,7 @@
 source /opt/workshops/elastic-retry.sh
 export $(curl http://kubernetes-vm:9000/env | xargs)
 
-/opt/workshops/elastic-llm.sh -m gpt-4o-westus -k true -d true -e true -p false 
+/opt/workshops/elastic-llm.sh -m gpt-4o-westus -k false -p false 
 
 # -------------
 

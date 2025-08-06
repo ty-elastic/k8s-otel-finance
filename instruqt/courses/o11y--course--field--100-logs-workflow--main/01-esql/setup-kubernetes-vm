@@ -3,6 +3,13 @@ export $(curl http://kubernetes-vm:9000/env | xargs)
 
 export INSTRUQT_TRACK_SLUG=o11y--course--field--100-logs-workflow--main
 
+# ------------- CODE
+
+mkdir -p /workspace/workshop
+git clone https://github.com/ty-elastic/k8s-otel-finance.git /workspace/workshop
+cd /workspace/workshop
+git checkout $INSTRUQT_TRACK_SLUG
+
 # ------------- FIX Kibana
 
 kubectl rollout restart deployment/kibana-kb
@@ -228,12 +235,6 @@ curl -X PUT "$ELASTICSEARCH_URL/_security/user/limited_user" \
         "enabled": true
     }'
 
-# ------------- CODE
-
-mkdir -p /workspace/workshop
-git clone https://github.com/ty-elastic/k8s-otel-finance.git /workspace/workshop
-cd /workspace/workshop
-git checkout $INSTRUQT_TRACK_SLUG
 
 # ------------- DEPLOY
 
