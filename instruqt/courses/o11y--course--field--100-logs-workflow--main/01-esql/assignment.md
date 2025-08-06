@@ -85,13 +85,19 @@ Let's visualize this as a pie graph to make it a little easier to understand.
 
 This error appears to only be affecting a small percentage of our overall API queries.
 
-Let's also confirm that we are still seeing a mix of 500 and 200 errors at this time (e.g., the problem wasn't transitory and somehow fixed itself).
+Let's also confirm that we are still seeing a mix of 500 and 200 errors (e.g., the problem wasn't transitory and somehow fixed itself).
 
 Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
-| STATS bad=COUNT() WHERE body.text LIKE "* 500 *", good=COUNT() WHERE body.text LIKE "* 200 *" BY minute = BUCKET(@timestamp, "1 min")
+| EVAL status = CASE(body.text LIKE "* 500 *", "bad", "good") // label messages containing " 500 " as "bad", else "good"
+| STATS COUNT() BY minute = BUCKET(@timestamp, "1 min"), status
 ```
+
+> [!NOTE]
+> If the resulting graph does not default to a bar graph plotted over time, click on the Pencil icon in the upper-right of the graph and change the graph type to `Bar`
+
+Indeed, we are still seeing a mix of 500 and 200 errors.
 
 # When did it start?
 
@@ -102,7 +108,8 @@ Let's see if we can find when the errors started occurring. Adjust the time fiel
 Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
-| STATS bad=COUNT() WHERE body.text LIKE "* 500 *", good=COUNT() WHERE body.text LIKE "* 200 *" BY minute = BUCKET(@timestamp, "1 min")
+| EVAL status = CASE(body.text LIKE "* 500 *", "bad", "good") // label messages containing " 500 " as "bad", else "good"
+| STATS COUNT() BY minute = BUCKET(@timestamp, "1 min"), status
 ```
 
 Ok, it looks like this issue first started happening around 80 minutes ago. We can use `CHANGE_POINT` to narrow it down to a specific minute:
@@ -110,12 +117,11 @@ Ok, it looks like this issue first started happening around 80 minutes ago. We c
 Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
-| STATS bad=COUNT() WHERE body.text LIKE "* 500 *", good=COUNT() WHERE body.text LIKE "* 200 *" BY minute = BUCKET(@timestamp, "1 min")
-| EVAL bad = COALESCE(TO_INT(bad), 0) // set bad=0 for time buckets with no bad entries
-| SORT minute ASC
-| CHANGE_POINT bad ON minute AS type
+| EVAL status = CASE(body.text LIKE "* 500 *", "bad", "good") // label messages containing " 500 " as "bad", else "good"
+| STATS count = COUNT() BY minute = BUCKET(@timestamp, "1 min"), status
+| CHANGE_POINT count ON minute AS type, pval // look for distribution change
 | WHERE type IS NOT NULL
-| KEEP type, minute, bad
+| KEEP type, minute
 ```
 
 Let's take stock of what we know:
