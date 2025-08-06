@@ -100,7 +100,7 @@ You'll note that we are limiting our results to only the top 10 last seen User A
 Let's save this search for future reference:
 
 1. Click `Save`
-2. Set `Title` to 
+2. Set `Title` to
   ```
   ua_release_dates
   ```
@@ -134,7 +134,7 @@ Create transform:
 6. Add an aggregation for `@timestamp.max`
 7. Add an aggregation for `@timestamp.min`
 8. Click `> Next`
-9. Set the `Transform ID` to 
+9. Set the `Transform ID` to
   ```
   user_agents
   ```
