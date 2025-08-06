@@ -53,6 +53,7 @@ for dir in ./courses/*/; do
       docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex --highlight-style=espresso --resource-path=/assets --output=/assets/script.pdf /data/input.md
       rm -rf input.md
       docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex --highlight-style=espresso --resource-path=/assets --output=/assets/brief.pdf /data/docs/brief.md
+      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex --highlight-style=espresso --resource-path=/assets --output=/assets/notes.pdf /data/docs/notes.md
 
       instruqt track push --force
       cd ../..

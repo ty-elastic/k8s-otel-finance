@@ -1,20 +1,20 @@
 flowchart TB
-    %% style logfile fill:#ffff00,stroke-width:4px
-    %% style datastream fill:#ffff00,stroke-width:4px
+    style logfile fill:#ffff00,stroke-width:4px
+    style datastream fill:#ffff00,stroke-width:4px
 
     style streams_parsing fill:#ffff00,stroke-width:4px
 
-    %% style esql_query fill:#ffff00,stroke-width:4px
+    style esql_query fill:#ffff00,stroke-width:4px
     %% style lookup_index fill:#ffff00,stroke-width:4px
-    style esql_parse fill:#ffff00,stroke-width:4px
-    %% style esql_agg fill:#ffff00,stroke-width:4px
+    %% style esql_parse fill:#ffff00,stroke-width:4px
+    style esql_agg fill:#ffff00,stroke-width:4px
 
     %% style transforms_query fill:#ffff00,stroke-width:4px
     %% style transforms_aggregations fill:#ffff00,stroke-width:4px
     %% style transforms_index fill:#ffff00,stroke-width:4px
-    
+
     %% style alerts fill:#ffff00,stroke-width:4px
-    %% style visualizations fill:#ffff00,stroke-width:4px
+    style visualizations fill:#ffff00,stroke-width:4px
 
     subgraph elasticsearch[Elasticsearch]
         datastream@{shape: cyl}
