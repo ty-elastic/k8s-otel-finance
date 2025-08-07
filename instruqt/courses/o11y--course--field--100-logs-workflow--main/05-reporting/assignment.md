@@ -158,8 +158,12 @@ Let's create a new alert which will fire whenever a new User Agent is seen.
 7. Set `FOR THE LAST` to `5 minutes`
 8. Set `Rule schedule` to `5 seconds`
 9. Set `Rule name` to `New UA Detected`
-9. Set `Related dashboards` to `Ingress Proxy`
-10. Click `Create rule`
+10. Set `Tags` to
+  ```
+  ingress
+  ```
+11. Set `Related dashboards` to `Ingress Proxy`
+12. Click `Create rule`
 
 # Let's test it
 
@@ -174,12 +178,8 @@ This will create a new Chrome UA 137. Let's go to our dashboard and see if we ca
 1. Navigate to the [button label="Elasticsearch"](tab-0) tab
 2. Navigate to Dashboards
 3. Select `Ingress Proxy`
-4. Look at the table of UAs that we added and note the addition of Chrome 137!
 
-Let's see if we fired an alert:
-
-1. Navigate to `Alerts`
-2. Note the active alert `New UA Detected`!
+Look at the table of UAs that we added and note the addition of Chrome 137! You'll also note a new active alert `New UA Detected`!
 
 # Summary
 

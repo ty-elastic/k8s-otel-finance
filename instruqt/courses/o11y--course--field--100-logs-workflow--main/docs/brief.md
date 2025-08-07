@@ -21,7 +21,7 @@ Participants will walk away from the workshop with an introduction to:
 * Using ES|QL to search logs
 * Using ES|QL to parse logs at query-time
 * [new in 9.1] Using ES|QL to do advanced aggregations, analytics, and visualizations
-* Creating a dashboard
+* Creating a useful dashboard
 * Using ES|QL to create Alerts
 * Using AI Assistant to help write ES|QL queries
 * [new in 9.1] Using Streams to setup ingest-time log processing pipeline (GROK parsing, geo-location, User Agent parsing)

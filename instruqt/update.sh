@@ -13,11 +13,11 @@ done
 # git add -u
 # git commit -m "updates"
 # git push origin main
-# git tag -f -a $current_course -m $current_course
-# git push origin $current_course
+# git tag -f -a $course -m $course
+# git push origin $course
 
-git tag -f -a $current_course -m $current_course
-git push -f origin $current_course
+git tag -f -a $course -m $course
+git push -f origin $course
 
 for dir in ./courses/*/; do
   echo $dir
