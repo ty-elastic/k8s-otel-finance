@@ -136,13 +136,13 @@ Let's take stock of what we know:
 
 # Parsing with ES|QL
 
-As you can see, simply searching for known error codes in our log lines will only get us so far. Maybe the error codes vary, or aren't specifically 500, but rather something in the 400 range?
+As you can see, simply searching for known error codes in our log lines will only get us so far. Maybe the error codes vary, maybe we want to analyze status code vs. request URL.
 
 Fortunately, nginx logs are semi-structured which makes them (relatively) easy to parse.
 
 Some of you may be familiar with GROK expressions which provides a higher-level interface on top of regex; namely, GROK allows you define patterns. If you are well versed in GROK, you may be able to write a parsing pattern yourself for nginx logs, possibly using tools like [GROK Debugger](https://grokdebugger.com) to help.
 
-If you aren't well versed in GROK expressions, or you don't want to spend the time, you can leverage our AI Assistant to help! Click on the AI Assistant button in the upper-right and enter the following prompt:
+If you aren't well versed in GROK expressions, or you don't want to spend the time to debug an expression yourself, you can leverage our AI Assistant to help! Click on the AI Assistant button in the upper-right and enter the following prompt:
 
 ```
 can you write an ES|QL query to parse these nginx log lines?
@@ -159,9 +159,6 @@ FROM logs-proxy.otel-default
 | KEEP @timestamp, client_ip, http_method, request_path, status_code, user_agent
 ```
 
-> [!NOTE]
-> You'll note that our search has gotten a little slower when we added query-time GROK parsing. In our next challenge, we will show you how we can retain fast-search over long time windows WITH parsing using ingest-time parsing.
-
 # Is this affecting all APIs?
 
 Let's make use of these parsed fields to break down `status_code` by `request_path` to see if this is affecting only a specific API?
@@ -175,6 +172,9 @@ FROM logs-proxy.otel-default
 ```
 
 Ok, it seems these errors are affecting all of our APIs.
+
+> [!NOTE]
+> You'll note that our search has gotten a little slower when we added query-time GROK parsing. In our next challenge, we will show you how we can retain fast-search over long time windows WITH parsing using ingest-time parsing.
 
 # Is this affecting all User Agents?
 
@@ -209,7 +209,7 @@ FROM logs-proxy.otel-default
 
 This is a useful graph, and you can clearly see the advantage of parsing the log line vs. simply searching for specific error codes. Here, we can just generally graph by `status_code` and additionally split the data by, say, `request_path`.
 
-This is a useful graph! Let's save it to a Dashboard for future use.
+Let's save this graph to a Dashboard for future use.
 
 ![1_save.png](../assets/1_save.png)
 
@@ -244,7 +244,7 @@ FROM logs-proxy.otel-default
 
 ![1_alert.png](../assets/1_alert.png)
 
-1. Click Alerts in the taskbar
+1. Click `Alerts` in the taskbar
 2. Select `Create search threshold rule`
 3. Click `Test query`
 4. Leave the defaults and click `Next`

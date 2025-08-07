@@ -28,7 +28,11 @@ We will be working with the Elastic Streams interface which makes it easy to set
 2. Select the `Processing` tab
 3. Click `Add a processor`
 4. Select `Grok` for the `Processor` if not already selected
-5. Set the `Field` to `body.text` if not already filled in
+5. Set the `Field` to
+  ```
+  body.text
+  ```
+  if not already filled in
 6. Click `Generate pattern`
 
 Elastic will analyze your log lines and try to recognize a pattern.
@@ -106,9 +110,19 @@ Remember that simple alert we created? Now that we are parsing these fields at i
 3. Select `Custom Query`
 4. Set `Data view` to `logs-proxy.otel-default`
 5. Set `Timestamp field` to `@timestamp`
-6. Set `Good query` to `http.response.status_code < 400`  (if this field isn't available, refresh the Instruqt virtual browser tab)
-7. Set `Total query` to `http.response.status_code : *` (if this field isn't available, refresh the Instruqt virtual browser tab)
-8. Set `Group by` to `http.request.url.path` (if this field isn't available, refresh the Instruqt virtual browser tab)
+6. Set `Good query` to
+  ```
+  http.response.status_code < 400
+  ```
+  (if this field isn't available, refresh the Instruqt virtual browser tab)
+7. Set `Total query` to
+  ```
+  http.response.status_code : *
+  ```
+8. Set `Group by` to
+  ```
+  http.request.url.path
+  ```
 9. Set `SLO Name` to
   ```
   Ingress Status
@@ -121,7 +135,7 @@ Remember that simple alert we created? Now that we are parsing these fields at i
 
 > [!NOTE]
 > Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the SLO.
-> ![2_slo.png](../assets/2_slo.png)
+> ![2_reload.png](../assets/2_reload.png)
 
 Now let's setup an alert that triggers when this SLO is breached.
 

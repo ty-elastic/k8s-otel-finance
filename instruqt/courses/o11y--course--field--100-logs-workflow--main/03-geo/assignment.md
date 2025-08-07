@@ -31,13 +31,14 @@ Let's analyze our clients by `client.ip` to look for possibly geographic pattern
   ```
   client.ip
   ```
-6. Open `Optional fields` and set `Target field` to
+6. Open `Optional fields`
+7. Set `Target field` to
   ```
   client.geo
   ```
-7. Set `Ignore missing` to true
-8. Click `Add processor`
-9. Click `Save changes`
+8. Set `Ignore missing` to true
+9. Click `Add processor`
+10. Click `Save changes`
 
 ![3_geo1.png](../assets/3_geo1.png)
 ![3_geo2.png](../assets/3_geo2.png)

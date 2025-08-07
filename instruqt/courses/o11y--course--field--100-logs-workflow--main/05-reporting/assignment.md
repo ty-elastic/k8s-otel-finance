@@ -95,7 +95,7 @@ FROM logs-proxy.otel-default
 | WHERE user_agent.full IS NOT NULL
 | STATS @timestamp.min = MIN(@timestamp), @timestamp.max = MAX(@timestamp) BY user_agent.full, client.geo.country_iso_code
 | SORT @timestamp.min ASC // sort first seen to last seen
-| STATS first_country_iso_code = TOP(client.geo.country_iso_code , 1, "asc"), first_seen = MIN(@timestamp.min), last_seen = MAX(@timestamp.max) BY user_agent.full
+| STATS first_country_iso_code = TOP(client.geo.country_iso_code , 1, "asc"), first_seen = MIN(@timestamp.min), last_seen = MAX(@timestamp.max) BY user_agent.full // select first and last seen values
 | SORT user_agent.full, first_seen, last_seen, first_country_iso_code
 ```
 
@@ -116,12 +116,12 @@ Execute the following query:
 ```
 FROM logs-proxy.otel-default
 | WHERE user_agent.full IS NOT NULL
-| EVAL user_agent.name_and_vmajor = SUBSTRING(user_agent.full, 0, LOCATE(user_agent.full, ".")-1)
+| EVAL user_agent.name_and_vmajor = SUBSTRING(user_agent.full, 0, LOCATE(user_agent.full, ".")-1) // simplify user_agent
 | STATS @timestamp.min = MIN(@timestamp), @timestamp.max = MAX(@timestamp) BY user_agent.name_and_vmajor, client.geo.country_iso_code
 | SORT @timestamp.min ASC // sort first seen to last seen
-| STATS first_country_iso_code = TOP(client.geo.country_iso_code , 1, "asc"), first_seen = MIN(@timestamp.min), last_seen = MAX(@timestamp.max) BY user_agent.name_and_vmajor
+| STATS first_country_iso_code = TOP(client.geo.country_iso_code , 1, "asc"), first_seen = MIN(@timestamp.min), last_seen = MAX(@timestamp.max) BY user_agent.name_and_vmajor // select first and last seen values
 | SORT user_agent.name_and_vmajor, first_seen, last_seen, first_country_iso_code
-| LOOKUP JOIN ua_lookup ON user_agent.name_and_vmajor
+| LOOKUP JOIN ua_lookup ON user_agent.name_and_vmajor // lookup release_date from ua_lookup using user_agent.name_and_vmajor key
 | KEEP release_date, user_agent.name_and_vmajor, first_country_iso_code, first_seen, last_seen
 ```
 
@@ -141,7 +141,7 @@ FROM logs-proxy.otel-default
 | EVAL prompt = CONCAT(
    "when did this version of this browser come out? output only a version of the format mm/dd/yyyy",
    "browser: ", user_agent.full
-  ) | COMPLETION release_date = prompt WITH openai_completion
+  ) | COMPLETION release_date = prompt WITH openai_completion // call out to LLM for each record
 | EVAL release_date = DATE_PARSE("MM/dd/YYYY", release_date)
 | KEEP release_date, first_country_iso_code, user_agent.full, first_seen, last_seen
 ```
@@ -211,7 +211,10 @@ Let's create a new alert which will fire whenever a new User Agent is seen.
 6. Set `IS ABOVE` to `1`
 7. Set `FOR THE LAST` to `5 minutes`
 8. Set `Rule schedule` to `5 seconds`
-9. Set `Rule name` to `New UA Detected`
+9. Set `Rule name` to
+  ```
+  New UA Detected
+  ```
 10. Set `Tags` to
   ```
   ingress
