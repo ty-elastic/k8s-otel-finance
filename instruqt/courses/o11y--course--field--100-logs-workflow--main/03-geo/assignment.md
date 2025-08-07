@@ -115,7 +115,7 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard showing status code over time
+* Created a Dashboard showing ingress status
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs for quicker and more powerful analysis
 * Create a SLO to let us know if we ever return non-200 error codes over time

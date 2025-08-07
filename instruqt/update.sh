@@ -34,6 +34,7 @@ for dir in ./courses/*/; do
         cd instruqt
       fi
 
+      cp pandoc.tex courses/$current_course/pandoc.tex
       cd courses/$current_course
 
       for diag in diagrams/*.mmd; do
@@ -50,13 +51,14 @@ for dir in ./courses/*/; do
           cat "$challenge/assignment.md" >> input.md
         fi
       done
-      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex --highlight-style=espresso --resource-path=/assets --output=/assets/script.pdf /data/input.md
+      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/extra -V geometry:margin=0.5in --highlight-style=espresso --include-in-header /data/pandoc.tex --resource-path=/assets --output=/assets/script.pdf /data/input.md
       rm -rf input.md
-      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex --highlight-style=espresso --resource-path=/assets --output=/assets/brief.pdf /data/docs/brief.md
-      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex --highlight-style=espresso --resource-path=/assets --output=/assets/notes.pdf /data/docs/notes.md
+      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex --resource-path=/assets --highlight-style=espresso --output=/assets/brief.pdf /data/docs/brief.md
+      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex --resource-path=/assets --highlight-style=espresso --output=/assets/notes.pdf /data/docs/notes.md
 
       instruqt track push --force
       cd ../..
+      rm courses/$current_course/pandoc.tex
     fi
   fi
 done

@@ -27,7 +27,7 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-Sometimes our data contains PII information which needs to be kept to a need-to-know basis and only for a given time.
+Sometimes our data contains PII information which needs to be restricted to a need-to-know basis and kept only for a limited time.
 
 # Limiting access
 
@@ -88,7 +88,7 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard showing status code over time
+* Created a Dashboard showing ingress status
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs for quicker and more powerful analysis
 * Create a SLO to let us know if we ever return non-200 error codes over time
@@ -99,3 +99,23 @@ And what we've done:
 * Created an alert to let us know when a new User Agent string appears
 * Setup RBAC to restrict access to `client.ip`
 * Setup retention to keep the logs online for only 30 days
+
+# Wrap-Up
+
+Over the course of this lab, we learned about:
+
+* Using ES|QL to search logs
+* Using ES|QL to parse logs at query-time
+* Using ES|QL to do advanced aggregations, analytics, and visualizations
+* Creating a dashboard
+* Using ES|QL to create Alerts
+* Using AI Assistant to help write ES|QL queries
+* Using Streams to setup ingest-time log processing pipeline (GROK parsing, geo-location, User Agent parsing)
+* Setting up SLOs
+* Using Maps to visualize geographic information
+* Scheduling dashboard reports
+* Setting up a Pivot Transform
+* Setting up RBAC
+* Setting up data retention
+
+We put these technologies to use in a practical workflow which quickly took us from an unknown problem to a definitive Root Cause. Furthermore, we've setup alerts to ensure we aren't caught off-guard in the future. Finally, we built a really nice custom Dashboard to help us monitor the health of our Ingress Proxy.

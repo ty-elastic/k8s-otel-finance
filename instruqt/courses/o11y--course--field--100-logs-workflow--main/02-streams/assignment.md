@@ -106,32 +106,57 @@ Remember that simple alert we created? Now that we are parsing these fields at i
 3. Select `Custom Query`
 4. Set `Data view` to `logs-proxy.otel-default`
 5. Set `Timestamp field` to `@timestamp`
-6. Set `Good query` to `http.response.status_code : 200`  (if this field isn't available, refresh the Instruqt virtual browser tab)
+6. Set `Good query` to `http.response.status_code < 400`  (if this field isn't available, refresh the Instruqt virtual browser tab)
 7. Set `Total query` to `http.response.status_code : *` (if this field isn't available, refresh the Instruqt virtual browser tab)
 8. Set `Group by` to `http.request.url.path` (if this field isn't available, refresh the Instruqt virtual browser tab)
-9. Set `Duration` to `7 days`
-10. Set `Target / SLO (%)` to `99.999`
-11. Set `SLO Name` to
+9. Set `SLO Name` to
   ```
   Ingress Status
   ```
-12. Click `Create SLO`
-13. Click on your newly created SLO `Ingress Status`
-14. Under the `Actions` menu in the upper-right, select `Create new alert rule`
-
-With burn rates, we can have Elastic dynamically adjust the escalation of a potential issue depending on how quickly it appears we will breach our SLO.
-
-13. Click `Next`
-14. (here we could create an action to take when our SLO starts to degrade, like posting to a Slack channel, creating a ServiceNow ticket, or connecting to Pager Duty)
-15. Click `Next`
-16. On the `Details` tab, set the `Rule name` to :
+10. Set `Tags` to
   ```
-  Ingress Status SLO
+  ingress
   ```
-16. Click `Create rule`
+11. Click `Create SLO`
 
 > [!NOTE]
 > Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the SLO. ![2_slo.png](../assets/2_slo.png)
+
+Now let's setup an alert that triggers when this SLO is breached.
+
+1. Click on your newly created SLO `Ingress Status`
+2. Under the `Actions` menu in the upper-right, select `Manage burn rate rule`
+
+With burn rates, we can have Elastic dynamically adjust the escalation of a potential issue depending on how quickly it appears we will breach our SLO.
+
+3. On the `Details` tab, set the `Rule name` to :
+  ```
+  Ingress Status SLO
+  ```
+4. Set `Tags` to
+  ```
+  ingress
+  ```
+5. Click `Save changes`
+6. Click `Save rule` on the resulting pop-up
+
+Now let's add the SLO monitor to our Dashboard.
+
+1. Navigate to Dashboards and open `Ingress Status`
+2. Click `Add panel`
+3. Select `SLO Overview`
+4. Select `Grouped SLOs`
+5. Set `Group by` to `Tags`
+6. Set `Tags` to `ingress`
+7. Click `Save`
+
+Let's also add our growing list of Alerts to our Dashboard.
+
+1. Click `Add panel`
+2. Select `Alerts`
+4. Set `Filter by` to `Rule tags`
+5. Set `Rule tags` to `ingress`
+6. Click `Save`
 
 # Summary
 
@@ -144,7 +169,7 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard showing status code over time
+* Created a Dashboard showing ingress status
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs for quicker and more powerful analysis
 * Create a SLO to let us know if we ever return non-200 error codes over time

@@ -198,7 +198,7 @@ Execute the following query:
 FROM logs-proxy.otel-default
 | GROK body.text "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
 | WHERE status_code IS NOT NULL
-| EVAL @timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp)
+| EVAL @timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp) // use embedded timestamp as record timestamp
 | STATS status = COUNT() BY status_code, minute = BUCKET(@timestamp, "1 min")
 ```
 
@@ -251,7 +251,11 @@ FROM logs-proxy.otel-default
   ```
   status_code >= 400
   ```
-7. Click `Create rule` on `Details` tab
+7. Set `Tags` to
+  ```
+  ingress
+  ```
+8. Click `Create rule` on `Details` tab
 
 In practice, this alert is too simple. We probably are okay with a small percentage of non-200 errors for any large scale infrastructure. What we really want is to alert when we violate a SLO. We will come back to this in a bit.
 
@@ -266,6 +270,6 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard showing status code over time
+* Created a Dashboard showing ingress status
 * Created a simple alert to let us know if we ever return non-200 error codes
 
