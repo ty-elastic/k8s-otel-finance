@@ -61,7 +61,7 @@ Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
 | WHERE user_agent.full IS NOT NULL
-| STATS good = COUNT(http.response.status_code < 400 OR NULL), bad = COUNT(http.response.status_code >= 500 OR NULL) BY user_agent.full
+| STATS good = COUNT(http.response.status_code < 400 OR NULL), bad = COUNT(http.response.status_code >= 400 OR NULL) BY user_agent.full
 | SORT bad DESC
 ```
 
@@ -70,7 +70,7 @@ Ah-ha, there is more to the story! It appears our errors may be isolated to a sp
 ```esql
 FROM logs-proxy.otel-default
 | WHERE user_agent.full IS NOT NULL
-| STATS good = COUNT(http.response.status_code < 400 OR NULL), bad = COUNT(http.response.status_code >= 500 OR NULL) BY user_agent.version
+| STATS good = COUNT(http.response.status_code < 400 OR NULL), bad = COUNT(http.response.status_code >= 400 OR NULL) BY user_agent.version
 | SORT bad DESC
 ```
 
