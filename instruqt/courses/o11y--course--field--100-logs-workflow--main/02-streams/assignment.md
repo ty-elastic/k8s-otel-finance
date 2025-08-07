@@ -120,7 +120,7 @@ Remember that simple alert we created? Now that we are parsing these fields at i
 11. Click `Create SLO`
 
 > [!NOTE]
-> Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the SLO. 
+> Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the SLO.
 > ![2_slo.png](../assets/2_slo.png)
 
 Now let's setup an alert that triggers when this SLO is breached.

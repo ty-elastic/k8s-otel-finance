@@ -2,19 +2,22 @@ flowchart TB
     style logfile fill:#ffff00,stroke-width:4px
     style datastream fill:#ffff00,stroke-width:4px
 
-    %% style streams_parsing fill:#ffff00,stroke-width:4px
+    style streams_parse fill:#ffff00,stroke-width:4px
 
-    style esql_query fill:#ffff00,stroke-width:4px
+    %% style slo_query fill:#ffff00,stroke-width:4px
+    %% style slo_burn fill:#ffff00,stroke-width:4px
+
+    %% style esql_query fill:#ffff00,stroke-width:4px
     %% style lookup_index fill:#ffff00,stroke-width:4px
     style esql_parse fill:#ffff00,stroke-width:4px
-    style esql_agg fill:#ffff00,stroke-width:4px
+    %% style esql_agg fill:#ffff00,stroke-width:4px
 
     %% style transforms_query fill:#ffff00,stroke-width:4px
     %% style transforms_aggregations fill:#ffff00,stroke-width:4px
     %% style transforms_index fill:#ffff00,stroke-width:4px
 
-    style alerts fill:#ffff00,stroke-width:4px
-    style visualizations fill:#ffff00,stroke-width:4px
+    %% style alerts fill:#ffff00,stroke-width:4px
+    %% style visualizations fill:#ffff00,stroke-width:4px
 
     subgraph elasticsearch[Elasticsearch]
         datastream@{shape: cyl}
@@ -24,7 +27,7 @@ flowchart TB
         alerts@{ shape: manual-file, label: "Alerts"}
         
         subgraph streams["Streams"]
-            streams_parsing("Parsing<br>(Ingest-Time Parsing)")
+            streams_parse("Parsing<br>(Ingest-Time Parsing)")
         end
 
         streams --> datastream
@@ -39,8 +42,12 @@ flowchart TB
             esql_query --> esql_agg
         end
 
-        datastream --> esql_query
-        esql_query -.-> lookup_index
+        subgraph SLO["SLO"]
+            slo_query[\Query/]
+            slo_burn@{ shape: notch-pent, label: "Burn Rate" }
+
+            slo_query --> slo_burn
+        end
 
         subgraph Transforms
             transforms_query[\Query/]
@@ -49,10 +56,17 @@ flowchart TB
             transforms_query --> transforms_aggregations
         end
 
+        datastream --> esql_query
+        datastream --> slo_query
+        datastream --> transforms_query
+
+        esql_query -.-> lookup_index
+
+        slo_burn --> alerts
+
         transforms_aggregations --> transforms_index
         transforms_index --> alerts
 
-        datastream --> transforms_query
         esql_agg --> visualizations
         esql_agg --> alerts
     end

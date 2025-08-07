@@ -39,6 +39,8 @@ We've gotten word from our customer service department that some users are unabl
 
 We will also be pivoting back and forth between query-time parsing using [ES|QL](https://www.elastic.co/docs/explore-analyze/query-filter/languages/esql) and ingest-time parsing using [Streams](https://www.elastic.co/docs/solutions/observability/logs/streams/streams). ES|QL lets us quickly test theories and look for possible tells in our log data. Once we've determined value in parsing our logs using ES|QL at query-time, we can shift that parsing to ingest-time using Streams. As we will see in this lab, ingest-time parsing allows for more advanced and complex parsing. Moving parsing to ingest-time also facilitates much faster query-time searches. Regardless of where the parsing is done, we will leverage ES|QL to perform aggregations, analysis, and visualization.
 
+![1_arch.mmd.png](../assets/1_arch.mmd.png)
+
 # Getting started
 
 We will start our investigation using ES|QL to interrogate our nginx reverse proxy logs. You can enter your queries in the pane at the top of the Elasticsearch tab. Set the time field to the last hour, then click "Refresh" to load the results.
