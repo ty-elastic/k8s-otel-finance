@@ -20,11 +20,65 @@ enhanced_loading: false
 ---
 Now that we know what happened, let's try to be sure this never happens again.
 
+# Generating a breakdown of user agents
+
+In general, it would be nice to have a graphical breakdown of the makeup of our clients.
+
+We can accomplish this using our parsed User Agent string and ES|QL.
+
+Execute the following query:
+```
+FROM logs-proxy.otel-default
+| WHERE user_agent.os.name IS NOT NULL
+| STATS COUNT() by user_agent.os.name, user_agent.os.version
+```
+
+1. Click on the pencil icon to the right of the existing graph
+2. Select `Treemap` from the visualizations drop-down menu
+3. Click `Apply and close`
+
+Let's save it to our Dashboard for future use.
+
+1. Click on the Disk icon in the upper-left of the resulting graph
+2. Name the visualization
+  ```
+  Client OSs
+  ```
+3. Select `Existing` under `Add to dashboard`
+4. Select the existing dashboard `Ingress Proxy`
+5. Click `Save and go to Dashboard`
+6. Once the dashboard has loaded, click the `Save` button in the upper-right
+
+Let's also create a chart depicting the overall breakdown of Browsers.
+
+Navigate back to Discover.
+
+Execute the following query:
+```
+FROM logs-proxy.otel-default
+| WHERE user_agent.name IS NOT NULL
+| STATS COUNT() by user_agent.name
+```
+
+1. Click on the pencil icon to the right of the existing graph
+2. Select `Pie` from the visualizations drop-down menu
+3. Click `Apply and close`
+
+Let's save it to our Dashboard for future use.
+
+1. Click on the Disk icon in the upper-left of the resulting graph
+2. Name the visualization
+  ```
+  Client Browsers
+  ```
+3. Select `Existing` under `Add to dashboard`
+4. Select the existing dashboard `Ingress Proxy`
+5. Click `Save and go to Dashboard`
+6. Once the dashboard has loaded, click the `Save` button in the upper-right
+
 # Generating a table of user agents
 
-One thing that would be helpful is to keep track of new User Agents as they appear in the wild.
-
-We can accomplish this using our parsed User Agent string and ES|QL:
+It would also be helpful is to keep track of new User Agents as they appear in the wild.
 
 Execute the following query:
 ```
@@ -200,6 +254,7 @@ And what we've done:
 * Create a SLO to let us know if we ever return non-200 error codes over time
 * Created a Pie Graph showing errors by region
 * Created a Map to help us visually geo-locate the errors
+* Created graphs in our dashboard showing the breakdown of User Agents
 * Created a table in our dashboard iterating seen User Agents
 * Created a nightly report to snapshot our Dashboard
 * Created an alert to let us know when a new User Agent string appears

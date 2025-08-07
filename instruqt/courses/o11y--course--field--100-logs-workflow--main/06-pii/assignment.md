@@ -94,6 +94,7 @@ And what we've done:
 * Create a SLO to let us know if we ever return non-200 error codes over time
 * Created a Pie Graph showing errors by region
 * Created a Map to help us visually geo-locate the errors
+* Created graphs in our dashboard showing the breakdown of User Agents
 * Created a table in our dashboard iterating seen User Agents
 * Created a nightly report to snapshot our Dashboard
 * Created an alert to let us know when a new User Agent string appears
@@ -119,3 +120,5 @@ Over the course of this lab, we learned about:
 * Setting up data retention
 
 We put these technologies to use in a practical workflow which quickly took us from an unknown problem to a definitive Root Cause. Furthermore, we've setup alerts to ensure we aren't caught off-guard in the future. Finally, we built a really nice custom Dashboard to help us monitor the health of our Ingress Proxy.
+
+**All of this from just a lowly nginx access file. That's the power unlocked by Elastic.**

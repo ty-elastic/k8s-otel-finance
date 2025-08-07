@@ -94,8 +94,8 @@ This is a useful graph! Let's save it to our Dashboard for future use.
   ```
 3. Select `Existing` under `Add to dashboard`
 4. Select the existing dashboard `Ingress Proxy`
-4. Click `Save and go to Dashboard`
-5. Once the dashboard has loaded, click the `Save` button in the upper-right
+5. Click `Save and go to Dashboard`
+6. Once the dashboard has loaded, click the `Save` button in the upper-right
 
 # Creating a SLO
 
