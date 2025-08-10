@@ -49,13 +49,13 @@ In the Elasticsearch (Limited) tab, we are logged in as a user with full privile
 Let's change permissions and see what happens:
 
 1. Open the [button label="Elasticsearch"](tab-0) tab
-2. Navigate to `Management` > `Stack Management` > `Security` > `Roles`
+2. Go to `Management` > `Stack Management` > `Security` > `Roles` using the left-hand navigation pane
 3. Select `limited_viewer`
 4. For Indices `logs-proxy.otel-default` click `Grant access to specific fields`
 5. Update `Denied fields` to be only `client.ip`, but remove `body.text`
 6. Click `Update role`
 
-1. Open the [button label="Elasticsearch (Limited)"](tab-1) tab
+1. Open the [button label="Elasticsearch (Limited)"](tab-1) Instruqt tab
 2. Close the open log record flyout
 3. Run the search query again
 4. Open a log record
@@ -65,8 +65,8 @@ Let's change permissions and see what happens:
 
 Say your records department requires you to keep these logs generally accessible only for a very specific period of time. We can ask Elasticsearch to automatically delete them after some number of days.
 
-1. Open the [button label="Elasticsearch"](tab-0) tab
-2. Navigate to `Streams`
+1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+2. Go to `Streams` using the left-hand navigation pane
 3. Select `logs-proxy.otel-default` from the list of Streams
 4. Click on the `Data retention` tab
 5. Click `Edit data retention`

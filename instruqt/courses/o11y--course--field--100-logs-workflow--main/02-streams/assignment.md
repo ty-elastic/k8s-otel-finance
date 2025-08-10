@@ -26,18 +26,20 @@ We will be working with the Elastic Streams interface which makes it easy to set
 
 1. Select `logs-proxy.otel-default` from the list of data streams (if you start typing, Elasticsearch will help you find it)
 2. Select the `Processing` tab
+
+## Parsing the log message
+
 3. Click `Add a processor`
 4. Select `Grok` for the `Processor` if not already selected
 5. Set the `Field` to
   ```
   body.text
   ```
-  if not already filled in
 6. Click `Generate pattern`
 
-Elastic will analyze your log lines and try to recognize a pattern.
+Elasticsearch will analyze your log lines and try to recognize a pattern.
 
-The generated pattern should look similar to the following.
+The generated pattern should look similar to the following:
 
 > [!NOTE]
 > To ensure a consistent lab experience, please copy the following GROK expression and paste it into `Grok patterns`
@@ -49,6 +51,8 @@ The generated pattern should look similar to the following.
 7. Click `Add processor`
 
 ![2_grok.png](../assets/2_grok.png)
+
+## Parsing the timestamp
 
 The nginx log line includes a timestamp; let's use that as our record timestamp.
 
@@ -89,6 +93,8 @@ Note that this graph, unlike the one we drew before, only has a few minutes of d
 
 You'll also note how quickly this graph rendered compared to when we were parsing our log lines at query-time with ES|QL.
 
+## Saving our visualization to a dashboard
+
 This is a useful graph! Let's save it to our Dashboard for future use.
 
 1. Click on the Disk icon in the upper-left of the resulting graph
@@ -105,7 +111,7 @@ This is a useful graph! Let's save it to our Dashboard for future use.
 
 Remember that simple alert we created? Now that we are parsing these fields at ingest-time, we can create a proper SLO instead of a simple binary alert. With a SLO, we can allow for some percentage of errors over time (common in a complex system) before we get our support staff out of bed.
 
-1. Click `SLOs` in the left-hand navigation
+1. Click `SLOs` in the left-hand navigation pane
 2. Click `Create SLO`
 3. Select `Custom Query`
 4. Set `Data view` to `logs-proxy.otel-default`
@@ -114,7 +120,6 @@ Remember that simple alert we created? Now that we are parsing these fields at i
   ```
   http.response.status_code < 400
   ```
-  (if this field isn't available, refresh the Instruqt virtual browser tab)
 7. Set `Total query` to
   ```
   http.response.status_code : *
@@ -137,6 +142,8 @@ Remember that simple alert we created? Now that we are parsing these fields at i
 > Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the SLO.
 > ![2_reload.png](../assets/2_reload.png)
 
+## Alerting on a SLO
+
 Now let's setup an alert that triggers when this SLO is breached.
 
 1. Click on your newly created SLO `Ingress Status`
@@ -153,17 +160,24 @@ With burn rates, we can have Elastic dynamically adjust the escalation of a pote
   ingress
   ```
 5. Click `Save changes`
-6. Click `Save rule` on the resulting pop-up
+6. Click `Save rule` on the pop-up dialog
 
-Now let's add the SLO monitor to our Dashboard.
+## Adding SLO monitors to our dashboard
 
-1. Navigate to Dashboards and open `Ingress Status`
-2. Click `Add panel`
-3. Select `SLO Overview`
-4. Select `Grouped SLOs`
-5. Set `Group by` to `Tags`
-6. Set `Tags` to `ingress`
-7. Click `Save`
+Now let's add the SLO monitor to our dashboard to help us find it in the future.
+
+1. Click `Dashboards` in the left-hand navigation pane 
+2. Open `Ingress Status`
+3. Click `Add panel`
+4. Select `SLO Overview`
+5. Select `Grouped SLOs`
+6. Set `Group by` to `Tags`
+7. Set `Tags` to `ingress`
+8. Click `Save`
+
+Note that we are dynamically adding SLOs by tag. Any additional SLOs tagged with `ingress` will also appear here.
+
+## Adding alerts to our dashboard
 
 Let's also add our growing list of Alerts to our Dashboard.
 
@@ -172,6 +186,8 @@ Let's also add our growing list of Alerts to our Dashboard.
 4. Set `Filter by` to `Rule tags`
 5. Set `Rule tags` to `ingress`
 6. Click `Save`
+
+Note that we are dynamically adding alerts by tag. Any additional alerts tagged with `ingress` will also appear here.
 
 # Summary
 

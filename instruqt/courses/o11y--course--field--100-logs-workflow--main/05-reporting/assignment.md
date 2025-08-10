@@ -51,7 +51,7 @@ Let's save it to our Dashboard for future use.
 
 Let's also create a chart depicting the overall breakdown of Browsers.
 
-Navigate back to Discover.
+Go back to Discover using the left-hand navigation pane.
 
 Execute the following query:
 ```
@@ -161,10 +161,11 @@ Let's save this search for future reference:
 
 Now let's add this as a table to our dashboard
 
-1. Navigate to Dashboards and open `Ingress Status`
-2. Click `Add from library`
-3. Find `ua_release_dates`
-4. Click `Save`
+1. Click `Dashboards` in the left-hand navigation pane 
+2. Open `Ingress Status`
+3. Click `Add from library`
+4. Find `ua_release_dates`
+5. Click `Save`
 
 # Scheduling a report
 
@@ -179,7 +180,7 @@ The CIO is concerned about us not testing new browsers sufficiently, and for som
 Ideally, we can send an alert whenever a new User Agent is seen. To do that, we need to keep state of what User Agents we've already seen. Fortunately, Elastic Transforms makes this easy!
 
 Create transform:
-1. Navigate to `Management` > `Stack Management` > `Transforms`
+1. Go to `Management` > `Stack Management` > `Transforms` using the left-hand navigation pane
 2. Click `Create a transform`
 3. Select `logs-proxy.otel-default`
 4. Select `Pivot`
@@ -203,7 +204,7 @@ Create transform:
 
 Let's create a new alert which will fire whenever a new User Agent is seen.
 
-1. Navigate to `Alerts`
+1. Go to `Alerts` using the left-hand navigation pane
 2. Click `Manage Rules`
 2. Click `Create Rule`
 4. Select `Custom threshold`
@@ -224,7 +225,7 @@ Let's create a new alert which will fire whenever a new User Agent is seen.
 
 # Let's test it
 
-1. Navigate to the [button label="Terminal"](tab-1) tab
+1. Open the [button label="Terminal"](tab-1) Instruqt tab
 2. Run the following command:
 ```bash,run
 curl -X POST http://kubernetes-vm:32003/err/browser/chrome
@@ -232,9 +233,9 @@ curl -X POST http://kubernetes-vm:32003/err/browser/chrome
 
 This will create a new Chrome UA 137. Let's go to our dashboard and see if we can spot it.
 
-1. Navigate to the [button label="Elasticsearch"](tab-0) tab
-2. Navigate to Dashboards
-3. Select `Ingress Proxy`
+1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
+2. Go to Dashboards using the left-hand navigation pane
+3. Open `Ingress Proxy`
 
 Look at the table of UAs that we added and note the addition of Chrome 137! You'll also note a new active alert `New UA Detected`!
 

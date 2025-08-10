@@ -78,7 +78,7 @@ In the meantime, this is a useful graph! Let's save it to a Dashboard for future
 
 Sometimes it is helpful to visualize geography on a map. Fortunately, Elastic has a built-in Map visualization we can readily use!
 
-1. Navigate to `Other tools` > `Maps`
+1. Go to `Other tools` > `Maps` using the left-hand navigation pane
 2. Click `Add layer`
 3. Select `Elasticsearch`
 4. Select `Documents`

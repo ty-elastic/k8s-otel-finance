@@ -201,13 +201,15 @@ FROM logs-proxy.otel-default
 | GROK body.text "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
 | WHERE status_code IS NOT NULL
 | EVAL @timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp) // use embedded timestamp as record timestamp
-| STATS status = COUNT() BY status_code, minute = BUCKET(@timestamp, "1 min")
+| STATS status_count = COUNT() BY status_code, minute = BUCKET(@timestamp, "1 min")
 ```
 
 > [!NOTE]
 > If the resulting graph does not default to a bar graph plotted over time, click on the Pencil icon in the upper-right of the graph and change the graph type to `Bar`
 
 This is a useful graph, and you can clearly see the advantage of parsing the log line vs. simply searching for specific error codes. Here, we can just generally graph by `status_code` and additionally split the data by, say, `request_path`.
+
+## Saving our visualization to a dashboard
 
 Let's save this graph to a Dashboard for future use.
 
@@ -220,18 +222,21 @@ Let's save this graph to a Dashboard for future use.
   ```
 3. Select `New` under `Add to dashboard`
 4. Click `Save and go to Dashboard`
-5. Once the new dashboard has loaded, click the `Save` button in the upper-right
-6. Enter the title of the new dashboard as
-  ```
-  Ingress Proxy
-  ```
-7. Click `Save`
 
 ![1_dashboard.png](../assets/1_dashboard.png)
 
+You will be taken to a new dashboard. Let's save it for future reference.
+
+1. Click the `Save` button in the upper-right
+2. Enter the title of the new dashboard as
+  ```
+  Ingress Proxy
+  ```
+3. Click `Save`
+
 # Setting up a simple alert
 
-Navigate back to `Discover` using the left-hand navigation pane.
+Go to `Discover` using the left-hand navigation pane.
 
 Let's create a simple alert to notify us whenever a `status_code` >= 400 is received:
 
@@ -258,6 +263,7 @@ FROM logs-proxy.otel-default
   ingress
   ```
 8. Click `Create rule` on `Details` tab
+9. Click `Save rule` on the pop-up dialog
 
 In practice, this alert is too simple. We probably are okay with a small percentage of non-200 errors for any large scale infrastructure. What we really want is to alert when we violate a SLO. We will come back to this in a bit.
 
