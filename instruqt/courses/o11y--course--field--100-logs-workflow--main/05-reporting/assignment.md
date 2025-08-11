@@ -161,7 +161,7 @@ Let's save this search for future reference:
 
 Now let's add this as a table to our dashboard
 
-1. Click `Dashboards` in the left-hand navigation pane 
+1. Click `Dashboards` in the left-hand navigation pane
 2. Open `Ingress Status`
 3. Click `Add from library`
 4. Find `ua_release_dates`
@@ -171,13 +171,15 @@ Now let's add this as a table to our dashboard
 
 The CIO is concerned about us not testing new browsers sufficiently, and for some time wants a nightly report of our dashboard. No problem!
 
-1. Click `Download` icon
+1. Click on `Export` icon
 2. Select `Schedule exports`
 3. Click `Schedule exports`
 
 # Alert when a new UA is seen
 
 Ideally, we can send an alert whenever a new User Agent is seen. To do that, we need to keep state of what User Agents we've already seen. Fortunately, Elastic Transforms makes this easy!
+
+## Creating a transform
 
 Create transform:
 1. Go to `Management` > `Stack Management` > `Transforms` using the left-hand navigation pane
@@ -201,6 +203,8 @@ Create transform:
 
 > [!NOTE]
 > Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the Map.
+
+## Creating an alert
 
 Let's create a new alert which will fire whenever a new User Agent is seen.
 

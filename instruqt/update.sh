@@ -43,12 +43,14 @@ for dir in ./courses/*/; do
         docker run --rm -u `id -u`:`id -g` -v $PWD/diagrams:/diagrams -v $PWD/assets:/assets minlag/mermaid-cli -i /diagrams/$diag_base -o /assets/$diag_base.png
       done
 
-      echo "" > input.md
+      title=$(yq .title track.yml)
+      echo $title
+      echo "# $title" > input.md
       for challenge in */; do
         echo $challenge
         if [ -f "$challenge/assignment.md" ]; then
           #echo "here"
-          sed -e 's/\(---.*---\).*/\1/' "$challenge/assignment.md" >> input.md
+          sed -e '/---/,/---/d' "$challenge/assignment.md" >> input.md
           echo "" >> input.md
           echo "___" >> input.md
           echo "" >> input.md
@@ -56,8 +58,8 @@ for dir in ./courses/*/; do
       done
       docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/extra -V geometry:margin=0.25in --highlight-style=espresso --include-in-header /data/pandoc.tex --resource-path=/assets --output=/assets/script.pdf /data/input.md
       rm -rf input.md
-      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex --resource-path=/assets --highlight-style=espresso --output=/assets/brief.pdf /data/docs/brief.md
-      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex --resource-path=/assets --highlight-style=espresso --output=/assets/notes.pdf /data/docs/notes.md
+      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex -V geometry:margin=0.25in --resource-path=/assets --highlight-style=espresso --resource-path=/assets --output=/assets/brief.pdf /data/docs/brief.md
+      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex -V geometry:margin=0.25in --resource-path=/assets --highlight-style=espresso --resource-path=/assets --output=/assets/notes.pdf /data/docs/notes.md
 
       instruqt track push --force
       cd ../..

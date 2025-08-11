@@ -21,7 +21,12 @@ enhanced_loading: false
 We still don't know why some requests are failing. Now that we are parsing the logs, however, we have access to a lot more information.
 
 # Is this affecting every region?
-Let's analyze our clients by `client.ip` to look for possibly geographic patterns. We can easily do that with the Elastic `GeoIP` processor.
+
+Let's analyze our clients by `client.ip` to look for possibly geographic patterns.
+
+## Using the Elastic GeoIP processor
+
+We can add the Elastic `GeoIP` processor to geo-locate our clients based on their client IP address.
 
 1. Select `logs-proxy.otel-default` from the list of Streams.
 2. Select the `Processing` tab
@@ -43,9 +48,11 @@ Let's analyze our clients by `client.ip` to look for possibly geographic pattern
 ![3_geo1.png](../assets/3_geo1.png)
 ![3_geo2.png](../assets/3_geo2.png)
 
-Let's jump back to Discover by clicking Discover in the left-hand navigation pane.
+## Analyzing with Discover
 
-Adjust the time field to show the last 2 hours of data.
+Jump back to Discover by clicking Discover in the left-hand navigation pane.
+
+Adjust the time field to show the last 3 hours of data.
 
 Execute the following query:
 ```esql
@@ -74,7 +81,7 @@ In the meantime, this is a useful graph! Let's save it to a Dashboard for future
 4. Click `Save and go to Dashboard`
 5. Once the dashboard has loaded, click the `Save` button in the upper-right
 
-# Visualizing with Maps
+## Visualizing with Maps
 
 Sometimes it is helpful to visualize geography on a map. Fortunately, Elastic has a built-in Map visualization we can readily use!
 
@@ -92,17 +99,35 @@ Sometimes it is helpful to visualize geography on a map. Fortunately, Elastic ha
 12. Set `Symbol Size` to `By value`
 12. Set `Select a field` to `http.response.status_code`
 13. Click `Keep changes`
-14. Click `Save`
-15. Name the Map
+
+Now let's save our awesome map to our dashboard.
+
+1. Click the `Save` button in the upper-right
+2. Name the Map
   ```
   Status Code by Location
   ```
-15. Select existing dashboard `Ingress Status`
-16. Click `Save and go to dashboard`
-17. Once the dashboard has loaded, click the `Save` button in the upper-right
+3. Select existing dashboard `Ingress Status`
+4. Click `Save and go to dashboard`
+5. Once the dashboard has loaded, click the `Save` button in the upper-right
 
 > [!NOTE]
 > Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the Map.
+
+# Organizing your dashboard
+
+As we are adding panels to our dashboard, we can group them into collapsible sections.
+
+1. Click on `Add panel`
+2. Select `Collapsible Section`
+3. Click on the Pencil icon to the right of the name of the new collapsible section
+4. Name the collapsible section
+  ```
+  Client Geography
+  ```
+5. Click the green check box next to the name of the collapsible section
+6. Open the collapsible section by clicking on the open/close arrow to the left of the collapsible section name
+7. Drag the `Status by Region` pie chart and the `Status Code by Location` map into the body of the `Client Geography` section
 
 # Summary
 

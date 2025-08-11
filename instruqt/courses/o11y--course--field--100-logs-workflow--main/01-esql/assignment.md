@@ -106,7 +106,7 @@ Indeed, we are still seeing a mix of 500 and 200 errors.
 
 # When did it start?
 
-Let's see if we can find when the errors started occurring. Adjust the time field to show the last 2 hours of data.
+Let's see if we can find when the errors started occurring. Adjust the time field to show the last 3 hours of data.
 
 ![1_time_field.png](../assets/1_time_field.png)
 

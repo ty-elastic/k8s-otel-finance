@@ -24,6 +24,10 @@ We know that errors appear to be localized to a specific region. But maybe there
 
 Let's parse that User Agent string to look for correlation. While difficult/impossible with a simple GROK expression, you can easily do this with the Elastic `User agent` processor.
 
+## Using the Elastic User Agent processor
+
+We can add the Elastic `User agent` processor to parse the UA string embedded in our nginx access logs.
+
 1. Select `logs-proxy.otel-default` from the list of Streams.
 2. Select the `Processing` tab
 3. Click `Add a processor`
@@ -36,6 +40,8 @@ Let's parse that User Agent string to look for correlation. While difficult/impo
 7. Click `Add processor`
 
 ![4_ua1.png](../assets/4_ua1.png)
+
+## Using the Elastic Set processor
 
 In addition to the fields produced by the User Agent processor, we also want a simplified combination of browser name and version. We can easily craft one using the Set processor.
 
@@ -54,6 +60,8 @@ In addition to the fields produced by the User Agent processor, we also want a s
 7. Click `Save changes`
 
 ![4_ua2.png](../assets/4_ua2.png)
+
+## Analyzing with Discover
 
 Now let's jump back to Discover by clicking Discover in the left-hand navigation pane.
 

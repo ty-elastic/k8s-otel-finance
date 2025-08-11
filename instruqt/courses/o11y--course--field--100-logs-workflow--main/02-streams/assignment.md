@@ -140,7 +140,8 @@ Remember that simple alert we created? Now that we are parsing these fields at i
 
 > [!NOTE]
 > Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the SLO.
-> ![2_reload.png](../assets/2_reload.png)
+
+![2_reload.png](../assets/2_reload.png)
 
 ## Alerting on a SLO
 
@@ -166,7 +167,7 @@ With burn rates, we can have Elastic dynamically adjust the escalation of a pote
 
 Now let's add the SLO monitor to our dashboard to help us find it in the future.
 
-1. Click `Dashboards` in the left-hand navigation pane 
+1. Click `Dashboards` in the left-hand navigation pane
 2. Open `Ingress Status`
 3. Click `Add panel`
 4. Select `SLO Overview`
