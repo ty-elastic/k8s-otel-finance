@@ -31,25 +31,25 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-We've gotten word from our customer service department that some users are receiving an error when trying to use our web-based application. We know that all of the REST API calls from our frontend web app flow through a nginx reverse proxy en route to our backend services, so that seems like a good place to start our investigation.
-
-![proxy_arch.mmd.png](../assets/proxy_arch.mmd.png)
+We've gotten word from our customer service department that some users are receiving an error when trying to use our web-based application.
 
 # Ingest vs. query-time parsing
 
-We will also be pivoting back and forth between query-time parsing using [ES|QL](https://www.elastic.co/docs/explore-analyze/query-filter/languages/esql) and ingest-time parsing using [Streams](https://www.elastic.co/docs/solutions/observability/logs/streams/streams). ES|QL lets us quickly test theories and look for possible tells in our log data. Once we've determined value in parsing our logs using ES|QL at query-time, we can shift that parsing to ingest-time using Streams. As we will see in this lab, ingest-time parsing allows for more advanced and complex parsing. Moving parsing to ingest-time also facilitates much faster query-time searches. Regardless of where the parsing is done, we will leverage ES|QL to perform aggregations, analysis, and visualization.
+Throughout this workshop, we will also be pivoting back and forth between query-time parsing using [ES|QL](https://www.elastic.co/docs/explore-analyze/query-filter/languages/esql) and ingest-time parsing using [Streams](https://www.elastic.co/docs/solutions/observability/logs/streams/streams). ES|QL lets us quickly test theories and look for possible tells in our log data. Once we've determined value in parsing our logs using ES|QL at query-time, we can shift that parsing to ingest-time using Streams. As we will see in this lab, ingest-time parsing allows for more advanced and complex parsing. Moving parsing to ingest-time also facilitates much faster searches. Regardless of where the parsing is done, we will leverage ES|QL to perform aggregations, analysis, and visualization.
 
 ![1_arch.mmd.png](../assets/1_arch.mmd.png)
 
 # Getting started
 
-We will start our investigation using ES|QL to interrogate our nginx reverse proxy logs. You can enter your queries in the pane at the top of the Elasticsearch tab. Set the time field to the last hour, then click "Refresh" to load the results.
+We know that all of the REST API calls from our frontend web app flow through a nginx reverse proxy en route to our backend services; that seems like a good place to start our investigation.
+
+![proxy_arch.mmd.png](../assets/proxy_arch.mmd.png)
+
+We will be using ES|QL, Elastic's query-time language, to analyze our nginx reverse proxy logs. You can enter your queries in the pane at the top of the Elasticsearch tab. You can change the time window of your search using the Time Filter. To execute a search, click the Refresh icon.
 
 ![1_discover.png](../assets/1_discover.png)
 
-# Finding the errors
-
-Let's have a look at the logs coming from our nginx reverse proxy.
+# Finding errors
 
 Execute the following query:
 ```esql
@@ -64,11 +64,11 @@ FROM logs-proxy.otel-default
 | WHERE body.text LIKE "* 500 *" // look for messages containing " 500 " in the body
 ```
 
-If we didn't find "500", we could of course add additional `LIKE` criteria to our `WHERE` clause, like `WHERE body.text LIKE "* 500 *" OR body.text LIKE "* 404 *"`. We will do a better job of handling more types of errors once we start parsing our logs. For now, though, we got lucky: indeed, we are clearly returning 500 errors for some users.
+If we didn't find "500", we could of course add additional `LIKE` criteria to our `WHERE` clause, like `WHERE body.text LIKE "* 500 *" OR body.text LIKE "* 404 *"`. We will do a better job of implicitly handling more types of errors once we start parsing our logs. For now, though, we got lucky: indeed, we are clearly returning 500 errors for some users.
 
-# Is it affecting everyone?
+# Are the errors affecting everyone?
 
-The next thing we quickly want to understand is what percentage of users are experiencing 500 errors?
+The next thing we quickly want to understand is what percentage of requests to our backend services are resulting in 500 errors?
 
 Execute the following query:
 ```esql
@@ -85,9 +85,11 @@ Let's visualize this as a pie graph to make it a little easier to understand.
 2. Select `Pie` from the visualizations drop-down menu
 3. Click `Apply and close`
 
-This error appears to only be affecting a small percentage of our overall API queries.
+This error appears to only be affecting a small percentage of our overall requests. We don't yet have the tools to break this down by customer or client, but we will in a future exercise.
 
-Let's also confirm that we are still seeing a mix of 500 and 200 errors (e.g., the problem wasn't transitory and somehow fixed itself).
+# Are the errors still occurring?
+
+Let's first confirm that we are still seeing a mix of 500 and 200 errors (e.g., the problem wasn't transitory and somehow fixed itself).
 
 Execute the following query:
 ```esql
@@ -104,20 +106,13 @@ Then change the resulting graph to a bar graph over time:
 
 Indeed, we are still seeing a mix of 500 and 200 errors.
 
-# When did it start?
+# When did the errors start?
 
-Let's see if we can find when the errors started occurring. Adjust the time field to show the last 3 hours of data.
+Let's see if we can find when the errors started occurring. Use the Time Filter to show the last 3 hours of data; this should automatically rerun the last query.
 
 ![1_time_field.png](../assets/1_time_field.png)
 
-Execute the following query:
-```esql
-FROM logs-proxy.otel-default
-| EVAL status = CASE(body.text LIKE "* 500 *", "bad", "good") // label messages containing " 500 " as "bad", else "good"
-| STATS COUNT() BY minute = BUCKET(@timestamp, "1 min"), status
-```
-
-Ok, it looks like this issue first started happening around 80 minutes ago. We can use `CHANGE_POINT` to narrow it down to a specific minute:
+Ok, it looks like this issue first started happening roughly in the last 2 hours. We can use ES|QL's [CHANGE_POINT](https://www.elastic.co/docs/reference/query-languages/esql/commands/processing-commands#esql-change_point) to narrow it down to a specific minute:
 
 Execute the following query:
 ```esql
@@ -129,20 +124,22 @@ FROM logs-proxy.otel-default
 | KEEP type, minute
 ```
 
+A-ha! Using `CHANGE_POINT`, we can say that these errors clearly started occurring 80 minutes ago.
+
 Let's take stock of what we know:
 
 * a small percentage of users are experiencing 500 errors
 * the errors started occurring around 80 minutes ago
 
-# Parsing with ES|QL
+# Parsing logs with ES|QL
 
-As you can see, simply searching for known error codes in our log lines will only get us so far. Maybe the error codes vary, maybe we want to analyze status code vs. request URL.
+As you can see, simply searching for known error codes in our log lines will only get us so far. Maybe the error code isn't just 500, or maybe we want to analyze status code vs. request URL, for example.
 
 Fortunately, nginx logs are semi-structured which makes them (relatively) easy to parse.
 
-Some of you may be familiar with GROK expressions which provides a higher-level interface on top of regex; namely, GROK allows you define patterns. If you are well versed in GROK, you may be able to write a parsing pattern yourself for nginx logs, possibly using tools like [GROK Debugger](https://grokdebugger.com) to help.
+Some of you may already be familiar with [grok](https://www.elastic.co/docs/explore-analyze/scripting/grok) expressions which provides a higher-level interface on top of regex; namely, grok allows you define patterns. If you are well versed in grok, you may be able to write a parsing pattern yourself for nginx logs, possibly using tools like [Grok Debugger](https://grokdebugger.com) to help.
 
-If you aren't well versed in GROK expressions, or you don't want to spend the time to debug an expression yourself, you can leverage our AI Assistant to help! Click on the AI Assistant button in the upper-right and enter the following prompt:
+If you aren't well versed in grok expressions, or you don't want to spend the time to debug an expression yourself, you can leverage our AI Assistant to help! Click on the AI Assistant button in the upper-right and enter the following prompt:
 
 ```
 can you write an ES|QL query to parse these nginx log lines?
@@ -153,15 +150,15 @@ can you write an ES|QL query to parse these nginx log lines?
 
 ```esql
 FROM logs-proxy.otel-default
-| GROK body.text "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
+| GROK body.text "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\"" // parse access log
 | WHERE status_code IS NOT NULL
-| EVAL @timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp)
+| EVAL @timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp) // use embedded timestamp as record timestamp
 | KEEP @timestamp, client_ip, http_method, request_path, status_code, user_agent
 ```
 
-# Is this affecting all APIs?
+# Is this affecting all backend APIs?
 
-Let's make use of these parsed fields to break down `status_code` by `request_path` to see if this is affecting only a specific API?
+Let's make use of these parsed fields to break down `status_code` by `request_path` to see if this is affecting only a specific API, or several APIs?
 
 Execute the following query:
 ```esql
@@ -171,14 +168,14 @@ FROM logs-proxy.otel-default
 | STATS COUNT() BY status_code, request_path
 ```
 
-Ok, it seems these errors are affecting all of our APIs.
+Ok, it seems these errors are affecting all of the APIs (2) exposed by our simple backend.
 
 > [!NOTE]
-> You'll note that our search has gotten a little slower when we added query-time GROK parsing. In our next challenge, we will show you how we can retain fast-search over long time windows WITH parsing using ingest-time parsing.
+> You may notice that our search has gotten a little slower when we added query-time grok parsing. This is because Elasticsearch is now applying our grok pattern to _every_ log line in the selected time window. In our next challenge, we will show you how we can retain fast-search over long time windows WITH parsing using ingest-time parsing!
 
 # Is this affecting all User Agents?
 
-Ideally, we could also cross-reference the errors against the `user_agent` field to understand if it is affecting all browsers.
+Our nginx access logs also include a [User Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/User-Agent) field, which is a semi-structured field containing some information about the requesting browser. Ideally, we could also cross-reference the errors against this field to understand if it is affecting all browsers, or only some types of browsers.
 
 Execute the following query:
 ```esql
@@ -189,9 +186,9 @@ FROM logs-proxy.otel-default
 | STATS bad = COUNT() BY user_agent
 ```
 
-Unfortunately, the unparsed `user_agent` field is too unstructured to really be useful for this kind of analysis. We could try to write a GROK expression to further parse `user_agent`, but in practice, it is too complicated (it requires translations and lookups in addition to parsing). Let's put a pin in this topic and revisit it in a bit when we have more tools at our disposal.
+Unfortunately, the unparsed `user_agent` field is too unstructured to really be useful for this kind of analysis. We could try to write a grok expression to further parse `user_agent`, but in practice, it is too complicated (it requires translations and lookups in addition to parsing). Let's put a pin in this topic and revisit it in a bit when we have more tools at our disposal.
 
-# A better way to query
+# Making use of our parsed fields
 
 Let's redraw the time graph we drew before, but this time using `status_code` instead of looking for specific error codes.
 
@@ -200,14 +197,14 @@ Execute the following query:
 FROM logs-proxy.otel-default
 | GROK body.text "%{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \\[%{HTTPDATE:timestamp}\\] \"%{WORD:http_method} %{NOTSPACE:request_path} HTTP/%{NUMBER:http_version}\" %{NUMBER:status_code} %{NUMBER:body_bytes_sent:int} \"%{DATA:referrer}\" \"%{DATA:user_agent}\""
 | WHERE status_code IS NOT NULL
-| EVAL @timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp) // use embedded timestamp as record timestamp
+| EVAL @timestamp = DATE_PARSE("dd/MMM/yyyy:HH:mm:ss Z", timestamp)
 | STATS status_count = COUNT() BY status_code, minute = BUCKET(@timestamp, "1 min")
 ```
 
 > [!NOTE]
 > If the resulting graph does not default to a bar graph plotted over time, click on the Pencil icon in the upper-right of the graph and change the graph type to `Bar`
 
-This is a useful graph, and you can clearly see the advantage of parsing the log line vs. simply searching for specific error codes. Here, we can just generally graph by `status_code` and additionally split the data by, say, `request_path`.
+This is a useful graph, and you can clearly see the advantage of parsing the log line vs. simply searching for specific error codes.
 
 ## Saving our visualization to a dashboard
 
