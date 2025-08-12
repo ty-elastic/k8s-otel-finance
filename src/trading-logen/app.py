@@ -64,6 +64,8 @@ def make_logger(service_name, max_logs_per_second):
 request_error_per_customer = {}
 stock_price = {}
 
+ERROR_RETRIES = 3
+
 NUM_CUSTOMERS_PER_REGION = 10
 
 REGIONS = ['NA', 'LATAM', 'EU', 'EMEA', 'APAC']
@@ -251,7 +253,7 @@ def bump_version_up_per_browser(*, browser, region, error=True):
             USERAGENTS_PER_USER[customer] = ua_generator.generate(browser=browser, options=ua_generator_options)
             if error:
                 print(f"start request error for customer {customer}")
-                request_error_per_customer[customer] = {'amount': 100, 'retries': 2}
+                request_error_per_customer[customer] = {'amount': 100, 'retries': ERROR_RETRIES}
 
 realtime = {}
 @app.get('/status/realtime')

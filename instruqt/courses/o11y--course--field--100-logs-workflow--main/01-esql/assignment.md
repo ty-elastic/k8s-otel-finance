@@ -31,7 +31,7 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-We've gotten word from our customer service department that some users are unable to complete stock trades. We know that all of the REST API calls from our front end web application flow through a nginx reverse proxy, so that seems like a good place to start our investigation.
+We've gotten word from our customer service department that some users are receiving an error when trying to use our web-based application. We know that all of the REST API calls from our frontend web app flow through a nginx reverse proxy en route to our backend services, so that seems like a good place to start our investigation.
 
 ![proxy_arch.mmd.png](../assets/proxy_arch.mmd.png)
 
