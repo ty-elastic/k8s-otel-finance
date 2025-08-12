@@ -27,28 +27,35 @@ BACKLOG_Q_TIME_S = 60 * 60
 BACKLOG_Q_BATCH_S = 60 * 2
 BACKLOG_Q_TIMEOUT_MS = 10
 
+DEBUG = False
+
 def make_logger(service_name, max_logs_per_second):
-    logger_provider = LoggerProvider(
-        resource=Resource.create(
-            {
-                "service.name": service_name,
-                "data_stream.dataset": service_name
-            }
-        ),
-    )
-    if 'COLLECTOR_ADDRESS' in os.environ:
-        address = os.environ['COLLECTOR_ADDRESS']
+
+    if not DEBUG:
+        logger_provider = LoggerProvider(
+            resource=Resource.create(
+                {
+                    "service.name": service_name,
+                    "data_stream.dataset": service_name
+                }
+            ),
+        )
+        if 'COLLECTOR_ADDRESS' in os.environ:
+            address = os.environ['COLLECTOR_ADDRESS']
+        else:
+            address = "collector"
+        otlp_exporter = OTLPLogExporter(endpoint=f"http://{address}:4317", insecure=True)
+        processor = BatchLogRecordProcessor(
+            otlp_exporter,
+            schedule_delay_millis=BACKLOG_Q_TIMEOUT_MS,
+            max_queue_size=BACKLOG_Q_TIME_S * max_logs_per_second,
+            max_export_batch_size=BACKLOG_Q_BATCH_S * max_logs_per_second,
+        )
+        logger_provider.add_log_record_processor(processor)
+        handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
     else:
-        address = "collector"
-    otlp_exporter = OTLPLogExporter(endpoint=f"http://{address}:4317", insecure=True)
-    processor = BatchLogRecordProcessor(
-        otlp_exporter,
-        schedule_delay_millis=BACKLOG_Q_TIMEOUT_MS,
-        max_queue_size=BACKLOG_Q_TIME_S * max_logs_per_second,
-        max_export_batch_size=BACKLOG_Q_BATCH_S * max_logs_per_second,
-    )
-    logger_provider.add_log_record_processor(processor)
-    handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
+        processor = None
+        handler = logging.StreamHandler()
     logger = logging.getLogger(service_name)
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
@@ -135,9 +142,10 @@ def generate_trader_line(*, symbol, price):
 
 def log_backoff(logger_tuple):
     processor = logger_tuple[1]
-    while len(processor._batch_processor._queue) == processor._batch_processor._max_queue_size:
-        time.sleep(BACKLOG_Q_SEND_DELAY)
-        #print('blocked')
+    if processor is not None:
+        while len(processor._batch_processor._queue) == processor._batch_processor._max_queue_size:
+            time.sleep(BACKLOG_Q_SEND_DELAY)
+            #print('blocked')
 
 LOG_LEVEL_LOOKUP = {
     'DEBUG': 10,
@@ -165,28 +173,39 @@ def log(logger_tuple, name, timestamp, level, body):
 
 def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, logs_per_second, throttled):
     timestamp = start_timestamp
+
     while timestamp < end_timestamp if end_timestamp is not None else True:
-        line = None
+        lines = []
         if generator_type == 'nginx':
+            
             region = random.choice(REGIONS)
             customer_id = random.choice(CUSTOMERS_PER_REGION[region])
             url=random.choice(URLS)
-            timestamp_str = timestamp.strftime("%d/%b/%Y:%H:%M:%S %z")
+            size=random.randrange(SIZE[url][0],SIZE[url][1])
 
+            retries = 1
             if customer_id in request_error_per_customer:
                 error_request = True if random.randint(0, 100) > (100-request_error_per_customer[customer_id]['amount']) else False
+                if error_request:
+                    retries = request_error_per_customer[customer_id]['retries']
             else:
                 error_request = False
 
-            line = generate_nginx_line(ip=IP_ADDRESS_PER_USER[customer_id],
-                                timestamp=timestamp_str,
-                                method='POST',
-                                url=url,
-                                protocol='HTTP/1.1',
-                                status_code=200 if error_request is False else 500,
-                                size=random.randrange(SIZE[url][0],SIZE[url][1]),
-                                ref_url='-',
-                                user_agent=USERAGENTS_PER_USER[customer_id].text)
+            send_timestamp = timestamp
+            for i in range(retries):
+                timestamp_str = send_timestamp.strftime("%d/%b/%Y:%H:%M:%S %z")
+
+                line = generate_nginx_line(ip=IP_ADDRESS_PER_USER[customer_id],
+                                    timestamp=timestamp_str,
+                                    method='POST',
+                                    url=url,
+                                    protocol='HTTP/1.1',
+                                    status_code=200 if error_request is False else 500,
+                                    size=size,
+                                    ref_url='-',
+                                    user_agent=USERAGENTS_PER_USER[customer_id].text)
+                lines.append(line)
+                send_timestamp = send_timestamp + timedelta(seconds=1/1000)
         elif generator_type == 'trader':
             symbol = random.choice(SYMBOLS)
             if symbol not in stock_price:
@@ -196,8 +215,9 @@ def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, lo
                 stock_price[symbol] = 10
 
             line = generate_trader_line(symbol=symbol, price=stock_price[symbol])
+            lines.append(line)
 
-        if line is not None:
+        for line in lines:
             log(logger, name, timestamp, 'INFO', line)
 
         if throttled:
@@ -211,7 +231,7 @@ def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, lo
         timestamp = timestamp + timedelta(seconds=1/logs_per_second)
     return timestamp
 
-def bump_version_up_per_browser(*, browser, region):
+def bump_version_up_per_browser(*, browser, region, error=True):
     global request_error_per_customer
 
     for browser_version_range in ua_generator_options.version_ranges.keys():
@@ -229,8 +249,9 @@ def bump_version_up_per_browser(*, browser, region):
         if USERAGENTS_PER_USER[customer].browser == browser:
             print(f'new ua for {browser}')
             USERAGENTS_PER_USER[customer] = ua_generator.generate(browser=browser, options=ua_generator_options)
-            print(f"start request error for customer {customer}")
-            request_error_per_customer[customer] = {'amount': 100}
+            if error:
+                print(f"start request error for customer {customer}")
+                request_error_per_customer[customer] = {'amount': 100, 'retries': 2}
 
 realtime = {}
 @app.get('/status/realtime')

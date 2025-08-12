@@ -270,13 +270,13 @@ dv=$(curl -X POST "$KIBANA_URL/api/data_views/data_view" \
 
 dv_id=$(echo $dv | jq --compact-output -r '.data_view.id')
 
-echo "Setup DV refresh for $dv_id"
-cat <<EOF >> dataview.sh
-while /bin/true; do
-  curl -s -o /dev/null -X POST "$KIBANA_URL/api/data_views/data_view/$dv_id" --header "kbn-xsrf: true" --header 'x-elastic-internal-origin: Kibana' --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" --header "Content-Type: application/json" -d '{"data_view": {}, "refresh_fields": true}';
-  sleep 1;
-done
-EOF
-chmod a+x dataview.sh
-nohup ./dataview.sh > dataview.log 2>&1 &
-echo "Setup DV refresh...done"
+# echo "Setup DV refresh for $dv_id"
+# cat <<EOF >> dataview.sh
+# while /bin/true; do
+#   curl -s -o /dev/null -X POST "$KIBANA_URL/api/data_views/data_view/$dv_id" --header "kbn-xsrf: true" --header 'x-elastic-internal-origin: Kibana' --header "Authorization: Basic $ELASTICSEARCH_AUTH_BASE64" --header "Content-Type: application/json" -d '{"data_view": {}, "refresh_fields": true}';
+#   sleep 1;
+# done
+# EOF
+# chmod a+x dataview.sh
+# nohup ./dataview.sh > dataview.log 2>&1 &
+# echo "Setup DV refresh...done"
