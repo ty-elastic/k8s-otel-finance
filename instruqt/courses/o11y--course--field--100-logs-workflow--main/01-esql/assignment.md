@@ -139,7 +139,7 @@ Fortunately, nginx logs are semi-structured which makes them (relatively) easy t
 
 Some of you may already be familiar with [grok](https://www.elastic.co/docs/explore-analyze/scripting/grok) expressions which provides a higher-level interface on top of regex; namely, grok allows you define patterns. If you are well versed in grok, you may be able to write a parsing pattern yourself for nginx logs, possibly using tools like [Grok Debugger](https://grokdebugger.com) to help.
 
-If you aren't well versed in grok expressions, or you don't want to spend the time to debug an expression yourself, you can leverage our AI Assistant to help! 
+If you aren't well versed in grok expressions, or you don't want to spend the time to debug an expression yourself, you can leverage our AI Assistant to help!
 
 1. Click on the AI Assistant button in the upper-right.
 2. Enter the following prompt in the `Send a message to the Assistant` field at the bottom of the fly-out.

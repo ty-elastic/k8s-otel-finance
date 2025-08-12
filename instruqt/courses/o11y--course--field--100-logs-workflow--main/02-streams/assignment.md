@@ -181,7 +181,7 @@ Now let's add the SLO monitor to our dashboard to help us find it in the future.
 
 Note that we are dynamically adding SLOs by tag. Any additional SLOs tagged with `ingress` will also appear here.
 
-## Adding alerts to our dashboard
+## Adding SLO alerts to our dashboard
 
 Let's also add our growing list of Alerts to our Dashboard.
 

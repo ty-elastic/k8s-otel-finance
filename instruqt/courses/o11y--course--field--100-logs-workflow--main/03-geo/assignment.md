@@ -69,7 +69,7 @@ Let's make this a pie chart to allow for more intuitive visualization.
 
 Wow! It looks like all of our 500 errors are occurring in the `TH` (Thailand) region. That is really interesting; without more information, we might be tempted to stop our RCA analysis here. However, there is often more to the story, as we will see.
 
-## Saving our visualization to a dashboard
+### Saving our visualization to a dashboard
 
 In the meantime, this is a useful graph! Let's save it to a Dashboard for future use.
 
@@ -103,6 +103,10 @@ Sometimes it is helpful to visualize geography on a map. Fortunately, Elastic ha
 11. Set `Symbol Size` to `By value`
 12. Set `Select a field` to `http.response.status_code`
 13. Click `Keep changes`
+
+Feel free to scroll around on our globe.
+
+### Saving our map to a dashboard
 
 Now let's save our awesome map to our dashboard.
 

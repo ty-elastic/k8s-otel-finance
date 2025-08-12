@@ -205,20 +205,24 @@ Create transform:
 2. Click `Create a transform`
 3. Select `logs-proxy.otel-default`
 4. Select `Pivot` (if not already selected)
-5. Set `Search filter` to `user_agent.full :*` (if this field isn't available, refresh the Instruqt virtual browser tab)
-5. Set `Group by` to `terms(user_agent.full)`
-6. Add an aggregation for `@timestamp.max`
-7. Add an aggregation for `@timestamp.min`
-8. Click `> Next`
-9. Set the `Transform ID` to
+5. Set `Search filter` to 
+  ```
+  user_agent.full :*
+  ```
+  (if this field isn't available, refresh the Instruqt virtual browser tab)
+6. Set `Group by` to `terms(user_agent.full)`
+7. Add an aggregation for `@timestamp.max`
+8. Add an aggregation for `@timestamp.min`
+9. Click `> Next`
+10. Set the `Transform ID` to
   ```
   user_agents
   ```
-10. Set `Time field` to `@timestamp.min` (if not already selected)
-11. Set `Continuous mode` on
-12. Open `Advanced settings` and set the Frequency to `5s` (we are selecting an aggressive runtime schedule to demonstrate the capability)
-13. Click `Next`
-14. Click `Create and start`
+11. Set `Time field` to `@timestamp.min` (if not already selected)
+12. Set `Continuous mode` on
+13. Open `Advanced settings` and set the Frequency to `5s` (we are selecting an aggressive runtime schedule to demonstrate the capability)
+14. Click `Next`
+15. Click `Create and start`
 
 > [!NOTE]
 > We choose a very aggressive `Frequency` (5s) for demonstration purposes. In practice, you would likely use a Frequency of >= 1m.

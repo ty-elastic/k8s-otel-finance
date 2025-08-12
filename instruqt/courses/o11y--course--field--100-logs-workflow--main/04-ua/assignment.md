@@ -20,7 +20,7 @@ enhanced_loading: false
 ---
 We know that errors appear to be localized to a specific region. But maybe there is more to the story?
 
-# Is this affecting every browser type?
+# Is this affecting every type of browser?
 
 Let's parse that User Agent string to look for correlation. While nearly impossible to parse with a simple grok expression, we can easily parse it using the Elastic [User agent](https://www.elastic.co/docs/reference/enrich-processor/user-agent-processor) processor.
 
