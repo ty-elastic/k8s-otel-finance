@@ -43,13 +43,13 @@ We can add the Elastic [GeoIP](https://www.elastic.co/docs/reference/enrich-proc
   ```
 8. Set `Ignore missing` to true
 9. Click `Add processor`
-10. Click `Save changes`
+10. Click `Save changes` in the bottom-right
 
 ![3_geo.png](../assets/3_geo.png)
 
 ## Analyzing with Discover
 
-Jump back to Discover by clicking Discover in the left-hand navigation pane.
+Jump back to Discover by clicking `Discover` in the left-hand navigation pane.
 
 Adjust the time field to show the last 3 hours of data.
 
@@ -65,8 +65,11 @@ Let's make this a pie chart to allow for more intuitive visualization.
 
 1. Click the pencil icon to the right of the graph
 2. Select `Pie` from the dropdown menu
+3. Click `Apply and close`
 
-So it looks like all of our 500 errors are contained in the `TH` (Thailand) region. That is interesting, and without more information, we might be tempted to stop our RCA analysis here. However, there is often more to the story, as we will see.
+Wow! It looks like all of our 500 errors are occurring in the `TH` (Thailand) region. That is really interesting; without more information, we might be tempted to stop our RCA analysis here. However, there is often more to the story, as we will see.
+
+## Saving our visualization to a dashboard
 
 In the meantime, this is a useful graph! Let's save it to a Dashboard for future use.
 
@@ -124,7 +127,7 @@ As we are adding panels to our dashboard, we can group them into collapsible sec
   ```
 5. Click the green check box next to the name of the collapsible section
 6. Open the collapsible section (if it isn't already) by clicking on the open/close arrow to the left of the collapsible section name
-7. Drag the `Status by Region` pie chart and the `Status Code by Location` map into the body of the `Client Geography` section
+7. Drag the `Status by Region` pie chart and the `Status Code by Location` map into the body below the `Client Geography` collapsible section
 
 Now save the dashboard by clicking on the `Save` button in the upper-right.
 
@@ -140,7 +143,7 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard showing ingress status
+* Created a Dashboard to monitor our ingress proxy
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs at ingest-time for quicker and more powerful analysis
 * Create a SLO (with alert) to let us know if we ever return a significant number of non-200 error codes over time

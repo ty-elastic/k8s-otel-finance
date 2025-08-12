@@ -55,13 +55,13 @@ In addition to the fields produced by the User Agent processor, we also want a s
   ```
 5. Click `Ignore failures for this processor`
 6. Click `Add processor`
-7. Click `Save changes`
+7. Click `Save changes` in the bottom-right
 
 ![4_ua2.png](../assets/4_ua2.png)
 
 ## Analyzing with Discover
 
-Now let's jump back to Discover by clicking Discover in the left-hand navigation pane.
+Now let's jump back to Discover by clicking `Discover` in the left-hand navigation pane.
 
 Execute the following query:
 ```esql
@@ -84,15 +84,14 @@ Indeed, it appears we might have a problem with version 136 of the Chrome browse
 
 # Correlating with region
 
-So what's the correlation with the geographic area we previously saw?
+So what's the correlation with the geographic area we previously identified as being associated with the errors we saw?
 
 Execute the following query:
 ```esql
 FROM logs-proxy.otel-default
 | WHERE client.geo.country_iso_code IS NOT NULL AND user_agent.version IS NOT NULL AND http.response.status_code IS NOT NULL
 | EVAL version_major = SUBSTRING(user_agent.version,0,LOCATE(user_agent.version, ".")-1)
-| WHERE user_agent.name == "Chrome"
-| WHERE TO_INT(version_major) == 136
+| WHERE user_agent.name == "Chrome" AND TO_INT(version_major) == 136
 | STATS COUNT() BY client.geo.country_iso_code
 ```
 
@@ -113,7 +112,7 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard showing ingress status
+* Created a Dashboard to monitor our ingress proxy
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs at ingest-time for quicker and more powerful analysis
 * Create a SLO (with alert) to let us know if we ever return a significant number of non-200 error codes over time

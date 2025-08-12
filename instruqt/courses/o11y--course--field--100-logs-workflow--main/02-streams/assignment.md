@@ -22,7 +22,7 @@ So far, we've been using ES|QL to parse our proxy logs at query time. While incr
 
 # Parsing with Streams
 
-We will be working with the Elastic Streams interface which makes it easy to setup log parsing pipelines.
+We will be working with the Elastic [Streams](https://www.elastic.co/docs/solutions/observability/logs/streams/streams) interface which makes it easy to setup log parsing pipelines.
 
 1. Select `logs-proxy.otel-default` from the list of data streams (if you start typing, Elasticsearch will help you find it)
 2. Select the `Processing` tab
@@ -64,7 +64,7 @@ Now save the Processing by clicking `Save changes` in the bottom-right.
 
 # A faster way to query
 
-Now let's jump back to Discover by clicking Discover in the left-hand navigation pane.
+Now let's jump back to Discover by clicking `Discover` in the left-hand navigation pane.
 
 Execute the following query:
 ```esql
@@ -85,7 +85,7 @@ FROM logs-proxy.otel-default
 | STATS COUNT() BY TO_STRING(http.response.status_code), minute = BUCKET(@timestamp, "1 min")
 ```
 
-Note that this graph, unlike the one we drew before, currently shows only a few minutes of data. That is because it relies upon the fields we parsed in the Processing we just setup. Prior to that time, those fields didn't exist. Change the time field to `Last 15 Minutes` to zoom in on the newly parsed data.
+Note that this graph, unlike the one we drew before, currently shows only a few minutes of data. That is because it relies upon the fields we parsed in the Processing we just setup. Prior to that time, those fields didn't exist. Change the time field to `Last 5 Minutes` to zoom in on the newly parsed data.
 
 ## Saving our visualization to a dashboard
 
@@ -153,7 +153,7 @@ Now let's setup an alert that triggers when this SLO is breached.
 
 With burn rates, we can have Elastic dynamically adjust the escalation of a potential issue depending on how quickly it appears we will breach our SLO.
 
-3. On the `Details` tab, set the `Rule name` to :
+3. On the `Details` tab of the fly-out, set the `Rule name` to :
   ```
   Ingress Status SLO
   ```
@@ -169,7 +169,7 @@ With burn rates, we can have Elastic dynamically adjust the escalation of a pote
 Now let's add the SLO monitor to our dashboard to help us find it in the future.
 
 1. Click `Dashboards` in the left-hand navigation pane
-2. Open the `Ingress Status` dashboard
+2. Open the `Ingress Status` dashboard (if not already open)
 3. Click `Add panel`
 4. Select `SLO Overview`
 5. Select `Grouped SLOs`
@@ -193,6 +193,8 @@ Let's also add our growing list of Alerts to our Dashboard.
 
 Note that we are dynamically adding alerts by tag. Any additional alerts tagged with `ingress` will also appear here.
 
+Now save the changes to our dashboard by clicking the `Save` button in the upper-right.
+
 # Summary
 
 Let's take stock of what we know:
@@ -204,7 +206,7 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard showing ingress status
+* Created a Dashboard to monitor our ingress proxy
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs at ingest-time for quicker and more powerful analysis
 * Create a SLO (with alert) to let us know if we ever return a significant number of non-200 error codes over time

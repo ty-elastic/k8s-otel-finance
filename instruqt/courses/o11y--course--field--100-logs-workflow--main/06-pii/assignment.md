@@ -31,7 +31,7 @@ Sometimes our data contains PII information which needs to be restricted to a ne
 
 # Limiting access
 
-With Elastic's in-built support for RBAC, we can limit access at the index, document, or field level.
+With Elastic's in-built support for [RBAC](https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/user-roles), we can limit access at the index, document, or field level.
 
 In this example, we've created a limited_user with a limited_role which restricts access to the `client.ip` and `body.text` fields (to avoid leaking the `client.ip`).
 
@@ -88,7 +88,7 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard showing ingress status
+* Created a Dashboard to monitor our ingress proxy
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs at ingest-time for quicker and more powerful analysis
 * Create a SLO (with alert) to let us know if we ever return a significant number of non-200 error codes over time

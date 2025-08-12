@@ -22,9 +22,11 @@ Now that we know what happened, let's try to be sure this never happens again.
 
 # Generating a breakdown of user agents
 
-In general, it would be nice to have a graphical breakdown of the makeup of our clients.
+In general, it would be nice to have a graphical breakdown of the makeup of our browser clients.
 
 We can accomplish this using our parsed User Agent string and ES|QL.
+
+## Breakdown by OS
 
 Execute the following query:
 ```
@@ -36,6 +38,8 @@ FROM logs-proxy.otel-default
 1. Click on the pencil icon to the right of the existing graph
 2. Select `Treemap` from the visualizations drop-down menu
 3. Click `Apply and close`
+
+## Saving our visualization to a dashboard
 
 Let's save it to our Dashboard for future use.
 
@@ -49,9 +53,11 @@ Let's save it to our Dashboard for future use.
 5. Click `Save and go to Dashboard`
 6. Once the dashboard has loaded, click the `Save` button in the upper-right
 
+## Breakdown by Browser
+
 Let's also create a chart depicting the overall breakdown of Browsers.
 
-Go back to Discover using the left-hand navigation pane.
+Jump back to Discover by clicking `Discover` in the left-hand navigation pane.
 
 Execute the following query:
 ```
@@ -63,6 +69,8 @@ FROM logs-proxy.otel-default
 1. Click on the pencil icon to the right of the existing graph
 2. Select `Pie` from the visualizations drop-down menu
 3. Click `Apply and close`
+
+## Adding our visualization to a dashboard
 
 Let's save it to our Dashboard for future use.
 
@@ -79,6 +87,8 @@ Let's save it to our Dashboard for future use.
 # Generating a table of user agents
 
 It would also be helpful is to keep track of new User Agents as they appear in the wild.
+
+Jump back to Discover by clicking `Discover` in the left-hand navigation pane.
 
 Execute the following query:
 ```
@@ -103,7 +113,7 @@ Fabulous! Now we can see every User Agent we encounter, when we first encountere
 
 Say you also wanted to know when a given User Agent was released by the developer?
 
-We could try to maintain our own User Agent lookup table and use ES|QL `LOOKUP JOIN`s to match browser versions to release dates:
+We could try to maintain our own User Agent lookup table and use ES|QL [LOOKUP JOIN](https://www.elastic.co/docs/reference/query-languages/esql/commands/processing-commands#esql-lookup-join) to match browser versions to release dates:
 
 Execute the following query:
 ```
@@ -158,14 +168,18 @@ Let's save this search for future reference:
   ```
   ua_release_dates
   ```
+3. Click `Save`
+
+## Adding our table to a dashboard
 
 Now let's add this as a table to our dashboard
 
 1. Click `Dashboards` in the left-hand navigation pane
 2. Open the `Ingress Status` dashboard (if it isn't already open)
 3. Click `Add from library`
-4. Find `ua_release_dates`
-5. Click `Save`
+4. Find and select `ua_release_dates`
+5. Close the fly-out
+5. Click `Save` to save the dashboard
 
 # Scheduling a report
 
@@ -190,7 +204,7 @@ Create transform:
 1. Go to `Management` > `Stack Management` > `Transforms` using the left-hand navigation pane
 2. Click `Create a transform`
 3. Select `logs-proxy.otel-default`
-4. Select `Pivot`
+4. Select `Pivot` (if not already selected)
 5. Set `Search filter` to `user_agent.full :*` (if this field isn't available, refresh the Instruqt virtual browser tab)
 5. Set `Group by` to `terms(user_agent.full)`
 6. Add an aggregation for `@timestamp.max`
@@ -200,11 +214,14 @@ Create transform:
   ```
   user_agents
   ```
-10. Set `Time field` to `@timestamp.min`
-11. Set `Continuous mode`
-12. Open `Advanced settings` and set the Frequency to `5s`
+10. Set `Time field` to `@timestamp.min` (if not already selected)
+11. Set `Continuous mode` on
+12. Open `Advanced settings` and set the Frequency to `5s` (we are selecting an aggressive runtime schedule to demonstrate the capability)
 13. Click `Next`
 14. Click `Create and start`
+
+> [!NOTE]
+> We choose a very aggressive `Frequency` (5s) for demonstration purposes. In practice, you would likely use a Frequency of >= 1m.
 
 ## Creating an alert
 
@@ -228,6 +245,7 @@ Let's create a new alert which will fire whenever a new User Agent is seen.
   ```
 11. Set `Related dashboards` to `Ingress Proxy`
 12. Click `Create rule`
+13. Click `Save rule` in the resulting pop-up
 
 # Let's test it
 
@@ -258,7 +276,7 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard showing ingress status
+* Created a Dashboard to monitor our ingress proxy
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs at ingest-time for quicker and more powerful analysis
 * Create a SLO (with alert) to let us know if we ever return a significant number of non-200 error codes over time
