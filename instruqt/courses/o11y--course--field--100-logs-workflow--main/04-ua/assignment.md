@@ -22,16 +22,14 @@ We know that errors appear to be localized to a specific region. But maybe there
 
 # Is this affecting every browser type?
 
-Let's parse that User Agent string to look for correlation. While difficult/impossible with a simple GROK expression, you can easily do this with the Elastic `User agent` processor.
+Let's parse that User Agent string to look for correlation. While nearly impossible to parse with a simple grok expression, we can easily parse it using the Elastic [User agent](https://www.elastic.co/docs/reference/enrich-processor/user-agent-processor) processor.
 
-## Using the Elastic User Agent processor
-
-We can add the Elastic `User agent` processor to parse the UA string embedded in our nginx access logs.
+## Adding the User Agent processor
 
 1. Select `logs-proxy.otel-default` from the list of Streams.
 2. Select the `Processing` tab
-3. Click `Add a processor`
-4. Select `User agent`
+3. Select `Add a processor`
+4. Select the `User agent` Processor
 5. Set the `Field` to
   ```
   user_agent.original
@@ -41,12 +39,12 @@ We can add the Elastic `User agent` processor to parse the UA string embedded in
 
 ![4_ua1.png](../assets/4_ua1.png)
 
-## Using the Elastic Set processor
+## Adding the Set processor
 
-In addition to the fields produced by the User Agent processor, we also want a simplified combination of browser name and version. We can easily craft one using the Set processor.
+In addition to the fields produced by the User Agent processor, we also want a simplified combination of browser name and version. We can easily craft one using the [Set](https://www.elastic.co/docs/reference/enrich-processor/set-processor) processor.
 
 1. Click `Add a processor`
-2. Click `Set`
+2. Select the `Set` Processor
 3. Set `Field` to
   ```
   user_agent.full
@@ -106,7 +104,7 @@ Congratulations! We found our problem! In the next challenge, we will setup a wa
 
 Let's take stock of what we know:
 
-* a small percentage of users are experiencing 500 errors
+* a small percentage of requests are experiencing 500 errors
 * the errors started occurring around 80 minutes ago
 * the only error type seen is 500
 * the errors occur over all APIs
@@ -117,6 +115,6 @@ And what we've done:
 
 * Created a Dashboard showing ingress status
 * Created a simple alert to let us know if we ever return non-200 error codes
-* Parsed the logs for quicker and more powerful analysis
-* Create a SLO to let us know if we ever return non-200 error codes over time
+* Parsed the logs at ingest-time for quicker and more powerful analysis
+* Create a SLO (with alert) to let us know if we ever return a significant number of non-200 error codes over time
 * Created a Map to help us visually geo-locate the errors

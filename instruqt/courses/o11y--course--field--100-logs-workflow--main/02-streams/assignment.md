@@ -27,28 +27,24 @@ We will be working with the Elastic Streams interface which makes it easy to set
 1. Select `logs-proxy.otel-default` from the list of data streams (if you start typing, Elasticsearch will help you find it)
 2. Select the `Processing` tab
 
+![2_processing.png](../assets/2_processing.png)
+
 ## Parsing the log message
 
-3. Click `Add a processor`
-4. Select `Grok` for the `Processor` if not already selected
-5. Set the `Field` to
+We can parse our nginx log messages at ingest-time using the Elastic [Grok](https://www.elastic.co/docs/reference/enrich-processor/grok-processor) processor.
+
+1. Click `Add a processor`
+2. Select the `Grok` Processor (if not already selected)
+3. Set the `Field` to
   ```
   body.text
   ```
-6. Click `Generate pattern`
-
-Elasticsearch will analyze your log lines and try to recognize a pattern.
-
-The generated pattern should look similar to the following:
-
-> [!NOTE]
-> To ensure a consistent lab experience, please copy the following GROK expression and paste it into `Grok patterns`
-
+4. Click `Generate pattern`. Elasticsearch will analyze your log lines and try to determine a suitable grok pattern.
+5. To ensure a consistent lab experience, copy the following grok expression and paste it into the `Grok patterns` field (rather than clicking on the `Accept` button)
 ```
 %{IPV4:client.ip} - %{NOTSPACE:client.user} \[%{HTTPDATE:timestamp}\] "%{WORD:http.request.method} %{URIPATH:http.request.url.path} HTTP/%{NUMBER:http.version}" %{NUMBER:http.response.status_code:int} %{NUMBER:http.response.body.bytes:int} "%{DATA:http.request.referrer}" "%{GREEDYDATA:user_agent.original}"
 ```
-
-7. Click `Add processor`
+6. Click `Add processor`
 
 ![2_grok.png](../assets/2_grok.png)
 
@@ -64,7 +60,7 @@ The nginx log line includes a timestamp; let's use that as our record timestamp.
 
 ![2_date.png](../assets/2_date.png)
 
-Now save the Processing by clicking `Save changes`.
+Now save the Processing by clicking `Save changes` in the bottom-right.
 
 # A faster way to query
 
@@ -89,9 +85,7 @@ FROM logs-proxy.otel-default
 | STATS COUNT() BY TO_STRING(http.response.status_code), minute = BUCKET(@timestamp, "1 min")
 ```
 
-Note that this graph, unlike the one we drew before, only has a few minutes of data. That is because it relies upon the fields we parsed in the Processing we just setup. Prior to that time, those fields didn't exist. Change the time field to `Last 15 Minutes` to see newly parsed data.
-
-You'll also note how quickly this graph rendered compared to when we were parsing our log lines at query-time with ES|QL.
+Note that this graph, unlike the one we drew before, currently shows only a few minutes of data. That is because it relies upon the fields we parsed in the Processing we just setup. Prior to that time, those fields didn't exist. Change the time field to `Last 15 Minutes` to zoom in on the newly parsed data.
 
 ## Saving our visualization to a dashboard
 
@@ -103,19 +97,26 @@ This is a useful graph! Let's save it to our Dashboard for future use.
   Status Code Over Time (Streams)
   ```
 3. Select `Existing` under `Add to dashboard`
-4. Select the existing dashboard `Ingress Proxy`
+4. Select the existing dashboard `Ingress Proxy` (you will need to start typing `Ingress` in the `Search dashboards...` field)
 5. Click `Save and go to Dashboard`
 6. Once the dashboard has loaded, click the `Save` button in the upper-right
 
+![2_dashboard.png](../assets/2_dashboard.png)
+
 # Creating a SLO
+
+> [!NOTE]
+> Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the SLO.
+
+![2_reload.png](../assets/2_reload.png)
 
 Remember that simple alert we created? Now that we are parsing these fields at ingest-time, we can create a proper SLO instead of a simple binary alert. With a SLO, we can allow for some percentage of errors over time (common in a complex system) before we get our support staff out of bed.
 
 1. Click `SLOs` in the left-hand navigation pane
 2. Click `Create SLO`
-3. Select `Custom Query`
+3. Select `Custom Query` (if not already selected)
 4. Set `Data view` to `logs-proxy.otel-default`
-5. Set `Timestamp field` to `@timestamp`
+5. Set `Timestamp field` to `@timestamp` (if not already selected)
 6. Set `Good query` to
   ```
   http.response.status_code < 400
@@ -128,6 +129,9 @@ Remember that simple alert we created? Now that we are parsing these fields at i
   ```
   http.request.url.path
   ```
+
+![2_slo1.png](../assets/2_slo1.png)
+
 9. Set `SLO Name` to
   ```
   Ingress Status
@@ -138,10 +142,7 @@ Remember that simple alert we created? Now that we are parsing these fields at i
   ```
 11. Click `Create SLO`
 
-> [!NOTE]
-> Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the SLO.
-
-![2_reload.png](../assets/2_reload.png)
+![2_slo2.png](../assets/2_slo2.png)
 
 ## Alerting on a SLO
 
@@ -168,13 +169,15 @@ With burn rates, we can have Elastic dynamically adjust the escalation of a pote
 Now let's add the SLO monitor to our dashboard to help us find it in the future.
 
 1. Click `Dashboards` in the left-hand navigation pane
-2. Open `Ingress Status`
+2. Open the `Ingress Status` dashboard
 3. Click `Add panel`
 4. Select `SLO Overview`
 5. Select `Grouped SLOs`
 6. Set `Group by` to `Tags`
 7. Set `Tags` to `ingress`
 8. Click `Save`
+
+![2_slo3.png](../assets/2_slo3.png)
 
 Note that we are dynamically adding SLOs by tag. Any additional SLOs tagged with `ingress` will also appear here.
 
@@ -194,7 +197,7 @@ Note that we are dynamically adding alerts by tag. Any additional alerts tagged 
 
 Let's take stock of what we know:
 
-* a small percentage of users are experiencing 500 errors
+* a small percentage of requests are experiencing 500 errors
 * the errors started occurring around 80 minutes ago
 * the only error type seen is 500
 * the errors occur over all APIs
@@ -203,5 +206,5 @@ And what we've done:
 
 * Created a Dashboard showing ingress status
 * Created a simple alert to let us know if we ever return non-200 error codes
-* Parsed the logs for quicker and more powerful analysis
-* Create a SLO to let us know if we ever return non-200 error codes over time
+* Parsed the logs at ingest-time for quicker and more powerful analysis
+* Create a SLO (with alert) to let us know if we ever return a significant number of non-200 error codes over time

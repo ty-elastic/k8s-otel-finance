@@ -79,7 +79,7 @@ Elasticsearch will now remove this data from its online indices after 30 days. A
 
 Let's take stock of what we know:
 
-* a small percentage of users are experiencing 500 errors
+* a small percentage of requests are experiencing 500 errors
 * the errors started occurring around 80 minutes ago
 * the only error type seen is 500
 * the errors occur over all APIs
@@ -90,8 +90,8 @@ And what we've done:
 
 * Created a Dashboard showing ingress status
 * Created a simple alert to let us know if we ever return non-200 error codes
-* Parsed the logs for quicker and more powerful analysis
-* Create a SLO to let us know if we ever return non-200 error codes over time
+* Parsed the logs at ingest-time for quicker and more powerful analysis
+* Create a SLO (with alert) to let us know if we ever return a significant number of non-200 error codes over time
 * Created a Pie Graph showing errors by region
 * Created a Map to help us visually geo-locate the errors
 * Created graphs in our dashboard showing the breakdown of User Agents

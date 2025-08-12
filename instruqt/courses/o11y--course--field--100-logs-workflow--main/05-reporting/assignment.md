@@ -45,7 +45,7 @@ Let's save it to our Dashboard for future use.
   Client OSs
   ```
 3. Select `Existing` under `Add to dashboard`
-4. Select the existing dashboard `Ingress Proxy`
+4. Select the existing dashboard `Ingress Proxy` (you will need to start typing `Ingress` in the `Search dashboards...` field)
 5. Click `Save and go to Dashboard`
 6. Once the dashboard has loaded, click the `Save` button in the upper-right
 
@@ -72,7 +72,7 @@ Let's save it to our Dashboard for future use.
   Client Browsers
   ```
 3. Select `Existing` under `Add to dashboard`
-4. Select the existing dashboard `Ingress Proxy`
+4. Select the existing dashboard `Ingress Proxy` (you will need to start typing `Ingress` in the `Search dashboards...` field)
 5. Click `Save and go to Dashboard`
 6. Once the dashboard has loaded, click the `Save` button in the upper-right
 
@@ -162,7 +162,7 @@ Let's save this search for future reference:
 Now let's add this as a table to our dashboard
 
 1. Click `Dashboards` in the left-hand navigation pane
-2. Open `Ingress Status`
+2. Open the `Ingress Status` dashboard (if it isn't already open)
 3. Click `Add from library`
 4. Find `ua_release_dates`
 5. Click `Save`
@@ -173,20 +173,25 @@ The CIO is concerned about us not testing new browsers sufficiently, and for som
 
 1. Click on `Export` icon
 2. Select `Schedule exports`
-3. Click `Schedule exports`
+3. Click `Schedule exports` at the bottom-right of the resulting fly-out
+
+![5_exports.png](../assets/5_exports.png)
 
 # Alert when a new UA is seen
 
-Ideally, we can send an alert whenever a new User Agent is seen. To do that, we need to keep state of what User Agents we've already seen. Fortunately, Elastic Transforms makes this easy!
+Ideally, we can send an alert whenever a new User Agent is seen. To do that, we need to keep state of what User Agents we've already seen. Fortunately, Elastic [Transforms](https://www.elastic.co/docs/explore-analyze/transforms) makes this easy!
 
 ## Creating a transform
+
+> [!NOTE]
+> Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the Map.
 
 Create transform:
 1. Go to `Management` > `Stack Management` > `Transforms` using the left-hand navigation pane
 2. Click `Create a transform`
 3. Select `logs-proxy.otel-default`
 4. Select `Pivot`
-5. Set `Search filter` to `user_agent.full :*`  (if this field isn't available, refresh the Instruqt virtual browser tab)
+5. Set `Search filter` to `user_agent.full :*` (if this field isn't available, refresh the Instruqt virtual browser tab)
 5. Set `Group by` to `terms(user_agent.full)`
 6. Add an aggregation for `@timestamp.max`
 7. Add an aggregation for `@timestamp.min`
@@ -200,9 +205,6 @@ Create transform:
 12. Open `Advanced settings` and set the Frequency to `5s`
 13. Click `Next`
 14. Click `Create and start`
-
-> [!NOTE]
-> Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the Map.
 
 ## Creating an alert
 
@@ -247,7 +249,7 @@ Look at the table of UAs that we added and note the addition of Chrome 137! You'
 
 Let's take stock of what we know:
 
-* a small percentage of users are experiencing 500 errors
+* a small percentage of requests are experiencing 500 errors
 * the errors started occurring around 80 minutes ago
 * the only error type seen is 500
 * the errors occur over all APIs
@@ -258,8 +260,8 @@ And what we've done:
 
 * Created a Dashboard showing ingress status
 * Created a simple alert to let us know if we ever return non-200 error codes
-* Parsed the logs for quicker and more powerful analysis
-* Create a SLO to let us know if we ever return non-200 error codes over time
+* Parsed the logs at ingest-time for quicker and more powerful analysis
+* Create a SLO (with alert) to let us know if we ever return a significant number of non-200 error codes over time
 * Created a Pie Graph showing errors by region
 * Created a Map to help us visually geo-locate the errors
 * Created graphs in our dashboard showing the breakdown of User Agents

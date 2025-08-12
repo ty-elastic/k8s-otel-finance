@@ -268,7 +268,7 @@ In practice, this alert is too simple. We probably are okay with a small percent
 
 Let's take stock of what we know:
 
-* a small percentage of users are experiencing 500 errors
+* a small percentage of requests are experiencing 500 errors
 * the errors started occurring around 80 minutes ago
 * the only error type seen is 500
 * the errors occur over all APIs
