@@ -118,21 +118,6 @@ Now let's save our awesome map to our dashboard.
 3. Select existing dashboard `Ingress Status` (you will need to start typing `Ingress` in the `Search dashboards...` field)
 4. Click `Save and go to dashboard`
 
-# Organizing our dashboard
-
-As we are adding panels to our dashboard, we can group them into collapsible sections.
-
-1. Click on `Add panel`
-2. Select `Collapsible Section`
-3. Click on the Pencil icon to the right of the name of the new collapsible section
-4. Name the collapsible section
-  ```
-  Client Geography
-  ```
-5. Click the green check box next to the name of the collapsible section
-6. Open the collapsible section (if it isn't already) by clicking on the open/close arrow to the left of the collapsible section name
-7. Drag the `Status by Region` pie chart and the `Status Code by Location` map into the body below the `Client Geography` collapsible section
-
 Now save the dashboard by clicking on the `Save` button in the upper-right.
 
 # Summary

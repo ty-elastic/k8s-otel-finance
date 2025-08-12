@@ -18,7 +18,7 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-Now that we know what happened, let's try to be sure this never happens again.
+Now that we know what happened, let's try to be sure this never happens again by building out more reporting and alerting.
 
 # Generating a breakdown of user agents
 
@@ -183,7 +183,25 @@ Now let's add this as a table to our dashboard
 3. Click `Add from library`
 4. Find and select `ua_release_dates`
 5. Close the fly-out
-5. Click `Save` to save the dashboard
+6. Click `Save` to save the dashboard
+
+# Organizing our dashboard
+
+As we are adding panels to our dashboard, we can group them into collapsible sections.
+
+1. Click on `Add panel`
+2. Select `Collapsible Section`
+3. Click on the Pencil icon to the right of the name of the new collapsible section
+4. Name the collapsible section
+  ```
+  User Agent
+  ```
+5. Click the green check box next to the name of the collapsible section
+6. Open the collapsible section (if it isn't already) by clicking on the open/close arrow to the left of the collapsible section name
+7. Drag the `ua_release_dates` table, the `Client Browsers` pie chart, and the `Client OSs` treemap into the body below the `User Agent` collapsible section
+8. Click `Save` to save the dashboard
+
+Feel free to create additional collapsible sections to group our other panels.
 
 # Scheduling a report
 
