@@ -55,7 +55,7 @@ Let's save it to our Dashboard for future use.
 
 ## Breakdown by Browser
 
-Let's also create a chart depicting the overall breakdown of Browsers.
+Let's also create a chart depicting the overall breakdown of browsers.
 
 Jump back to Discover by clicking `Discover` in the left-hand navigation pane.
 
@@ -111,6 +111,8 @@ FROM logs-proxy.otel-default
 
 Fabulous! Now we can see every User Agent we encounter, when we first encountered it, and in what region it was first seen.
 
+## Using LOOKUP JOIN to determine release date
+
 Say you also wanted to know when a given User Agent was released by the developer?
 
 We could try to maintain our own User Agent lookup table and use ES|QL [LOOKUP JOIN](https://www.elastic.co/docs/reference/query-languages/esql/commands/processing-commands#esql-lookup-join) to match browser versions to release dates:
@@ -136,6 +138,8 @@ FROM logs-proxy.otel-default
 ```
 
 We can quickly see the problem with maintaining our own `ua_lookup` index. It would take a lot of work to truly track the release date of every Browser version in the wild.
+
+## Using COMPLETION to determine release date
 
 Fortunately, Elastic makes it possible to leverage an external Large Language Model (LLM) to lookup those browser release dates for us!
 
@@ -205,11 +209,10 @@ Create transform:
 2. Click `Create a transform`
 3. Select `logs-proxy.otel-default`
 4. Select `Pivot` (if not already selected)
-5. Set `Search filter` to 
+5. Set `Search filter` to
   ```
   user_agent.full :*
   ```
-  (if this field isn't available, refresh the Instruqt virtual browser tab)
 6. Set `Group by` to `terms(user_agent.full)`
 7. Add an aggregation for `@timestamp.max`
 8. Add an aggregation for `@timestamp.min`
@@ -220,12 +223,13 @@ Create transform:
   ```
 11. Set `Time field` to `@timestamp.min` (if not already selected)
 12. Set `Continuous mode` on
-13. Open `Advanced settings` and set the Frequency to `5s` (we are selecting an aggressive runtime schedule to demonstrate the capability)
+13. Set `Delay` under `Continuous mode` to `0s`
+13. Open `Advanced settings` and set the Frequency to `1s` (we are selecting an aggressive runtime schedule to demonstrate the capability)
 14. Click `Next`
 15. Click `Create and start`
 
 > [!NOTE]
-> We choose a very aggressive `Frequency` (5s) for demonstration purposes. In practice, you would likely use a Frequency of >= 1m.
+> We are intentionally choosing very aggressive settings here strictly for demonstration purposes (e.g., to quickly trigger an alert). In practice, you would use more a more practical frequency, for example.
 
 ## Creating an alert
 
@@ -238,7 +242,7 @@ Let's create a new alert which will fire whenever a new User Agent is seen.
 5. Set `DATA VIEW` to `user_agents`
 6. Set `IS ABOVE` to `1`
 7. Set `FOR THE LAST` to `5 minutes`
-8. Set `Rule schedule` to `5 seconds`
+8. Set `Rule schedule` to `1 seconds`
 9. Set `Rule name` to
   ```
   New UA Detected
@@ -251,7 +255,10 @@ Let's create a new alert which will fire whenever a new User Agent is seen.
 12. Click `Create rule`
 13. Click `Save rule` in the resulting pop-up
 
-# Let's test it
+> [!NOTE]
+> We are intentionally choosing very aggressive settings here strictly for demonstration purposes (e.g., to quickly trigger an alert). In practice, you would use more a more practical frequency, for example.
+
+## Testing our alert
 
 1. Open the [button label="Terminal"](tab-1) Instruqt tab
 2. Run the following command:
@@ -262,8 +269,8 @@ curl -X POST http://kubernetes-vm:32003/err/browser/chrome
 This will create a new Chrome UA 137. Let's go to our dashboard and see if we can spot it.
 
 1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
-2. Go to Dashboards using the left-hand navigation pane
-3. Open `Ingress Proxy`
+2. Go to `Dashboards` using the left-hand navigation pane
+3. Open `Ingress Proxy` (if it isn't already open)
 
 Look at the table of UAs that we added and note the addition of Chrome 137! You'll also note a new active alert `New UA Detected`!
 

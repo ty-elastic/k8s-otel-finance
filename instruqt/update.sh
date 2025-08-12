@@ -44,8 +44,10 @@ for dir in ./courses/*/; do
       done
 
       title=$(yq .title track.yml)
-      echo $title
-      echo "# $title" > input.md
+      echo "![](./header.png)" > input.md
+      echo "" >> input.md
+      echo "# $title" >> input.md
+      echo "" >> input.md
       for challenge in */; do
         echo $challenge
         if [ -f "$challenge/assignment.md" ]; then

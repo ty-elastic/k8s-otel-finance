@@ -51,9 +51,10 @@ Let's change permissions and see what happens:
 1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Go to `Management` > `Stack Management` > `Security` > `Roles` using the left-hand navigation pane
 3. Select `limited_viewer`
-4. For Indices `logs-proxy.otel-default` click `Grant access to specific fields`
-5. Update `Denied fields` to be only `client.ip`, but remove `body.text`
-6. Click `Update role`
+4. For Indices `logs-proxy.otel-default`, update `Denied fields` to remove `body.text` (it should only contain `client.ip`)
+5. Click `Update role`
+
+Now let's ensure our limited user has access to `body.text`.
 
 1. Open the [button label="Elasticsearch (Limited)"](tab-1) Instruqt tab
 2. Close the open log record flyout
