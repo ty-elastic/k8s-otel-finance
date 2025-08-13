@@ -165,16 +165,16 @@ You'll note that we are limiting our results to only the top 10 last seen User A
 
 Let's save this search for future reference:
 
-1. Click `Save`
+1. Click the `Save` button in the upper-right
 2. Set `Title` to
   ```
   ua_release_dates
   ```
 3. Click `Save`
 
-## Adding our table to a dashboard
+Saving an ES|QL query allows others on our team to easily re-run it on demand. By saving the query, we can also add it to our dashboard!
 
-Now let's add this as a table to our dashboard.
+## Adding our table to a dashboard
 
 1. Click `Dashboards` in the left-hand navigation pane
 2. Open the `Ingress Status` dashboard (if it isn't already open)
@@ -199,7 +199,7 @@ As we are adding panels to our dashboard, we can group them into collapsible sec
 7. Drag the `ua_release_dates` table, the `Client Browsers` pie chart, and the `Client OSs` treemap into the body below the `User Agent` collapsible section
 8. Click `Save` to save the dashboard
 
-Feel free to create additional collapsible sections to group other visualizations.
+Feel free to create additional collapsible sections to group and organize other visualizations on our dashboard.
 
 # Scheduling a report
 
@@ -215,12 +215,13 @@ The CIO is concerned about us not testing new browsers sufficiently, and for som
 
 Ideally, we can send an alert whenever a new User Agent is seen. To do that, we need to keep state of what User Agents we've already seen. Fortunately, Elastic [Transforms](https://www.elastic.co/docs/explore-analyze/transforms) makes this easy!
 
+Transforms run asynchronously in the background, querying data, aggregating it, and writing the results to a new index. In this case, we can use a Pivot transform to read from our parsed proxy logs and pivot based on `user_agent.full`. This will create a new index with one record per `user_agent.full`. We can then alert whenever a new record is added to this index, indicating a new User Agent.
+
 ## Creating a transform
 
 > [!NOTE]
 > Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the Map.
 
-Create transform:
 1. Go to `Management` > `Stack Management` > `Transforms` using the left-hand navigation pane
 2. Click `Create your first transform`
 3. Select `logs-proxy.otel-default`
@@ -232,6 +233,9 @@ Create transform:
 6. Set `Group by` to `terms(user_agent.full)`
 7. Add an aggregation for `@timestamp.min`
 8. Click `> Next`
+
+![5_transform1.png](../assets/5_transform1.png)
+
 9. Set the `Transform ID` to
   ```
   user_agents
@@ -239,16 +243,24 @@ Create transform:
 10. Set `Time field` to `@timestamp.min` (if not already selected)
 11. Set `Continuous mode` on
 12. Set `Delay` under `Continuous mode` to `0s`
-13. Open `Advanced settings` and set the Frequency to `1s`
-14. Click `Next`
-15. Click `Create and start`
+13. Open `Advanced settings`
+14. Set the Frequency to `1s` under `Advanced Settings`
+15. Click `Next`
+
+![5_transform2.png](../assets/5_transform2.png)
+
+16. Click `Create and start`
+
+![5_transform3.png](../assets/5_transform3.png)
 
 > [!NOTE]
 > We are intentionally choosing very aggressive settings here strictly for demonstration purposes (e.g., to quickly trigger an alert). In practice, you would use more a more practical frequency, for example.
 
+Our transform is now running every second looking for new User Agents in the `logs-proxy.otel-default` datastream. It is smart enough to only look for new User Agents across log records which have arrived since the last run of the transform. When a new User Agent is seen, a corresponding record is written to the `user_agents` index.
+
 ## Creating an alert
 
-Let's create a new alert which will fire whenever a new User Agent is seen.
+Let's create a new alert which will fire whenever a new User Agent is seen. We specifically want to alert whenever a new record is written to the `user_agents` index, which in turn is maintained by the transform we just created.
 
 1. Go to `Alerts` using the left-hand navigation pane
 2. Click `Manage Rules`
@@ -263,6 +275,9 @@ Let's create a new alert which will fire whenever a new User Agent is seen.
   user_agent.full
   ```
 10. Set `Rule schedule` to `1 seconds`
+
+![5_alert1.png](../assets/5_alert1.png)
+
 11. Set `Rule name` to
   ```
   New UA Detected
@@ -274,6 +289,8 @@ Let's create a new alert which will fire whenever a new User Agent is seen.
 13. Set `Related dashboards` to `Ingress Proxy`
 14. Click `Create rule`
 15. Click `Save rule` in the resulting pop-up
+
+![5_alert2.png](../assets/5_alert2.png)
 
 > [!NOTE]
 > We are intentionally choosing very aggressive settings here strictly for demonstration purposes (e.g., to quickly trigger an alert). In practice, you would use more a more practical frequency, for example.
@@ -308,11 +325,11 @@ Let's take stock of what we know:
 And what we've done:
 
 * Created a Dashboard to monitor our ingress proxy
+* Created graphs to monitor status codes over time
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs at ingest-time for quicker and more powerful analysis
 * Create a SLO (with alert) to let us know if we ever return a significant number of non-200 error codes over time
-* Created a Pie Graph showing errors by region
-* Created a Map to help us visually geo-locate the errors
+* Created visualizations to help us visually locate clients and errors
 * Created graphs in our dashboard showing the breakdown of User Agents
 * Created a table in our dashboard iterating seen User Agents
 * Created a nightly report to snapshot our Dashboard

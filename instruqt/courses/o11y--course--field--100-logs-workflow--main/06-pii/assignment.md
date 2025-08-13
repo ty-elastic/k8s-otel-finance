@@ -19,10 +19,6 @@ tabs:
   custom_request_headers:
   - key: Authorization
     value: Basic bGltaXRlZF91c2VyOmVsYXN0aWM=
-- id: poj3poztpezq
-  title: Terminal
-  type: terminal
-  hostname: kubernetes-vm
 difficulty: basic
 timelimit: 600
 enhanced_loading: false
@@ -90,11 +86,11 @@ Let's take stock of what we know:
 And what we've done:
 
 * Created a Dashboard to monitor our ingress proxy
+* Created graphs to monitor status codes over time
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs at ingest-time for quicker and more powerful analysis
 * Create a SLO (with alert) to let us know if we ever return a significant number of non-200 error codes over time
-* Created a Pie Graph showing errors by region
-* Created a Map to help us visually geo-locate the errors
+* Created visualizations to help us visually locate clients and errors
 * Created graphs in our dashboard showing the breakdown of User Agents
 * Created a table in our dashboard iterating seen User Agents
 * Created a nightly report to snapshot our Dashboard
@@ -116,7 +112,7 @@ Over the course of this lab, we learned about:
 * Setting up SLOs
 * Using Maps to visualize geographic information
 * Scheduling dashboard reports
-* Setting up a Pivot Transform
+* Setting up a Pivot Transform and Alert
 * Setting up RBAC
 * Setting up data retention
 

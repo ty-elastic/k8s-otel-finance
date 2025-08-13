@@ -10,10 +10,6 @@ tabs:
   hostname: kubernetes-vm
   path: /app/streams
   port: 30001
-- id: tphygyq6udbv
-  title: Terminal
-  type: terminal
-  hostname: kubernetes-vm
 difficulty: basic
 timelimit: 600
 enhanced_loading: false
@@ -115,7 +111,8 @@ Let's take stock of what we know:
 And what we've done:
 
 * Created a Dashboard to monitor our ingress proxy
+* Created graphs to monitor status codes over time
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs at ingest-time for quicker and more powerful analysis
 * Create a SLO (with alert) to let us know if we ever return a significant number of non-200 error codes over time
-* Created a Map to help us visually geo-locate the errors
+* Created visualizations to help us visually locate clients and errors
