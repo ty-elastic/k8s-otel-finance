@@ -95,7 +95,7 @@ FROM logs-proxy.otel-default
 | STATS @timestamp.min = MIN(@timestamp), @timestamp.max = MAX(@timestamp) BY user_agent.full
 ```
 
-This is good, but it would also be helpful, based on what we saw, to know the first country that a given User Agent appeared in.
+This is good, but it would also be helpful, based on our experience here, to know the first country that a given User Agent appeared in.
 
 Execute the following query:
 ```
@@ -111,7 +111,7 @@ Fabulous! Now we can see every User Agent we encounter, when we first encountere
 
 ## Using LOOKUP JOIN to determine release date
 
-Say you also wanted to know when a given User Agent was released by the developer?
+Say you also wanted to know when a given User Agent was released to the wild by the developer?
 
 We could try to maintain our own User Agent lookup table and use ES|QL [LOOKUP JOIN](https://www.elastic.co/docs/reference/query-languages/esql/commands/processing-commands#esql-lookup-join) to match browser versions to release dates:
 
@@ -139,7 +139,7 @@ We can quickly see the problem with maintaining our own `ua_lookup` index. It wo
 
 ## Using COMPLETION to determine release date
 
-Fortunately, Elastic makes it possible to leverage an external Large Language Model (LLM) to lookup those browser release dates for us!
+Fortunately, Elastic makes it possible to leverage an external Large Language Model (LLM) as part of an ES|QL query using the [COMPLETION](https://www.elastic.co/docs/reference/query-languages/esql/commands/processing-commands#esql-completion) command. In this case, we can pipe each browser to the LLM and ask it to return the release date.
 
 Execute the following query:
 ```
@@ -222,7 +222,7 @@ Ideally, we can send an alert whenever a new User Agent is seen. To do that, we 
 
 Create transform:
 1. Go to `Management` > `Stack Management` > `Transforms` using the left-hand navigation pane
-2. Click `Create a transform`
+2. Click `Create your first transform`
 3. Select `logs-proxy.otel-default`
 4. Select `Pivot` (if not already selected)
 5. Set `Search filter` to
@@ -230,16 +230,15 @@ Create transform:
   user_agent.full :*
   ```
 6. Set `Group by` to `terms(user_agent.full)`
-7. Add an aggregation for `@timestamp.max`
-8. Add an aggregation for `@timestamp.min`
-9. Click `> Next`
-10. Set the `Transform ID` to
+7. Add an aggregation for `@timestamp.min`
+8. Click `> Next`
+9. Set the `Transform ID` to
   ```
   user_agents
   ```
-11. Set `Time field` to `@timestamp.min` (if not already selected)
-12. Set `Continuous mode` on
-13. Set `Delay` under `Continuous mode` to `0s`
+10. Set `Time field` to `@timestamp.min` (if not already selected)
+11. Set `Continuous mode` on
+12. Set `Delay` under `Continuous mode` to `0s`
 13. Open `Advanced settings` and set the Frequency to `1s`
 14. Click `Next`
 15. Click `Create and start`
@@ -253,7 +252,7 @@ Let's create a new alert which will fire whenever a new User Agent is seen.
 
 1. Go to `Alerts` using the left-hand navigation pane
 2. Click `Manage Rules`
-2. Click `Create Rule`
+3. Click `Create Rule`
 4. Select `Custom threshold`
 5. Set `DATA VIEW` to `user_agents`
 6. Change `IS ABOVE` to `IS ABOVE OR EQUALS`
@@ -287,7 +286,7 @@ Let's create a new alert which will fire whenever a new User Agent is seen.
 curl -X POST http://kubernetes-vm:32003/err/browser/chrome
 ```
 
-This will create a new Chrome UA 137. Let's go to our dashboard and see if we can spot it.
+This will create a new Chrome UA v137. Let's go to our dashboard and see if we can spot it.
 
 1. Open the [button label="Elasticsearch"](tab-0) Instruqt tab
 2. Go to `Dashboards` using the left-hand navigation pane
