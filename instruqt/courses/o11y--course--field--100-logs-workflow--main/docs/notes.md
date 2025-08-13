@@ -6,8 +6,8 @@
 
 ## Timing
 
-* If you need to shorten the course, drop: 
+If you need to shorten the course, drop (probably in this order):
 
-1) RBAC (last challenge)
-2) Transform+Alert (last part of second to last challenge)
-3) All of the second to last challenge
+1) RBAC: all of Challenge 6
+2) New UA Alert using Transforms: last part of Challenge 5
+3) Reporting and RBAC: all of Challenge 5
