@@ -257,7 +257,7 @@ Let's create a new alert which will fire whenever a new User Agent is seen.
 4. Select `Custom threshold`
 5. Set `DATA VIEW` to `user_agents`
 6. Set `IS ABOVE` to `1`
-7. Set `FOR THE LAST` to `5 minutes`
+7. Set `FOR THE LAST` to `1 minute`
 8. Set `Rule schedule` to `1 seconds`
 9. Set `Rule name` to
   ```
