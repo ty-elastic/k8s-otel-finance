@@ -22,9 +22,7 @@ Now that we know what happened, let's try to be sure this never happens again by
 
 # Generating a breakdown of user agents
 
-In general, it would be nice to have a graphical breakdown of the makeup of our browser clients.
-
-We can accomplish this using our parsed User Agent string and ES|QL.
+As long as we are parsing our User Agent string, let's build some visualizations of the makeup of our browser clients. We can accomplish this using our parsed User Agent string and ES|QL.
 
 ## Breakdown by OS
 
@@ -176,7 +174,7 @@ Let's save this search for future reference:
 
 ## Adding our table to a dashboard
 
-Now let's add this as a table to our dashboard
+Now let's add this as a table to our dashboard.
 
 1. Click `Dashboards` in the left-hand navigation pane
 2. Open the `Ingress Status` dashboard (if it isn't already open)
@@ -201,7 +199,7 @@ As we are adding panels to our dashboard, we can group them into collapsible sec
 7. Drag the `ua_release_dates` table, the `Client Browsers` pie chart, and the `Client OSs` treemap into the body below the `User Agent` collapsible section
 8. Click `Save` to save the dashboard
 
-Feel free to create additional collapsible sections to group our other panels.
+Feel free to create additional collapsible sections to group other visualizations.
 
 # Scheduling a report
 
@@ -242,7 +240,7 @@ Create transform:
 11. Set `Time field` to `@timestamp.min` (if not already selected)
 12. Set `Continuous mode` on
 13. Set `Delay` under `Continuous mode` to `0s`
-13. Open `Advanced settings` and set the Frequency to `1s` (we are selecting an aggressive runtime schedule to demonstrate the capability)
+13. Open `Advanced settings` and set the Frequency to `1s`
 14. Click `Next`
 15. Click `Create and start`
 
@@ -290,7 +288,7 @@ This will create a new Chrome UA 137. Let's go to our dashboard and see if we ca
 2. Go to `Dashboards` using the left-hand navigation pane
 3. Open `Ingress Proxy` (if it isn't already open)
 
-Look at the table of UAs that we added and note the addition of Chrome 137! You'll also note a new active alert `New UA Detected`!
+Look at the table of UAs that we added and note the addition of Chrome v137! You'll also note a new active alert `New UA Detected`!
 
 # Summary
 

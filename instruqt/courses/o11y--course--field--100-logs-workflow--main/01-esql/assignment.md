@@ -31,23 +31,23 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-We've gotten word from our customer service department that some users are receiving an error when trying to use our web-based application.
+We've gotten word from our customer service department that some users are receiving an error when trying to use our web-based application. We will use this workshop to showcase Elastic's state-of-the-art logging workflow to get to the root cause of these errors.
 
 # Ingest vs. query-time parsing
 
-Throughout this workshop, we will also be pivoting back and forth between query-time parsing using [ES|QL](https://www.elastic.co/docs/explore-analyze/query-filter/languages/esql) and ingest-time parsing using [Streams](https://www.elastic.co/docs/solutions/observability/logs/streams/streams). ES|QL lets us quickly test theories and look for possible tells in our log data. Once we've determined value in parsing our logs using ES|QL at query-time, we can shift that parsing to ingest-time using Streams. As we will see in this lab, ingest-time parsing allows for more advanced and complex workflows. Moving parsing to ingest-time also facilitates faster search results. Regardless of where the parsing is done, we will leverage ES|QL to perform aggregations, analysis, and visualization.
+Throughout this workshop, we will be pivoting back and forth between query-time parsing using [ES|QL](https://www.elastic.co/docs/explore-analyze/query-filter/languages/esql) and ingest-time parsing using [Streams](https://www.elastic.co/docs/solutions/observability/logs/streams/streams). ES|QL lets us quickly test theories and look for possible tells in our log data. Once we've determined value in parsing our logs using ES|QL at query-time, we can shift that parsing to ingest-time using Streams. As we will see in this lab, ingest-time parsing allows for more advanced and complex workflows. Moving parsing to ingest-time also facilitates faster search results. Regardless of where the parsing is done, we will leverage ES|QL to perform aggregations, analysis, and visualization.
 
 ![1_arch.mmd.png](../assets/1_arch.mmd.png)
+
+This workshop will heavily leverage ES|QL, Elastic's query-time language, to analyze our nginx reverse proxy logs. You can enter your queries in the pane at the top of the Elasticsearch tab. You can change the time window of your search using the Time Filter. To execute a search, click the Play/Refresh icon.
+
+![1_discover.png](../assets/1_discover.png)
 
 # Getting started
 
 We know that all of the REST API calls from our frontend web app flow through a nginx reverse proxy en route to our backend services; that seems like a good place to start our investigation.
 
 ![proxy_arch.mmd.png](../assets/proxy_arch.mmd.png)
-
-We will be using ES|QL, Elastic's query-time language, to analyze our nginx reverse proxy logs. You can enter your queries in the pane at the top of the Elasticsearch tab. You can change the time window of your search using the Time Filter. To execute a search, click the Refresh icon.
-
-![1_discover.png](../assets/1_discover.png)
 
 # Finding errors
 
@@ -125,11 +125,6 @@ FROM logs-proxy.otel-default
 ```
 
 A-ha! Using `CHANGE_POINT`, we can say that these errors clearly started occurring 80 minutes ago.
-
-Let's take stock of what we know:
-
-* a small percentage of users are experiencing 500 errors
-* the errors started occurring around 80 minutes ago
 
 # Parsing logs with ES|QL
 

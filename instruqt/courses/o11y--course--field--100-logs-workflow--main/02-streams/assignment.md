@@ -18,11 +18,11 @@ difficulty: basic
 timelimit: 600
 enhanced_loading: false
 ---
-So far, we've been using ES|QL to parse our proxy logs at query time. While incredibly powerful for quick analysis, we can do even more with our logs if we parse them at ingest-time.
+So far, we've been using ES|QL to parse our proxy logs at query-time. While incredibly powerful for quick analysis, we can do even more with our logs if we parse them at ingest-time.
 
 # Parsing with Streams
 
-We will be working with the Elastic [Streams](https://www.elastic.co/docs/solutions/observability/logs/streams/streams) interface which makes it easy to setup log parsing pipelines.
+We will be working with Elastic [Streams](https://www.elastic.co/docs/solutions/observability/logs/streams/streams) which makes it easy to setup log parsing pipelines.
 
 1. Select `logs-proxy.otel-default` from the list of data streams (if you start typing, Elasticsearch will help you find it)
 2. Select the `Processing` tab
@@ -181,9 +181,9 @@ Now let's add the SLO monitor to our dashboard to help us find it in the future.
 
 Note that we are dynamically adding SLOs by tag. Any additional SLOs tagged with `ingress` will also appear here.
 
-## Adding SLO alerts to our dashboard
+## Adding alerts to our dashboard
 
-Let's also add our growing list of Alerts to our Dashboard.
+Let's also add our growing list of alerts to our Dashboard.
 
 1. Click `Add panel`
 2. Select `Alerts`

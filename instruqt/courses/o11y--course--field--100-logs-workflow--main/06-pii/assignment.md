@@ -33,14 +33,14 @@ Sometimes our data contains PII information which needs to be restricted to a ne
 
 With Elastic's in-built support for [RBAC](https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/user-roles), we can limit access at the index, document, or field level.
 
-In this example, we've created a limited_user with a limited_role which restricts access to the `client.ip` and `body.text` fields (to avoid leaking the `client.ip`).
+In this example, we've created a limited_user with a limited_role which restricts access to the `client.ip` and `body.text` fields (to avoid implicitly leaking the `client.ip`).
 
 In the Elasticsearch tab, we are logged in as a user with full privileges. Let's check our access.
 1. Open the [button label="Elasticsearch"](tab-0) tab
 2. Open a log record and click on the `Table` tab in the flyout
 3. Note access to the `client.ip` and `body.text` fields
 
-In the Elasticsearch (Limited) tab, we are logged in as a user with full privileges. Let's check our access.
+In the Elasticsearch (Limited) tab, we are logged in as a user with limited privileges. Let's check our access.
 
 1. Open the [button label="Elasticsearch (Limited)"](tab-1) tab
 2. Open a log record and click on the `Table` tab in the flyout

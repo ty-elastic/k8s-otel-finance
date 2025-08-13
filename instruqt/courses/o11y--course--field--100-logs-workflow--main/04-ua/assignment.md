@@ -22,7 +22,7 @@ We know that errors appear to be localized to a specific region. But maybe there
 
 # Is this affecting every type of browser?
 
-Let's parse that User Agent string to look for correlation. While nearly impossible to parse with a simple grok expression, we can easily parse it using the Elastic [User agent](https://www.elastic.co/docs/reference/enrich-processor/user-agent-processor) processor.
+Remember the User Agent string we tried to group by and failed using ES|QL? While nearly impossible to parse with a simple grok expression, we can easily parse the User Agent string using the Elastic [User agent](https://www.elastic.co/docs/reference/enrich-processor/user-agent-processor) processor.
 
 ## Adding the User Agent processor
 
@@ -58,6 +58,8 @@ In addition to the fields produced by the User Agent processor, we also want a s
 7. Click `Save changes` in the bottom-right
 
 ![4_ua2.png](../assets/4_ua2.png)
+
+This processor will add a new field `user_agent.full` to each document composed the `user_agent.name` and `user_agent.version` fields concatenated together.
 
 ## Analyzing with Discover
 
@@ -95,7 +97,7 @@ FROM logs-proxy.otel-default
 | STATS COUNT() BY client.geo.country_iso_code
 ```
 
-Ah! It appears that this specific version of the Chrome browser has only been seen in the `TH` region! Quite possibly, Google has rolled out a specialized or canary version of their browser first in the `TH` region.
+A-ha! It appears that this specific version of the Chrome browser (v136) has only been seen in the `TH` region! Quite possibly, Google has rolled out a specialized or canary version of their browser first in the `TH` region. That would explain why we saw errors only in the `TH` region.
 
 Congratulations! We found our problem! In the next challenge, we will setup a way to catch new User Agents in the future.
 
