@@ -256,20 +256,25 @@ Let's create a new alert which will fire whenever a new User Agent is seen.
 2. Click `Create Rule`
 4. Select `Custom threshold`
 5. Set `DATA VIEW` to `user_agents`
-6. Set `IS ABOVE` to `1`
-7. Set `FOR THE LAST` to `1 minute`
-8. Set `Rule schedule` to `1 seconds`
-9. Set `Rule name` to
+6. Change `IS ABOVE` to `IS ABOVE OR EQUALS`
+7. Set `IS ABOVE OR EQUALS` to `1`
+8. Set `FOR THE LAST` to `1 minute`
+9. Set `Group alerts by (optional)` to
+  ```
+  user_agent.full
+  ```
+10. Set `Rule schedule` to `1 seconds`
+11. Set `Rule name` to
   ```
   New UA Detected
   ```
-10. Set `Tags` to
+12. Set `Tags` to
   ```
   ingress
   ```
-11. Set `Related dashboards` to `Ingress Proxy`
-12. Click `Create rule`
-13. Click `Save rule` in the resulting pop-up
+13. Set `Related dashboards` to `Ingress Proxy`
+14. Click `Create rule`
+15. Click `Save rule` in the resulting pop-up
 
 > [!NOTE]
 > We are intentionally choosing very aggressive settings here strictly for demonstration purposes (e.g., to quickly trigger an alert). In practice, you would use more a more practical frequency, for example.

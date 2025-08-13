@@ -122,4 +122,4 @@ Over the course of this lab, we learned about:
 
 We put these technologies to use in a practical workflow which quickly took us from an unknown problem to a definitive Root Cause. Furthermore, we've setup alerts to ensure we aren't caught off-guard in the future. Finally, we built a really nice custom Dashboard to help us monitor the health of our Ingress Proxy.
 
-**All of this from just a lowly nginx access file. That's the power unlocked by Elastic.**
+**All of this from just a lowly nginx access file. That's the power of your logs unlocked by Elastic.**
