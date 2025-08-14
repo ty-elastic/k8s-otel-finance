@@ -67,7 +67,7 @@ Wow! It looks like all of our 500 errors are occurring in the `TH` (Thailand) re
 
 ### Saving our visualization to a dashboard
 
-In the meantime, this is a useful graph! Let's save it to a Dashboard for future use.
+In the meantime, this is a useful graph! Let's save it to our dashboard for future use.
 
 1. Click on the Disk icon in the upper-left of the resulting graph
 2. Name the visualization
@@ -84,7 +84,7 @@ In the meantime, this is a useful graph! Let's save it to a Dashboard for future
 > [!NOTE]
 > Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the Map.
 
-Sometimes it is helpful to visualize geography on a map. Fortunately, Elastic has a built-in Map visualization we can readily use!
+Sometimes it is helpful to visualize client geography on a map. Fortunately, Elastic has a built-in Map visualization we can readily use!
 
 1. Go to `Other tools` > `Maps` using the left-hand navigation pane
 2. Click `Add layer`
@@ -110,7 +110,7 @@ Feel free to scroll around the globe and note the intuitive visualization of cli
 
 ### Saving our map to a dashboard
 
-Now let's save our awesome map to our dashboard.
+Let's add our map to our dashboard for future reference.
 
 1. Click the `Save` button in the upper-right
 2. Set `Title` to
@@ -134,7 +134,7 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard to monitor our ingress proxy
+* Created a dashboard to monitor our ingress proxy
 * Created graphs to monitor status codes over time
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs at ingest-time for quicker and more powerful analysis

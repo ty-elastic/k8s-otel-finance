@@ -207,7 +207,7 @@ Now that we are graphing by `status_code`, we know definitively that we returnin
 
 ## Saving our visualization to a dashboard
 
-Let's save this graph to a Dashboard for future use.
+Let's save this graph to a dashboard for future use.
 
 ![1_save.png](../assets/1_save.png)
 
@@ -274,7 +274,7 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard to monitor our ingress proxy
+* Created a dashboard to monitor our ingress proxy
 * Created graphs to monitor status codes over time
 * Created a simple alert to let us know if we ever return non-200 error codes
 

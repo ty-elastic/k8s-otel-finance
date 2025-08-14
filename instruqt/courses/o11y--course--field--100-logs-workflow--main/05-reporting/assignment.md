@@ -39,7 +39,7 @@ FROM logs-proxy.otel-default
 
 ## Saving our visualization to a dashboard
 
-Let's save it to our Dashboard for future use.
+Let's save it to our dashboard for future use.
 
 1. Click on the Disk icon in the upper-left of the resulting graph
 2. Name the visualization
@@ -70,7 +70,7 @@ FROM logs-proxy.otel-default
 
 ## Adding our visualization to a dashboard
 
-Let's save it to our Dashboard for future use.
+Let's save it to our dashboard for future use.
 
 1. Click on the Disk icon in the upper-left of the resulting graph
 2. Name the visualization
@@ -215,12 +215,12 @@ The CIO is concerned about us not testing new browsers sufficiently, and for som
 
 Ideally, we can send an alert whenever a new User Agent is seen. To do that, we need to keep state of what User Agents we've already seen. Fortunately, Elastic [Transforms](https://www.elastic.co/docs/explore-analyze/transforms) makes this easy!
 
-Transforms run asynchronously in the background, querying data, aggregating it, and writing the results to a new index. In this case, we can use a Pivot transform to read from our parsed proxy logs and pivot based on `user_agent.full`. This will create a new index with one record per `user_agent.full`. We can then alert whenever a new record is added to this index, indicating a new User Agent.
+Transforms run asynchronously in the background, querying data, aggregating it, and writing the results to a new index. In this case, we can use a Pivot transform to read from our parsed proxy logs and pivot based on `user_agent.full`. This will create a new index with one record per `user_agent.full`. We can then alert whenever a new record is added to this index, indicating a new User Agent!
 
 ## Creating a transform
 
 > [!NOTE]
-> Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the Map.
+> Because we are moving quickly, Elasticsearch may take some time to update field lists in the UI. If you encounter a situation where Elasticsearch doesn't recognize one of the fields we just parsed, click the Refresh icon in the upper-right of the Instruqt tab and try again to create the Transform.
 
 1. Go to `Management` > `Stack Management` > `Transforms` using the left-hand navigation pane
 2. Click `Create your first transform`
@@ -324,7 +324,7 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard to monitor our ingress proxy
+* Created a dashboard to monitor our ingress proxy
 * Created graphs to monitor status codes over time
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs at ingest-time for quicker and more powerful analysis
@@ -332,5 +332,5 @@ And what we've done:
 * Created visualizations to help us visually locate clients and errors
 * Created graphs in our dashboard showing the breakdown of User Agents
 * Created a table in our dashboard iterating seen User Agents
-* Created a nightly report to snapshot our Dashboard
+* Created a nightly report to snapshot our dashboard
 * Created an alert to let us know when a new User Agent string appears

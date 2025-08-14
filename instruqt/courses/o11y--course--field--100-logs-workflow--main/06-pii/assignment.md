@@ -85,7 +85,7 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard to monitor our ingress proxy
+* Created a dashboard to monitor our ingress proxy
 * Created graphs to monitor status codes over time
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs at ingest-time for quicker and more powerful analysis
@@ -93,7 +93,7 @@ And what we've done:
 * Created visualizations to help us visually locate clients and errors
 * Created graphs in our dashboard showing the breakdown of User Agents
 * Created a table in our dashboard iterating seen User Agents
-* Created a nightly report to snapshot our Dashboard
+* Created a nightly report to snapshot our dashboard
 * Created an alert to let us know when a new User Agent string appears
 * Setup RBAC to restrict access to `client.ip`
 * Setup retention to keep the logs online for only 30 days
@@ -116,6 +116,6 @@ Over the course of this lab, we learned about:
 * Setting up RBAC
 * Setting up data retention
 
-We put these technologies to use in a practical workflow which quickly took us from an unknown problem to a definitive Root Cause. Furthermore, we've setup alerts to ensure we aren't caught off-guard in the future. Finally, we built a really nice custom Dashboard to help us monitor the health of our Ingress Proxy.
+We put these technologies to use in a practical workflow which quickly took us from an unknown problem to a definitive Root Cause. Furthermore, we've setup alerts to ensure we aren't caught off-guard in the future. Finally, we built a really nice custom dashboard to help us monitor the health of our Ingress Proxy.
 
 **All of this from just a lowly nginx access file. That's the power of your logs unlocked by Elastic.**

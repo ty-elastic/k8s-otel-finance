@@ -85,7 +85,7 @@ Note that this graph, unlike the one we drew before, currently shows only a few 
 
 ## Saving our visualization to a dashboard
 
-This is a useful graph! Let's save it to our Dashboard for future use.
+This is a useful graph! Let's save it to our dashboard for future use.
 
 1. Click on the Disk icon in the upper-left of the resulting graph
 2. Name the visualization
@@ -179,7 +179,7 @@ Note that we are dynamically adding SLOs by tag. Any additional SLOs tagged with
 
 ## Adding alerts to our dashboard
 
-Let's also add our growing list of alerts to our Dashboard.
+Let's also add our growing list of alerts to our dashboard.
 
 1. Click `Add panel`
 2. Select `Alerts`
@@ -202,7 +202,7 @@ Let's take stock of what we know:
 
 And what we've done:
 
-* Created a Dashboard to monitor our ingress proxy
+* Created a dashboard to monitor our ingress proxy
 * Created graphs to monitor status codes over time
 * Created a simple alert to let us know if we ever return non-200 error codes
 * Parsed the logs at ingest-time for quicker and more powerful analysis
