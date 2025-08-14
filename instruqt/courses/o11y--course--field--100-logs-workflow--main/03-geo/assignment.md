@@ -95,10 +95,16 @@ Sometimes it is helpful to visualize geography on a map. Fortunately, Elastic ha
 7. Scroll down to `Layer style`
 8. Set `Fill color` to `By value`
 9. Set `Select a field` to `http.response.status_code`
-10. Set `As number` to `As category`
-11. Set `Symbol Size` to `By value`
-12. Set `Select a field` to `http.response.status_code`
-13. Click `Keep changes`
+10. Select `Custom color ramp` in the field next to `As number`
+11. Select a greenish color for the first number row (if not already selected)
+12. Click the `+` button to the right of the first number row
+13. Enter `400` in the second number row
+14. Select a reddish color for the `400` number row
+15. Set `Symbol Size` to `By value`
+16. Set `Select a field` to `http.response.status_code`
+17. Click `Keep changes`
+
+![3_map.png](../assets/3_map.png)
 
 Feel free to scroll around the globe and note the intuitive visualization of client locations and status codes.
 
