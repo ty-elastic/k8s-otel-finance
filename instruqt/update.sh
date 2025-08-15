@@ -58,7 +58,7 @@ for dir in ./courses/*/; do
           echo "" >> input.md
         fi
       done
-      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/extra -f markdown-implicit_figures -V geometry:margin=0.25in --highlight-style=espresso --include-in-header /data/pandoc.tex --resource-path=/assets --output=/assets/script.pdf /data/input.md
+      docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/extra -f markdown-implicit_figures -V geometry:margin=0.25in --highlight-style=breezedark --include-in-header /data/pandoc.tex --resource-path=/assets --output=/assets/script.pdf /data/input.md
       rm -rf input.md
       docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex -V geometry:margin=0.25in --resource-path=/assets --highlight-style=espresso --resource-path=/assets --output=/assets/brief.pdf /data/docs/brief.md
       docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc/latex -V geometry:margin=0.25in --resource-path=/assets --highlight-style=espresso --resource-path=/assets --output=/assets/notes.pdf /data/docs/notes.md

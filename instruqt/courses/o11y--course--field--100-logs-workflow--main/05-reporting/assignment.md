@@ -27,7 +27,7 @@ As long as we are parsing our User Agent string, let's build some visualizations
 ## Breakdown by OS
 
 Execute the following query:
-```
+```esql
 FROM logs-proxy.otel-default
 | WHERE user_agent.os.name IS NOT NULL
 | STATS COUNT() by user_agent.os.name, user_agent.os.version
@@ -58,7 +58,7 @@ Let's also create a chart depicting the overall breakdown of browsers.
 Jump back to Discover by clicking `Discover` in the left-hand navigation pane.
 
 Execute the following query:
-```
+```esql
 FROM logs-proxy.otel-default
 | WHERE user_agent.name IS NOT NULL
 | STATS COUNT() by user_agent.name
@@ -89,7 +89,7 @@ It would also be helpful is to keep track of new User Agents as they appear in t
 Jump back to Discover by clicking `Discover` in the left-hand navigation pane.
 
 Execute the following query:
-```
+```esql
 FROM logs-proxy.otel-default
 | WHERE user_agent.full IS NOT NULL
 | STATS @timestamp.min = MIN(@timestamp), @timestamp.max = MAX(@timestamp) BY user_agent.full
@@ -98,7 +98,7 @@ FROM logs-proxy.otel-default
 This is good, but it would also be helpful, based on our experience here, to know the first country that a given User Agent appeared in.
 
 Execute the following query:
-```
+```esql
 FROM logs-proxy.otel-default
 | WHERE user_agent.full IS NOT NULL
 | STATS @timestamp.min = MIN(@timestamp), @timestamp.max = MAX(@timestamp) BY user_agent.full, client.geo.country_iso_code
@@ -116,14 +116,14 @@ Say you also wanted to know when a given User Agent was released to the wild by 
 We could try to maintain our own User Agent lookup table and use ES|QL [LOOKUP JOIN](https://www.elastic.co/docs/reference/query-languages/esql/commands/processing-commands#esql-lookup-join) to match browser versions to release dates:
 
 Execute the following query:
-```
+```esql
 FROM ua_lookup
 ```
 
 We built this table by hand; it is far from comprehensive. Now let's use `LOOKUP JOIN` to do a real-time lookup for each row:
 
 Execute the following query:
-```
+```esql
 FROM logs-proxy.otel-default
 | WHERE user_agent.full IS NOT NULL
 | EVAL user_agent.name_and_vmajor = SUBSTRING(user_agent.full, 0, LOCATE(user_agent.full, ".")-1) // simplify user_agent
@@ -142,7 +142,7 @@ We can quickly see the problem with maintaining our own `ua_lookup` index. It wo
 Fortunately, Elastic makes it possible to leverage an external Large Language Model (LLM) as part of an ES|QL query using the [COMPLETION](https://www.elastic.co/docs/reference/query-languages/esql/commands/processing-commands#esql-completion) command. In this case, we can pipe each browser to the LLM and ask it to return the release date.
 
 Execute the following query:
-```
+```esql
 FROM logs-proxy.otel-default
 | WHERE user_agent.full IS NOT NULL
 | STATS @timestamp.min = MIN(@timestamp), @timestamp.max = MAX(@timestamp) BY user_agent.full, client.geo.country_iso_code

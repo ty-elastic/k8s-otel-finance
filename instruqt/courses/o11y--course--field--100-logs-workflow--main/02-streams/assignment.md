@@ -75,7 +75,7 @@ FROM logs-proxy.otel-default
 Let's redraw our status code graph using our newly parsed field:
 
 Execute the following query:
-```
+```esql
 FROM logs-proxy.otel-default
 | WHERE http.response.status_code IS NOT NULL
 | STATS COUNT() BY TO_STRING(http.response.status_code), minute = BUCKET(@timestamp, "1 min")
