@@ -142,6 +142,7 @@ If you aren't well versed in grok expressions, or you don't want to spend the ti
   can you write an ES|QL query to parse these nginx log lines?
   ```
 3. Click the execute button
+
 ![1_ai.png](../assets/1_ai.png)
 
 > [!NOTE]

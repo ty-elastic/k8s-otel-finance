@@ -24,13 +24,15 @@ Participants will walk away from the workshop with an introduction to:
 * Using ES|QL to search logs
 * Using ES|QL to parse logs at query-time
 * Using ES|QL to do advanced aggregations, analytics, and visualizations
+* Using ES|QL with JOINs and COMPLETION to enrich records
 * Creating a useful dashboard
 * Using ES|QL to create Alerts
 * Using AI Assistant to help write ES|QL queries
-* Using Streams to setup ingest-time log processing pipeline (GROK parsing, geo-location, User Agent parsing)
-* Setting up SLOs
+* Using Streams to setup ingest-time log processing (GROK parsing, geo-location, User Agent parsing)
+* Setting up a SLO and corresponding Alert
 * Using Maps to visualize geographic information
 * Scheduling dashboard reports
-* Setting up a Pivot Transform
+* Organizing dashboards with collapsible sections
+* Setting up a Pivot Transform and corresponding alert
 * Setting up RBAC
-* Setting up data retention
+* Setting up data retention with Streams
