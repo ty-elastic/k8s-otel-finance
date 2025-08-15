@@ -54,6 +54,12 @@ for dir in ./courses/*/; do
         echo $challenge
         if [ -f "$challenge/assignment.md" ]; then
           #echo "here"
+
+          sed -n '/---/,/---/p' "$challenge/assignment.md" > input.yaml
+          ch_title=$(yq .title input.yaml)
+          echo $ch_title
+          rm input.yaml
+
           sed -e '/---/,/---/d' "$challenge/assignment.md" >> input.md
           echo "" >> input.md
           echo "___" >> input.md
