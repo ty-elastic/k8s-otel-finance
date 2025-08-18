@@ -156,7 +156,7 @@ FROM logs-proxy.otel-default
 | KEEP @timestamp, client_ip, http_method, request_path, status_code, user_agent
 ```
 
-# Is this affecting all backend APIs?
+# Is this affecting several or just one backend API?
 
 Let's make use of these parsed fields to break down `status_code` by `request_path` to see if this is affecting only a specific API, or several APIs?
 

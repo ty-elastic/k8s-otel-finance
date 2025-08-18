@@ -1,10 +1,5 @@
 package com.example.recorder;
 
-
-import com.example.recorder.Trade;
-import com.example.recorder.TradeRecorder;
-import com.example.recorder.TradeNotifier;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

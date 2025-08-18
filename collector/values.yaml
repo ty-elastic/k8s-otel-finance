@@ -6,7 +6,6 @@ opentelemetry-operator:
   manager:
     extraArgs:
       - --enable-go-instrumentation
-      - --enable-nginx-instrumentation
   admissionWebhooks:
     certManager:
       enabled: false # For production environments, it is [recommended to use cert-manager for better security and scalability](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-operator#tls-certificate-requirement).
@@ -17,9 +16,8 @@ crds:
   create: true # Install the OpenTelemetry Operator CRDs.
 defaultCRConfig:
   image:
-    repository: "us-central1-docker.pkg.dev/elastic-sa/tbekiares/otelcol"
-    tag: "latest"
-  imagePullPolicy: Always
+    repository: "docker.elastic.co/elastic-agent/elastic-agent"
+    tag: "9.1.2"
   targetAllocator:
     enabled: false # Enable/disable the Operator's Target allocator.
     # Refer to: https://github.com/open-telemetry/opentelemetry-operator/tree/main/cmd/otel-allocator
@@ -194,17 +192,9 @@ collectors:
         value: ""
       - name: ELASTIC_AGENT_OTEL
         value: '"true"'
-    volumeMounts:
-      - name: varlogpods
-        mountPath: /var/log/pods
-        readOnly: true
-    volumes:
-      - name: varlogpods
-        hostPath:
-          path: /var/log/pods
     presets:
       logsCollection:
-        enabled: false # Enable/disable the collection of node's logs.
+        enabled: true # Enable/disable the collection of node's logs.
         storeCheckpoints: true # Store checkpoints for log collection, allowing for resumption from the last processed log.
     hostNetwork: true # Use the host's network namespace. This allows the daemon to access the network interfaces of the host directly.
     securityContext: # Run the daemon as the root user and group for proper metrics collection.
@@ -212,11 +202,6 @@ collectors:
       runAsGroup: 0
     scrape_configs_file: "" # [Prometheus metrics](https://github.com/open-telemetry/opentelemetry-helm-charts/tree/main/charts/opentelemetry-kube-stack#scrape_configs_file-details)
     config:
-      extensions:
-        k8s_observer:
-          observe_nodes: true
-          observe_services: true
-          observe_ingresses: true
       exporters:
         # [Debug exporter](https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/debugexporter/README.md)
         debug:
@@ -227,7 +212,7 @@ collectors:
             insecure: true
       processors:
         # [Batch Processor](https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor/batchprocessor)
-        batch: {} # inherit any values from helm chart
+        batch: {}
         batch/metrics:
           # explicitly set send_batch_max_size to 0, as splitting metrics requests may cause version_conflict_engine_exception in TSDB
           send_batch_max_size: 0
@@ -353,46 +338,6 @@ collectors:
               - tag_name: app.label.version
                 key: app.kubernetes.io/version
                 from: pod
-        k8sattributes/logs:
-          filter:
-            # Only retrieve pods running on the same node as the collector
-            node_from_env_var: OTEL_K8S_NODE_NAME
-          passthrough: false
-          pod_association:
-            # Below association takes a look at the k8s.pod.ip and k8s.pod.uid resource attributes or connection's context, and tries to match it with the pod having the same attribute.
-            - sources:
-                - from: resource_attribute
-                  name: k8s.pod.ip
-            - sources:
-                - from: resource_attribute
-                  name: k8s.pod.uid
-            - sources:
-                - from: connection
-          extract:
-            annotations:
-              - tag_name: com.example.logs.format
-                key: com.example.logs/format
-                from: pod
-              - tag_name: com.example.logs.flask
-                key: com.example.logs/flask
-                from: pod
-        transform/parse_flask:
-          error_mode: ignore
-          log_statements:
-            - context: log
-              conditions:
-                - body != nil and resource.attributes["com.example.logs.flask"] == "true"
-              statements:
-                - set(cache, ExtractGrokPatterns(body, "%{IP:client_address} - - \\[%{GREEDYDATA:time}\\] \x22.*(?<method>(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|CONNECT|TRACE)) %{URIPATH:path}(?:%{URIPARAM:param})? %{WORD:protocol_name}/%{NUMBER:protocol_version}.*\x22 %{NUMBER:status_code} -", true))
-                - set(attributes["http.method"], cache["method"]) where cache["method"] != nil
-                - set(attributes["http.url"], Concat([cache["path"], cache["query"]], "")) where cache["path"] != nil and cache["query"] != nil
-                - set(attributes["url.path"], cache["path"]) where cache["path"] != nil
-                - set(attributes["url.query"], cache["query"]) where cache["query"] != nil            
-                - set(attributes["http.status_code"], cache["status_code"]) where cache["status_code"] != nil       
-                - set(attributes["client.address"], cache["client_address"]) where cache["client_address"] != nil   
-                - set(attributes["network.protocol.name"], cache["protocol_name"]) where cache["protocol_name"] != nil 
-                - set(attributes["network.protocol.version"], cache["protocol_version"]) where cache["protocol_version"] != nil 
-                - set(time, Time(Concat([cache["time"], "UTC"], " "), "%d/%b/%Y %H:%M:%S %Z")) where cache["time"] != nil 
       receivers:
         # [OTLP Receiver](https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver)
         otlp:
@@ -401,13 +346,21 @@ collectors:
               endpoint: 0.0.0.0:4317
             http:
               endpoint: 0.0.0.0:4318
-        receiver_creator/logs:
-          watch_observers: [k8s_observer]
-          discovery:
+        # [File Log Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver)
+        filelog:
+          retry_on_failure:
             enabled: true
-          default_annotations:
-            io.opentelemetry.discovery.logs/enabled: "true"
-          receivers: {}
+          start_at: end
+          exclude:
+            # exlude collector logs
+            - /var/log/pods/*opentelemetry-kube-stack*/*/*.log
+          include:
+            - /var/log/pods/*/*/*.log
+          include_file_name: false
+          include_file_path: true
+          operators:
+            - id: container-parser # Extract container's metadata
+              type: container
         # [Hostmetrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver)
         hostmetrics:
           collection_interval: 10s
@@ -483,7 +436,7 @@ collectors:
           auth_type: serviceAccount # Authentication mechanism with the Kubelet endpoint, refer to: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/kubeletstatsreceiver#configuration
           collection_interval: 20s
           endpoint: ${env:OTEL_K8S_NODE_NAME}:10250
-          node: '${env:OTEL_K8S_NODE_NAME}'
+          node: "${env:OTEL_K8S_NODE_NAME}"
           # Required to work for all CSPs without an issue
           insecure_skip_verify: true
           k8s_api_config:
@@ -513,29 +466,12 @@ collectors:
               enabled: true
           extra_metadata_labels:
             - container.id
-
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
-      connectors:
-        otlpjson: {}
-        routing/logs:
-          default_pipelines: [logs/node]
-          table:
-            - context: resource
-              condition: attributes["com.example.logs.format"] == "otlpjson"
-              pipelines: [logs/node_raw_otlpjson]
       service:
-        extensions: [k8s_observer]
         pipelines:
-          logs/node_raw:
-            receivers: [receiver_creator/logs]
-            processors: [k8sattributes/logs]
-            exporters: [routing/logs]
-          logs/node_raw_otlpjson:
-            receivers: [routing/logs]
-            exporters: [otlpjson]
           logs/node:
             receivers:
-              - routing/logs
+              - filelog
             processors:
               - batch
               - k8sattributes
@@ -576,10 +512,7 @@ collectors:
           logs/apm:
             receivers:
               - otlp
-              - otlpjson
             processors:
-              - k8sattributes/logs
-              - transform/parse_flask
               - batch
               - resource/hostname
             exporters:
@@ -596,46 +529,35 @@ collectors:
   #  forwarding telemetry to an Elasticsearch endpoint.
   gateway:
     fullnameOverride: "opentelemetry-kube-stack-gateway"
+    suffix: gateway
+    replicas: 2
+    autoscaler:
+      minReplicas: 2 # Start with at least 2 replicas for better availability.
+      maxReplicas: 5 # Allow more scale-out if needed.
+      targetCPUUtilization: 70 # Scale when CPU usage exceeds 70%.
+      targetMemoryUtilization: 75 # Scale when memory usage exceeds 75%.
     resources:
       limits:
-        cpu: 1500m
-        memory: 1500Mi
+        cpu: 500m
+        memory: 1000Mi
       requests:
         cpu: 100m
         memory: 500Mi
-    suffix: gateway
-    replicas: 2
     enabled: true
     env:
       - name: ELASTIC_AGENT_OTEL
         value: '"true"'
-      - name: ELASTIC_ENDPOINT
+      - name: ELASTIC_OTLP_ENDPOINT
         valueFrom:
           secretKeyRef:
             name: elastic-secret-otel
-            key: elastic_endpoint
+            key: elastic_otlp_endpoint
       - name: ELASTIC_API_KEY
         valueFrom:
           secretKeyRef:
             name: elastic-secret-otel
             key: elastic_api_key
-      - name: GOMAXPROCS
-        valueFrom:
-          resourceFieldRef:
-            resource: limits.cpu
-      - name: GOMEMLIMIT
-        value: "1025MiB"
     config:
-      connectors:
-        routing:
-          default_pipelines: [metrics/otel]
-          error_mode: ignore
-          table:
-            - context: metric
-              statement: route() where instrumentation_scope.name == "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/kubeletstatsreceiver" or IsMatch(instrumentation_scope.name, "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver/internal/scraper/*")
-              pipelines: [metrics/infra/ecs, metrics/otel]
-        # [Elastic APM Connector](https://github.com/elastic/opentelemetry-collector-components/tree/main/connector/elasticapmconnector)
-        elasticapm: {}
       receivers:
         otlp:
           protocols:
@@ -644,23 +566,6 @@ collectors:
             http:
               endpoint: ${env:MY_POD_IP}:4318
       processors:
-        # [Elastic Infra Metrics Processor](https://github.com/elastic/opentelemetry-collector-components/tree/main/processor/elasticinframetricsprocessor)
-        elasticinframetrics:
-          add_system_metrics: true
-          add_k8s_metrics: true
-          drop_original: true
-        # [Attributes Processor](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/attributesprocessor)
-        attributes/dataset:
-          actions:
-            - key: event.dataset
-              from_attribute: data_stream.dataset
-              action: upsert
-        resource/process:
-          attributes:
-            - key: process.executable.name
-              action: delete
-            - key: process.executable.path
-              action: delete
         batch:
           send_batch_size: 1000
           timeout: 1s
@@ -669,64 +574,27 @@ collectors:
           # explicitly set send_batch_max_size to 0, as splitting metrics requests may cause version_conflict_engine_exception in TSDB
           send_batch_max_size: 0
           timeout: 1s
-        # [Elastic Trace Processor](https://github.com/elastic/opentelemetry-collector-components/tree/main/processor/elastictraceprocessor)
-        elastictrace: {} # The processor enriches traces with elastic specific requirements.
       exporters:
-        debug: {}
-        # [Elasticsearch exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/exporter/elasticsearchexporter/README.md)
-        elasticsearch/otel:
-          endpoints: # List of Elasticsearch endpoints.
-            - ${env:ELASTIC_ENDPOINT}
-          api_key: ${env:ELASTIC_API_KEY} # API key for Elasticsearch authentication.
-          logs_dynamic_index:
-            enabled: true
-          metrics_dynamic_index:
-            enabled: true
-          traces_dynamic_index:
-            enabled: true
-          # Enable in order to skip the SSL certificate Check
-          # tls:
-          #   insecure_skip_verify: true
-          mapping:
-            mode: otel
-        elasticsearch/ecs:
-          endpoints:
-            - ${env:ELASTIC_ENDPOINT}
-          api_key: ${env:ELASTIC_API_KEY}
-          mapping:
-            mode: ecs
+        debug:
+        otlp/ingest:
+          endpoint: ${env:ELASTIC_OTLP_ENDPOINT}
+          headers:
+            Authorization: ApiKey ${env:ELASTIC_API_KEY}
+          timeout: 15s
       service:
         pipelines:
           metrics:
             receivers: [otlp]
-            exporters: [routing]
-          metrics/infra/ecs:
-            receivers: [routing]
-            processors:
-              - elasticinframetrics
-              - attributes/dataset
-              - resource/process
-              - batch/metrics
-            exporters: [debug, elasticsearch/ecs]
-          metrics/otel:
-            receivers: [routing]
-            processors: [batch]
-            exporters: [debug, elasticsearch/otel]
+            processors: [batch/metrics]
+            exporters: [debug, otlp/ingest]
           logs:
             receivers: [otlp]
             processors: [batch]
-            exporters: [debug, elasticapm, elasticsearch/otel]
+            exporters: [debug, otlp/ingest]
           traces:
             receivers: [otlp]
-            processors: [batch, elastictrace]
-            exporters: [debug, elasticapm, elasticsearch/otel]
-          metrics/aggregated-otel-metrics:
-            receivers:
-              - elasticapm
-            processors:
-            exporters:
-              - debug
-              - elasticsearch/otel
+            processors: [batch]
+            exporters: [debug, otlp/ingest]
 # For more details on OpenTelemetry's zero-code instrumentation, see:
 # https://opentelemetry.io/docs/concepts/instrumentation/zero-code/
 instrumentation:
@@ -742,12 +610,12 @@ instrumentation:
     type: parentbased_traceidratio # Sampler type
     argument: "1.0" # Sampling rate set to 100% (all traces are sampled).
   java:
-    image: docker.elastic.co/observability/elastic-otel-javaagent:1.3.0
+    image: docker.elastic.co/observability/elastic-otel-javaagent:1.4.1
   nodejs:
-    image: docker.elastic.co/observability/elastic-otel-node:1.0.0
+    image: docker.elastic.co/observability/elastic-otel-node:1.1.1
   dotnet:
-    image: docker.elastic.co/observability/elastic-otel-dotnet:1.0.1
+    image: docker.elastic.co/observability/elastic-otel-dotnet:1.0.2
   python:
-    image: docker.elastic.co/observability/elastic-otel-python:1.0.0
+    image: docker.elastic.co/observability/elastic-otel-python:1.3.0
   go:
-    image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.21.0
+    image: ghcr.io/open-telemetry/opentelemetry-go-instrumentation/autoinstrumentation-go:v0.22.0
