@@ -122,9 +122,10 @@ FROM logs-proxy.otel-default
 | CHANGE_POINT count ON minute AS type, pval // look for distribution change
 | WHERE type IS NOT NULL
 | KEEP type, minute
+| EVAL minutes_ago = DATE_DIFF("minute", minute, NOW())
 ```
 
-A-ha! Using `CHANGE_POINT`, we can say that these errors clearly started occurring 80 minutes ago.
+A-ha! Using `CHANGE_POINT`, we can say that these errors clearly started occurring 60-80 minutes ago.
 
 # Parsing logs with ES|QL
 
