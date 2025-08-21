@@ -24,5 +24,5 @@ lab_config:
     name: modern-dark
   override_challenge_layout: false
   hideStopButton: false
-checksum: "18423350030751981804"
+checksum: "3617130560458271657"
 enhanced_loading: false

@@ -1,12 +1,14 @@
 arch=linux/amd64
 build=true
 course=all
-while getopts "a:b:c:" opt
+instruqt=true
+while getopts "a:b:c:i:" opt
 do
    case "$opt" in
       a ) arch="$OPTARG" ;;
       b ) build="$OPTARG" ;;
       c ) course="$OPTARG" ;;
+      i ) instruqt="$OPTARG" ;;
    esac
 done
 
@@ -71,7 +73,9 @@ for dir in ./courses/*/; do
       docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter --pdf-engine xelatex --include-in-header /data/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/brief.pdf /data/docs/brief.md
       docker run --platform linux/amd64 --rm -v $PWD/assets:/assets -v $PWD:/data -u $(id -u):$(id -g) pandoc-inter --pdf-engine xelatex --include-in-header /data/pandoc.tex -V geometry:margin=0.25in -f markdown-implicit_figures --highlight-style=breezedark --resource-path=/assets --output=/assets/notes.pdf /data/docs/notes.md
 
-      instruqt track push --force
+      if [ "$instruqt" = "true" ]; then
+        instruqt track push --force
+      fi
       cd ../..
       rm courses/$current_course/pandoc.tex
     fi

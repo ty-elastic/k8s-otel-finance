@@ -152,6 +152,9 @@ With burn rates, we can have Elastic dynamically adjust the escalation of a pote
 3. Click on the `Actions` tab of the fly-out
 4. Click `Add action`
 5. Select `Cases` (this will automatically open a case/ticket when this SLO is breached)
+
+![2_alert1.png](../assets/2_alert1.png)
+
 6. Click on the `Details` tab of the fly-out
 7. Set the `Rule name` to :
   ```
@@ -162,7 +165,8 @@ With burn rates, we can have Elastic dynamically adjust the escalation of a pote
   ingress
   ```
 9. Click `Save changes`
-10. Click `Save rule` on the pop-up dialog
+
+![2_alert2.png](../assets/2_alert2.png)
 
 We now have a SLO that will tolerate a configurable percentage of errors, governed by a contractual goal. When it looks like we may violate that SLO, an alert will fire, which in turn will automatically open a case in Elastic! Moreover, if configured, Elastic can synchronize cases with your [existing ticket management systems](https://www.elastic.co/docs/reference/kibana/connectors-kibana).
 
