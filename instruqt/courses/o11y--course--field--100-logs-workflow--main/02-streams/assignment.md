@@ -40,7 +40,7 @@ We can parse our nginx log messages at ingest-time using the Elastic [Grok](http
 ```
 %{IPV4:client.ip} - %{NOTSPACE:client.user} \[%{HTTPDATE:timestamp}\] "%{WORD:http.request.method} %{URIPATH:http.request.url.path} HTTP/%{NUMBER:http.version}" %{NUMBER:http.response.status_code:int} %{NUMBER:http.response.body.bytes:int} "%{DATA:http.request.referrer}" "%{GREEDYDATA:user_agent.original}"
 ```
-6. Click `Add processor`
+6. Wait until the sample `body.text` on the right shows highlighting, then click `Add processor`
 
 ![2_grok.png](../assets/2_grok.png)
 
@@ -149,16 +149,22 @@ Now let's setup an alert that triggers when this SLO is breached.
 
 With burn rates, we can have Elastic dynamically adjust the escalation of a potential issue depending on how quickly it appears we will breach our SLO.
 
-3. On the `Details` tab of the fly-out, set the `Rule name` to :
+3. Click on the `Actions` tab of the fly-out
+4. Click `Add action`
+5. Select `Cases` (this will automatically open a case/ticket when this SLO is breached)
+6. Click on the `Details` tab of the fly-out
+7. Set the `Rule name` to :
   ```
   Ingress Status SLO
   ```
-4. Set `Tags` to
+8. Set `Tags` to
   ```
   ingress
   ```
-5. Click `Save changes`
-6. Click `Save rule` on the pop-up dialog
+9. Click `Save changes`
+10. Click `Save rule` on the pop-up dialog
+
+We now have a SLO that will tolerate a configurable percentage of errors, governed by a contractual goal. When it looks like we may violate that SLO, an alert will fire, which in turn will automatically open a case in Elastic! Moreover, if configured, Elastic can synchronize cases with your [existing ticket management systems](https://www.elastic.co/docs/reference/kibana/connectors-kibana).
 
 ## Adding SLO monitors to our dashboard
 

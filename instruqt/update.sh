@@ -18,8 +18,8 @@ docker build --platform linux/amd64 -f Dockerfile.pandoc -t pandoc-inter .
 # git tag -f -a $course -m $course
 # git push origin $course
 
-git tag -f -a $course -m $course
-git push -f origin $course
+# git tag -f -a $course -m $course
+# git push -f origin $course
 
 for dir in ./courses/*/; do
   echo $dir
