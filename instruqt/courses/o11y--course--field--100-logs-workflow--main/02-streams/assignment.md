@@ -36,7 +36,7 @@ We can parse our nginx log messages at ingest-time using the Elastic [Grok](http
   body.text
   ```
 4. Click `Generate pattern`. Elasticsearch will analyze your log lines and try to determine a suitable grok pattern.
-5. To ensure a consistent lab experience, copy the following grok expression and paste it into the `Grok patterns` field (rather than clicking on the `Accept` button)
+5. To ensure a consistent lab experience, copy the following grok expression and paste it into the `Grok patterns` field (_do not_ click the `Accept` button next to the generated pattern)
 ```
 %{IPV4:client.ip} - %{NOTSPACE:client.user} \[%{HTTPDATE:timestamp}\] "%{WORD:http.request.method} %{URIPATH:http.request.url.path} HTTP/%{NUMBER:http.version}" %{NUMBER:http.response.status_code:int} %{NUMBER:http.response.body.bytes:int} "%{DATA:http.request.referrer}" "%{GREEDYDATA:user_agent.original}"
 ```
@@ -87,13 +87,13 @@ Note that this graph, unlike the one we drew before, currently shows only a few 
 
 This is a useful graph! Let's save it to our dashboard for future use.
 
-1. Click on the Disk icon in the upper-left of the resulting graph
+1. Click on the Disk icon in the upper-right of the resulting graph 
 2. Name the visualization
   ```
   Status Code Over Time (Streams)
   ```
 3. Select `Existing` under `Add to dashboard`
-4. Select the existing dashboard `Ingress Proxy` (you will need to start typing `Ingress` in the `Search dashboards...` field)
+4. Select the existing dashboard `Ingress Status` (you will need to start typing `Ingress` in the `Search dashboards...` field)
 5. Click `Save and go to Dashboard`
 6. Once the dashboard has loaded, click the `Save` button in the upper-right
 
