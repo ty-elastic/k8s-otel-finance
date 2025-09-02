@@ -213,7 +213,7 @@ Let's save this graph to a dashboard for future use.
 
 ![1_save.png](../assets/1_save.png)
 
-1. Click on the Disk icon in the upper-right of the resulting graph 
+1. Click on the Disk icon in the upper-right of the resulting graph
 2. Name the visualization
   ```
   Status Code Over Time (ESQL)
