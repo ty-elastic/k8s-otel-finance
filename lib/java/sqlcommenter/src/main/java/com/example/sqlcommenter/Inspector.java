@@ -22,16 +22,16 @@ public class Inspector implements StatementInspector {
   public String inspect(String sql) {
     State state = null;
 
-    // Priority for OpenTelemetry commenting
-    io.opentelemetry.api.trace.SpanContext spanContextOT =
+    io.opentelemetry.context.Context context = io.opentelemetry.context.Context.current();
+    io.opentelemetry.api.trace.SpanContext spanContext =
         io.opentelemetry.api.trace.Span.current().getSpanContext();
 
-    if (spanContextOT.isValid()) {
-      if (spanContextOT.isSampled()) {
+    if (spanContext.isValid()) {
+      if (spanContext.isSampled()) {
         state =
             State.newBuilder()
                 .withSpanContextMetadata(
-                    SpanContextMetadata.fromOpenTelemetryContext(spanContextOT))
+                    SpanContextMetadata.fromOpenTelemetryContext(context, spanContext))
                 .build();
       }
     }

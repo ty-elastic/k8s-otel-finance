@@ -9,6 +9,21 @@ import math
 import requests
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+from opentelemetry import trace, baggage, context, metrics
+from opentelemetry.processor.baggage import BaggageSpanProcessor, ALLOW_ALL_BAGGAGE_KEYS
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
+from opentelemetry.sdk.metrics.export import (
+    PeriodicExportingMetricReader,
+)
+from opentelemetry.sdk.metrics import (
+    MeterProvider,
+)
+
+from opentelemetry import _logs as logs
+from opentelemetry.processor.logrecord.baggage import BaggageLogRecordProcessor
+
+ATTRIBUTE_PREFIX = "com.example"
+
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 app.logger.info(f"variant: default")
@@ -19,6 +34,32 @@ app.logger.info(f"variant: default")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2)
 
 import model
+
+def init_otel(): 
+    try:
+        trace.get_tracer_provider().add_span_processor(BaggageSpanProcessor(ALLOW_ALL_BAGGAGE_KEYS))
+    except:
+        pass
+
+    if 'OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED' in os.environ:
+        print("enable otel logging")
+        logs.get_logger_provider().add_log_record_processor(BaggageLogRecordProcessor(ALLOW_ALL_BAGGAGE_KEYS))
+
+    tracer = trace.get_tracer(__name__)
+
+    metrics_provider = MeterProvider(metric_readers=[PeriodicExportingMetricReader(OTLPMetricExporter(), export_interval_millis=5000)])  # Export every 5 seconds
+    meter = metrics_provider.get_meter("trader")
+    trading_revenue = meter.create_counter("trading_revenue", "dollars")
+    app.logger.info('trading_revenue metric created')
+    return tracer, trading_revenue
+
+tracer, trading_revenue = init_otel()
+
+def set_attribute_and_baggage(key, value):
+    # always set it on the current span
+    trace.get_current_span().set_attribute(key, value)
+    # and attach it to baggage
+    context.attach(baggage.set_baggage(key, value))
 
 def conform_request_bool(value):
     return value.lower() == 'true'
@@ -40,20 +81,28 @@ def decode_common_args():
     customer_id = params.get('customer_id', None)
     if customer_id is None:
         raise Exception("malformatted customer_id", request.remote_addr)
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.customer_id", customer_id)
 
     day_of_week = params.get('day_of_week', None)
     if day_of_week is None:
         day_of_week = random.choice(['M', 'Tu', 'W', 'Th', 'F'])
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.day_of_week", day_of_week)
  
     region = params.get('region', "NA")
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.region", region)
 
     symbol = params.get('symbol', 'ESTC')
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.symbol", symbol)
 
     data_source = params.get('data_source', 'monkey')
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.data_source", data_source)
 
     classification = params.get('classification', None)
+    if classification is not None:
+        set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.classification", classification)
 
     canary = params.get('canary', False)
+    set_attribute_and_baggage(f"{ATTRIBUTE_PREFIX}.canary", canary)
 
     # forced errors
     latency_amount = params.get('latency_amount', 0)
@@ -66,15 +115,26 @@ def decode_common_args():
 
     return trade_id, customer_id, day_of_week, region, symbol, latency_amount, latency_action, error_model, error_db, error_db_service, skew_market_factor, canary, data_source, classification
 
+@tracer.start_as_current_span("trade")
 def trade(*, region, trade_id, customer_id, symbol, day_of_week, shares, share_price, canary, action, error_db, data_source, classification, error_db_service=None):
+
     app.logger.info(f"trade requested for {symbol} on day {day_of_week}")
+
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.action", action)
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.shares", shares)
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.share_price", share_price)
+    if action == 'buy' or action == 'sell':
+        trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.value", shares * share_price)
+        trading_revenue.add(math.ceil(share_price * shares * .001), attributes={"cloud.region": region} )
+    else:
+        trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.value", 0)
 
     response = {}
     response['id'] = trade_id
     response['symbol']= symbol
     
     params={'canary': "true" if canary else "false", 'customer_id': customer_id, 'trade_id': trade_id, 'symbol': symbol, 'shares': shares, 'share_price': share_price, 'action': action}
-    print(params)
+    #print(params)
     if error_db is True:
         params['share_price'] = -share_price
         params['shares'] = -shares
@@ -83,7 +143,6 @@ def trade(*, region, trade_id, customer_id, symbol, day_of_week, shares, share_p
         
     trade_response = requests.post(f"http://{os.environ['ROUTER_HOST']}:9000/record", params=params)
     trade_response.raise_for_status()
-    trade_response_json = trade_response.json()
 
     response['shares']= shares
     response['share_price']= share_price
@@ -113,9 +172,11 @@ def trade_request():
     
     return trade (region=region, data_source=data_source, classification=classification, trade_id=trade_id, symbol=symbol, customer_id=customer_id, day_of_week=day_of_week, shares=shares, share_price=share_price, canary=canary, action=action, error_db=error_db, error_db_service=error_db_service)
 
+@tracer.start_as_current_span("run_model")
 def run_model(*, trade_id, customer_id, day_of_week, region, symbol, error=False, latency_amount=0.0, latency_action=None, skew_market_factor=0):
 
     market_factor, share_price = model.sim_market_data(symbol=symbol, day_of_week=day_of_week, skew_market_factor=skew_market_factor)
+    trace.get_current_span().set_attribute(f"{ATTRIBUTE_PREFIX}.market_factor", market_factor)
 
     action, shares = model.sim_decide(error=error, region=region, latency_amount=latency_amount, latency_action=latency_action, symbol=symbol, market_factor=market_factor)
 

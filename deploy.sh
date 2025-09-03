@@ -3,8 +3,10 @@ service=all
 local=false
 variant=none
 otel=false
+namespace=trading
+region=0
 
-while getopts "l:c:s:v:o:" opt
+while getopts "l:c:s:v:o:n:r:" opt
 do
    case "$opt" in
       c ) course="$OPTARG" ;;
@@ -12,6 +14,8 @@ do
       l ) local="$OPTARG" ;;
       v ) variant="$OPTARG" ;;
       o ) otel="$OPTARG" ;;
+      n ) namespace="$OPTARG" ;;
+      r ) region="$OPTARG" ;;
    esac
 done
 
@@ -22,6 +26,8 @@ fi
 
 export COURSE=$course
 export REPO=$repo
+export NAMESPACE=$namespace
+export REGION=$region
 
 if [ "$otel" = "true" ]; then
     # ---------- COLLECTOR
@@ -36,9 +42,8 @@ if [ "$otel" = "true" ]; then
     fi
     helm upgrade --install opentelemetry-kube-stack open-telemetry/opentelemetry-kube-stack \
     --namespace opentelemetry-operator-system \
-    --set "manager.extraArgs={--enable-nginx-instrumentation,--enable-go-instrumentation}" \
     --values 'values.yaml' \
-    --version '0.3.9'
+    --version '0.6.3'
     
     kubectl -n opentelemetry-operator-system rollout restart deployment/opentelemetry-kube-stack-opentelemetry-operator 
     cd ..
@@ -55,21 +60,24 @@ if [ "$otel" = "true" ]; then
     sleep 30
 fi
 
+envsubst < k8s/yaml/_namespace.yaml | kubectl apply -f -
+kubectl label ns $namespace namespace-node-affinity=enabled
+
 if [ "$service" != "none" ]; then
-    for file in k8s/*.yaml; do
+    for file in k8s/yaml/*.yaml; do
         current_service=$(basename "$file")
         current_service="${current_service%.*}"
         echo $current_service
         echo $service
         if [[ "$service" == "all" || "$service" == "$current_service" ]]; then
             echo "deploying..."
-            if [ -f "k8s/_courses/$variant/$current_service.yaml" ]; then
+            if [ -f "k8s/yaml/_courses/$variant/$current_service.yaml" ]; then
                 echo "applying variant"
-                envsubst < k8s/_courses/$variant/$current_service.yaml | kubectl apply -f -
+                envsubst < k8s/yaml/_courses/$variant/$current_service.yaml | kubectl apply -f -
             else
-                envsubst < k8s/$current_service.yaml | kubectl apply -f -
+                envsubst < k8s/yaml/$current_service.yaml | kubectl apply -f -
             fi
-            #kubectl -n trading rollout restart deployment/$current_service
+            kubectl -n $namespace rollout restart deployment/$current_service
         fi
     done
 fi

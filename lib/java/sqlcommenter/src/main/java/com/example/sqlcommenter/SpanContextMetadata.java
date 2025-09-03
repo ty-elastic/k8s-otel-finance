@@ -8,6 +8,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
+import io.opentelemetry.api.baggage.Baggage;
+
 public class SpanContextMetadata {
   private static final Logger logger = Logger.getLogger(SpanContextMetadata.class.getName());
   private static final String UTF8 = StandardCharsets.UTF_8.toString();
@@ -26,6 +28,7 @@ public class SpanContextMetadata {
   }
 
   public static SpanContextMetadata fromOpenTelemetryContext(
+      io.opentelemetry.context.Context context,
       io.opentelemetry.api.trace.SpanContext spanContext) {
     if (spanContext == null || !spanContext.isValid()) {
       return null;
@@ -56,6 +59,7 @@ public class SpanContextMetadata {
         logger.log(Level.WARNING, "Exception when encoding Tracestate", e);
       }
     }
+
     String traceStateStr = String.join(",", pairsList);
 
     return new SpanContextMetadata(traceId, spanId, traceOptions, traceStateStr);

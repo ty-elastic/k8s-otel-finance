@@ -25,9 +25,11 @@ public class TradeRecorder {
                 tradeRepo.enablePGStatStatements();
             }
             catch (Exception e) {
-
+                log.atWarn().log(e.getMessage());
+                if (e.getMessage().contains("already exists")) {
+                    pgStatEnabled = true;
+                }
             }
-            pgStatEnabled = true;
         }
 
         Trade savedTrade = tradeRepo.save(trade);

@@ -4,7 +4,10 @@ service=all
 local=true
 variant=none
 otel=false
-while getopts "s:a:l:v:o:" opt
+namespace=trading
+region=0
+
+while getopts "s:a:l:v:o:n:r:" opt
 do
    case "$opt" in
       s ) service="$OPTARG" ;;
@@ -12,6 +15,8 @@ do
       a ) arch="$OPTARG" ;;
       l ) local="$OPTARG" ;;
       v ) variant="$OPTARG" ;;
+      n ) namespace="$OPTARG" ;;
+      r ) region="$OPTARG" ;;
    esac
 done
 
@@ -23,4 +28,4 @@ fi
 echo $service
 
 ./build.sh -a $arch -c $course -s $service -l $local -v $variant -x true -y false -z false
-./deploy.sh -c $course -s $service -l $local -v $variant -o $otel
+./deploy.sh -c $course -s $service -l $local -v $variant -o $otel -n $namespace -r $region

@@ -6,7 +6,7 @@ metadata:
     app: trading
     service: trader
   name: trader
-  namespace: trading
+  namespace: $NAMESPACE
 spec:
   replicas: 1
   selector:
@@ -17,6 +17,7 @@ spec:
     metadata:
       annotations:
         instrumentation.opentelemetry.io/inject-python: "opentelemetry-operator-system/elastic-instrumentation"
+        io.opentelemetry.discovery.logs/enabled: "false"
       labels:
         app: trading
         service: trader
@@ -36,7 +37,7 @@ metadata:
     app: trading
     service: trader
   name: trader
-  namespace: trading
+  namespace: $NAMESPACE
 spec:
   ports:
     - name: trader

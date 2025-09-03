@@ -38,7 +38,17 @@ ua_generator_options.version_ranges = {
 
 DAYS_OF_WEEK = ['M', 'Tu', 'W', 'Th', 'F']
 ACTIONS = ['buy', 'sell', 'hold']
-REGIONS = ['NA', 'LATAM', 'EU', 'EMEA', 'APAC']
+
+if os.environ['REGION'] == "1":
+    print("region1")
+    REGIONS = ['NA', 'LATAM']
+elif os.environ['REGION'] == "2":
+    print("region2")
+    REGIONS = ['EU', 'EMEA', 'APAC']
+else:
+    print("region=all")
+    REGIONS = ['NA', 'LATAM', 'EU', 'EMEA', 'APAC']
+
 SYMBOLS = ['ZVZZT', 'ZALM', 'ZYX', 'CBAZ', 'BAA', 'OELK']
 
 CLIENTIPS_PER_REGION = {
@@ -46,7 +56,7 @@ CLIENTIPS_PER_REGION = {
     'LATAM': '186.189.224.0/20',
     'EU': '149.254.212.0/24',
     'EMEA': '102.65.16.0/20',
-    'APAC': '101.136.0.0/14'
+    'APAC': '103.107.52.0/24'
 }
 
 CUSTOMERS_PER_REGION = {}
@@ -364,6 +374,8 @@ def tput_symbol_delete(symbol):
 
 @app.post('/latency/region/<region>/<amount>')
 def latency_region(region, amount):
+    app.logger.info(f"latency start {region}={amount}") 
+
     global latency_per_action_per_region
     latency_action = request.args.get('latency_action', default=None, type=str)
     latency_oneshot = request.args.get('latency_oneshot', default=True, type=conform_request_bool)
@@ -373,6 +385,8 @@ def latency_region(region, amount):
     return latency_per_action_per_region    
 @app.delete('/latency/region/<region>')
 def latency_region_delete(region):
+    app.logger.info(f"latency stop {region}") 
+
     global latency_per_action_per_region
     if region in latency_per_action_per_region:
         del latency_per_action_per_region[region]

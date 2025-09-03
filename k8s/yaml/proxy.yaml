@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: proxy
-  namespace: trading
+  namespace: $NAMESPACE
   labels:
     app: trading
     service: proxy
@@ -51,13 +51,12 @@ metadata:
     app: trading
     service: proxy
   name: proxy
-  namespace: trading
+  namespace: $NAMESPACE
 spec:
   ports:
     - name: proxy
       port: 9090
       targetPort: 80
-  type: LoadBalancer
   selector:
     app: trading
     service: proxy
@@ -69,7 +68,7 @@ metadata:
     app: trading
     service: proxy
   name: proxy-ext
-  namespace: trading
+  namespace: $NAMESPACE
 spec:
   ports:
     - name: proxy

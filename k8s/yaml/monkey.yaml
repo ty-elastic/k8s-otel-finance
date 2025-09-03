@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: monkey
-  namespace: trading
+  namespace: $NAMESPACE
   labels:
     app: trading
     service: monkey
@@ -17,6 +17,7 @@ spec:
     metadata:
       annotations:
         instrumentation.opentelemetry.io/inject-python: "opentelemetry-operator-system/elastic-instrumentation"
+        io.opentelemetry.discovery.logs/enabled: "false"
       labels:
         app: trading
         service: monkey
@@ -30,6 +31,8 @@ spec:
           env:
             - name: TRADER_SERVICE
               value: proxy:9090/trader
+            - name: REGION
+              value: "$REGION"
       restartPolicy: Always
 ---
 apiVersion: v1
@@ -39,7 +42,7 @@ metadata:
     app: trading
     service: monkey
   name: monkey
-  namespace: trading
+  namespace: $NAMESPACE
 spec:
   ports:
     - name: monkey
