@@ -1,28 +1,90 @@
+metadata:
+  stock:
+    ZVZZT:
+      price:
+        min: 10
+        max: 200
+        swing: 10
+    ZALM:
+      price:
+        min: 10
+        max: 200
+        swing: 10
+    ZYX:
+      price:
+        min: 10
+        max: 200
+        swing: 10
+    CBAZ:
+      price:
+        min: 10
+        max: 200
+        swing: 10
+    BAA:
+      price:
+        min: 10
+        max: 200
+        swing: 10 
+    OELK:
+      price:
+        min: 10
+        max: 200
+        swing: 10
+  region:
+    NA:
+      ip_range: '107.80.0.0/16'
+      num_customers: 10
+    LATAM:
+      ip_range: '186.189.224.0/20'
+      num_customers: 10
+    EU:
+      ip_range: '149.254.212.0/24'
+      num_customers: 10
+    EMEA:
+      ip_range: '102.65.16.0/20'
+      num_customers: 10
+    APAC:
+      ip_range: '103.107.52.0/24'
+      num_customers: 10
+
 threads:
-  - name: proxy
-    schedule:
-      - type: nginx
-        backfill_start_minutes: 60
-        backfill_stop_minutes: 30
-        logs_per_second: 100
-        name: proxy
-      - type: request_errors
-        browser: chrome
-        region: APAC
-      - type: nginx
-        backfill_stop_minutes: 0
-        logs_per_second: 100
-        name: proxy
-      - type: nginx
-        logs_per_second: 100
-        name: proxy
+  # - name: proxy
+  #   metadata:
+  #     api:
+  #       - endpoint: '/trade/request'
+  #         payload: 
+  #           min: 205
+  #           max: 220
+  #       - endpoint: '/trade/status'
+  #         payload: 
+  #           min: 316
+  #           max: 340
+  #   schedule:
+  #     - type: nginx
+  #       backfill_start_minutes: 60
+  #       backfill_stop_minutes: 30
+  #       logs_per_second: 100
+  #       name: proxy
+  #     - type: request_errors
+  #       browser: chrome
+  #       region: APAC
+  #     - type: nginx
+  #       backfill_stop_minutes: 0
+  #       logs_per_second: 100
+  #       name: proxy
+  #     - type: nginx
+  #       logs_per_second: 100
+  #       name: proxy
   - name: trader
+    metadata: {}
     schedule:
-      - type: trader
+      - type: trading
+        template: "current market share price for {stock.symbol}: ${stock.price}"
         backfill_start_minutes: 60
         backfill_stop_minutes: 0
         logs_per_second: 50
         name: trader
-      - type: trader
+      - type: trading
+        template: "current market share price for {stock.symbol}: ${stock.price}"
         logs_per_second: 50
         name: trader

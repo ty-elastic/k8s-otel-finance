@@ -198,8 +198,8 @@ collectors:
           watch_observers: [k8s_observer]
           discovery:
             enabled: true
-          default_annotations:
-            io.opentelemetry.discovery.logs/enabled: "false"
+            default_annotations:
+              io.opentelemetry.discovery.logs/enabled: "true"
           receivers: {}
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       service:

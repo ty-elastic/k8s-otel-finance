@@ -20,8 +20,8 @@ spec:
       labels:
         app: trading
         service: proxy
-      annotations:
-        io.opentelemetry.discovery.logs/enabled: "true"
+      # annotations:
+      #   io.opentelemetry.discovery.logs/enabled: "false"
     spec:
       containers:
         - image: $REPO/proxy:$COURSE

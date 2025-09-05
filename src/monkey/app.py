@@ -22,7 +22,7 @@ HIGH_TPUT_PCT = 95
 LATENCY_SWING_MS = 10
 HIGH_TPUT_SLEEP_MS = [2,3]
 NORMAL_TPUT_SLEEP_MS = [200,300]
-ERROR_TIMEOUT_S = 60
+ERROR_TIMEOUT_S = 300
 CONCURRENT_TRADE_REQUESTS = 20
 NUM_CUSTOMERS_PER_REGION = 10
 
@@ -193,6 +193,7 @@ def generate_trade_requests():
                 latency_action = None
 
             if region in model_error_per_region:
+                app.logger.info(f"db_error_per_region[{region}] check")
                 error_model = True if random.randint(0, 100) > (100-model_error_per_region[region]['amount']) else False
                 if time.time() - model_error_per_region[region]['start'] >= ERROR_TIMEOUT_S:
                     app.logger.info(f"db_error_per_region[{region}] timeout")

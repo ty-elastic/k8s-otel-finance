@@ -28,6 +28,10 @@ BACKLOG_Q_BATCH_S = 60 * 2
 BACKLOG_Q_TIMEOUT_MS = 10
 
 DEBUG = False
+ERROR_RETRIES = 3
+
+request_error_per_customer = {}
+stock_price = {}
 
 def make_logger(service_name, max_logs_per_second):
 
@@ -61,39 +65,15 @@ def make_logger(service_name, max_logs_per_second):
     logger.setLevel(logging.INFO)
     return logger, processor
 
-request_error_per_customer = {}
-stock_price = {}
-
-ERROR_RETRIES = 3
-
-NUM_CUSTOMERS_PER_REGION = 10
-
-REGIONS = ['NA', 'LATAM', 'EU', 'EMEA', 'APAC']
-SYMBOLS = ['ZVZZT', 'ZALM', 'ZYX', 'CBAZ', 'BAA', 'OELK']
-
-URLS = ['/trade/request', '/trade/status']
-SIZE = {
-    '/trade/request': (205, 220),
-    '/trade/status': (316, 340),
-}
-
-CLIENTIPS_PER_REGION = {
-    'NA': '107.80.0.0/16',
-    'LATAM': '186.189.224.0/20',
-    'EU': '149.254.212.0/24',
-    'EMEA': '102.65.16.0/20',
-    'APAC': '103.107.52.0/24'
-}
-
-CUSTOMERS_PER_REGION = {}
-def generate_customers_per_region():
+def generate_customers_per_region(regions):
+    customers_per_region = {}
     fake = Faker()
-    for region in REGIONS:
-        CUSTOMERS_PER_REGION[region] = []
-        for i in range(NUM_CUSTOMERS_PER_REGION):
+    for region in regions.keys():
+        customers_per_region[region] = []
+        for i in range(regions[region]['num_customers']):
             name = fake.unique.first_name().lower() + "." + fake.unique.last_name().lower()
-            CUSTOMERS_PER_REGION[region].append(name)
-generate_customers_per_region()
+            customers_per_region[region].append(name)
+    return customers_per_region
 
 CHROME_VERSIONS = (125, 135)
 BROWSER_PREFERENCE = ('chrome')
@@ -108,29 +88,30 @@ def make_ua_generator_options():
     return ua_generator_options
 ua_generator_options = make_ua_generator_options()
 
-USERAGENTS_PER_USER = {}
-def generate_useragent_per_user():
-    for region in CUSTOMERS_PER_REGION.keys():
-        for customer in CUSTOMERS_PER_REGION[region]:
+
+def generate_useragent_per_user(customers_per_region):
+    useragents_per_user = {}
+    for region in customers_per_region.keys():
+        for customer in customers_per_region[region]:
             if random.randint(0,100) < BROWSER_PREFERENCE_PERCENTAGE:
-                USERAGENTS_PER_USER[customer] = ua_generator.generate(browser=BROWSER_PREFERENCE, options=ua_generator_options)
+                useragents_per_user[customer] = ua_generator.generate(browser=BROWSER_PREFERENCE, options=ua_generator_options)
             else:
-                USERAGENTS_PER_USER[customer] = ua_generator.generate(options=ua_generator_options) 
-generate_useragent_per_user()
+                useragents_per_user[customer] = ua_generator.generate(options=ua_generator_options) 
+    return useragents_per_user
 
-IP_ADDRESS_PER_USER = {}
-def generate_ipaddress_per_user():
-    for region in CUSTOMERS_PER_REGION.keys():
-        for customer in CUSTOMERS_PER_REGION[region]:
-            network = ipaddress.ip_network(CLIENTIPS_PER_REGION[region])
+def generate_ipaddress_per_user(customers_per_region, regions):
+    ip_address_per_user = {}
+    for region in customers_per_region.keys():
+        for customer in customers_per_region[region]:
+            network = ipaddress.ip_network(regions[region]['ip_range'])
             ip_list = [str(ip) for ip in network]
-            IP_ADDRESS_PER_USER[customer] = random.choice(ip_list)
-generate_ipaddress_per_user()
+            ip_address_per_user[customer] = random.choice(ip_list)
+    return ip_address_per_user
 
-def get_customers():
+def get_customers(customers_per_region):
     customers = []
-    for region in CUSTOMERS_PER_REGION:
-        for customer in CUSTOMERS_PER_REGION[region]:
+    for region in customers_per_region:
+        for customer in customers_per_region[region]:
             customers.append(customer)
     return customers
 
@@ -138,8 +119,9 @@ def generate_nginx_line(*, ip, timestamp, method, url, protocol, status_code, si
     line = f"{ip} - - [{timestamp}] \"{method} {url} {protocol}\" {status_code} {size} \"{ref_url}\" \"{user_agent}\"\n"
     return line
 
-def generate_trader_line(*, symbol, price):
-    line = f"current market share price for {symbol}: ${price}"
+def generate_trading_line(*, symbol, price, template):
+    line = template.replace('{stock.symbol}', symbol)
+    line = line.replace('{stock.price}', str(price))
     return line
 
 def log_backoff(logger_tuple):
@@ -173,17 +155,18 @@ def log(logger_tuple, name, timestamp, level, body):
     log_backoff(logger_tuple)
     logger.handle(record)
 
-def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, logs_per_second, throttled):
+def generate(*, name, generator_type, template, logger, start_timestamp, end_timestamp, logs_per_second, throttled, metadata):
     timestamp = start_timestamp
 
     while timestamp < end_timestamp if end_timestamp is not None else True:
         lines = []
         if generator_type == 'nginx':
-            
-            region = random.choice(REGIONS)
-            customer_id = random.choice(CUSTOMERS_PER_REGION[region])
-            url=random.choice(URLS)
-            size=random.randrange(SIZE[url][0],SIZE[url][1])
+
+            api = random.choice(metadata['api']) 
+            region = random.choice(list(metadata['region'].keys()))
+            customer_id = random.choice(metadata['customers_per_region'][region])
+            url=api['endpoint']
+            size=random.randrange(api['payload']['min'], api['payload']['max'])
 
             retries = 1
             if customer_id in request_error_per_customer:
@@ -197,7 +180,7 @@ def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, lo
             for i in range(retries):
                 timestamp_str = send_timestamp.strftime("%d/%b/%Y:%H:%M:%S %z")
 
-                line = generate_nginx_line(ip=IP_ADDRESS_PER_USER[customer_id],
+                line = generate_nginx_line(ip=metadata['ip_address_per_user'][customer_id],
                                     timestamp=timestamp_str,
                                     method='POST',
                                     url=url,
@@ -205,18 +188,18 @@ def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, lo
                                     status_code=200 if error_request is False else 500,
                                     size=size,
                                     ref_url='-',
-                                    user_agent=USERAGENTS_PER_USER[customer_id].text)
+                                    user_agent=metadata['user_agent_per_user'][customer_id].text)
                 lines.append(line)
                 send_timestamp = send_timestamp + timedelta(seconds=1/1000)
-        elif generator_type == 'trader':
-            symbol = random.choice(SYMBOLS)
+        elif generator_type == 'trading':
+            symbol = random.choice(list(metadata['stock'].keys()))
             if symbol not in stock_price:
-                stock_price[symbol] = random.randrange(10,200)
-            stock_price[symbol] = stock_price[symbol] + random.randrange(-10,10)
-            if stock_price[symbol] <= 10:
-                stock_price[symbol] = 10
+                stock_price[symbol] = random.randrange(metadata['stock'][symbol]['price']['min'],metadata['stock'][symbol]['price']['max'])
+            stock_price[symbol] = stock_price[symbol] + random.randrange(-metadata['stock'][symbol]['price']['swing'],metadata['stock'][symbol]['price']['swing'])
+            if stock_price[symbol] <= metadata['stock'][symbol]['price']['min']:
+                stock_price[symbol] = metadata['stock'][symbol]['price']['min']
 
-            line = generate_trader_line(symbol=symbol, price=stock_price[symbol])
+            line = generate_trading_line(symbol=symbol, price=stock_price[symbol], template=template)
             lines.append(line)
 
         for line in lines:
@@ -233,7 +216,7 @@ def generate(*, name, generator_type, logger, start_timestamp, end_timestamp, lo
         timestamp = timestamp + timedelta(seconds=1/logs_per_second)
     return timestamp
 
-def bump_version_up_per_browser(*, browser, region, error=True):
+def bump_version_up_per_browser(*, browser, region, error=True, metadata):
     global request_error_per_customer
 
     for browser_version_range in ua_generator_options.version_ranges.keys():
@@ -244,13 +227,13 @@ def bump_version_up_per_browser(*, browser, region, error=True):
             }
 
     if region is not None:
-        customers = CUSTOMERS_PER_REGION[region]
+        customers = metadata['customers_per_region'][region]
     else:
         customers = get_customers()
     for customer in customers:
-        if USERAGENTS_PER_USER[customer].browser == browser:
+        if metadata['user_agent_per_user'][customer].browser == browser:
             print(f'new ua for {browser}')
-            USERAGENTS_PER_USER[customer] = ua_generator.generate(browser=browser, options=ua_generator_options)
+            metadata['user_agent_per_user'][customer] = ua_generator.generate(browser=browser, options=ua_generator_options)
             if error:
                 print(f"start request error for customer {customer}")
                 request_error_per_customer[customer] = {'amount': 100, 'retries': ERROR_RETRIES}
@@ -277,9 +260,10 @@ def err_request_ua(browser):
     bump_version_up_per_browser(browser=browser, region=region)
     return request_error_per_customer
 
-def run_schedule(thread_name, schedule):
+def run_schedule(thread_name, schedule, global_metadata, thread_metadata):
     global realtime
     realtime[thread_name] = False
+    metadata = global_metadata | thread_metadata
 
     last_ts = None
     loggers = {}
@@ -295,7 +279,7 @@ def run_schedule(thread_name, schedule):
     schedule_start = datetime.now(tz=timezone.utc)
     print(f'start @ {schedule_start}')
     for item in schedule:
-        if item['type'] == 'nginx' or item['type'] == 'trader':
+        if item['type'] == 'nginx' or item['type'] == 'trading':
             if 'backfill_start_minutes' not in item:
                 start = last_ts
             else:
@@ -311,10 +295,11 @@ def run_schedule(thread_name, schedule):
                 throttled = True
             print(f'type={item['type']}, start={start}, stop={stop}, interval_s={1/item['logs_per_second']}, send_delay={send_delay}')
             last_ts = generate(name=item['name'], generator_type=item['type'], logger=loggers[item['name']], start_timestamp=start, 
-                               end_timestamp=stop, logs_per_second=item['logs_per_second'], throttled=throttled)
+                               end_timestamp=stop, logs_per_second=item['logs_per_second'], throttled=throttled,
+                               metadata=metadata, template=item['template'])
 
         elif item['type'] == 'request_errors':
-            bump_version_up_per_browser(browser=item['browser'], region=item['region'])
+            bump_version_up_per_browser(browser=item['browser'], region=item['region'], metadata=global_metadata)
 
 def load_config():
     try:
@@ -328,9 +313,15 @@ def load_config():
 config = load_config()
 
 def run_threads():
+    global_metadata = config['metadata']
+
+    global_metadata['customers_per_region'] = generate_customers_per_region(global_metadata['region'])
+    global_metadata['user_agent_per_user'] = generate_useragent_per_user(global_metadata['customers_per_region'])
+    global_metadata['ip_address_per_user'] = generate_ipaddress_per_user(global_metadata['customers_per_region'], global_metadata['region'])
+    
     threads = []
     for thread in config['threads']:
-        t = Thread(target=run_schedule, args=[thread['name'], thread['schedule']], daemon=False)
+        t = Thread(target=run_schedule, args=[thread['name'], thread['schedule'], config['metadata'], thread['metadata']], daemon=False)
         t.start()
         threads.append(t)
     for t in threads:
