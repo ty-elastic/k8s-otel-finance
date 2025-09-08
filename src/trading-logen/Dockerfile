@@ -14,7 +14,7 @@ RUN if [ -d "_courses/$VARIANT" ]; then \
         cp _courses/$VARIANT/config.yaml config.yaml; \
     fi
 
-COPY app.py .
+COPY *.py .
 
 ENV PYTHONUNBUFFERED=1
 

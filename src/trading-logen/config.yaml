@@ -27,9 +27,9 @@ metadata:
         swing: 10 
     OELK:
       price:
-        min: 10
-        max: 200
-        swing: 10
+        min: 100
+        max: 1000
+        swing: 50
   region:
     NA:
       ip_range: '107.80.0.0/16'
@@ -65,7 +65,7 @@ threads:
   #       backfill_stop_minutes: 30
   #       logs_per_second: 100
   #       name: proxy
-  #     - type: request_errors
+  #     - type: nginx_ua_request_errors
   #       browser: chrome
   #       region: APAC
   #     - type: nginx
@@ -76,15 +76,29 @@ threads:
   #       logs_per_second: 100
   #       name: proxy
   - name: trader
-    metadata: {}
     schedule:
-      - type: trading
-        template: "current market share price for {stock.symbol}: ${stock.price}"
-        backfill_start_minutes: 60
-        backfill_stop_minutes: 0
+      # - type: trading
+      #   messages: 
+      #     - "current market share price for {stock.symbol}: ${stock.price}"
+      #   backfill_start_minutes: 60
+      #   backfill_stop_minutes: 0
+      #   logs_per_second: 50
+      #   name: trader
+      - type: service
+        messages:
+          - "current market share price for {stock.symbol}: ${stock.price}"
         logs_per_second: 50
+        stop_minutes: 0.1
+        wired: true
         name: trader
-      - type: trading
-        template: "current market share price for {stock.symbol}: ${stock.price}"
+
+      - type: generate_exception
+        region: APAC
+        template: "Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.util.concurrent.ExecutionException: org.springframework.transaction.TransactionSystemException: Could not commit JPA transaction] with root cause"
+
+      - type: service
+        messages:
+          - "current market share price for {stock.symbol}: ${stock.price}"
         logs_per_second: 50
+        wired: true
         name: trader
